@@ -91,11 +91,9 @@ class TesteTiles extends Screen
 		
 
 	primitives.begin();
-	primitives.renderMode(false);
 
 	primitives.line(lastToutch.x, lastToutch.y, Toutch.x, Toutch.y, 1, 0, 0);
 	
-	primitives.render();
 	primitives.end;
 	
     }
@@ -107,8 +105,7 @@ class TesteTiles extends Screen
 		toutch = true;
 		lastToutch.x = mousex;
 		lastToutch.y = mousey;
-		//lastToutch=camera.unproject(lastToutch);
-		
+
 		
 	}		
 	override public function mouseMove(mousex:Float, mousey:Float) 
@@ -119,7 +116,6 @@ class TesteTiles extends Screen
 			
 			Toutch.x = mousex;
 			Toutch.y = mousey;
-		//	Toutch=camera.unproject(Toutch);
 	
 			
 		var dir:Vector3 = Vector3.Sub(Toutch, lastToutch);

@@ -21,7 +21,7 @@ class Buffer
 		position =new  Vector2(0, 0);
 		rotation = 0;
 		scale=1;
-		viewMatrix = Matrix.create2D(position.x, position.y, scale, rotation);
+		viewMatrix = Matrix.Identity();
 	}
 	public function getMatrix():Matrix
 	{
@@ -29,12 +29,11 @@ class Buffer
 	}
 	public function combineMatrix(m:Matrix)
 	{
-		viewMatrix = Matrix.MatrixMultiply4x4(this.viewMatrix, m);
+		viewMatrix.Multiply4x4(viewMatrix, m);
 	}
     public function update()
 	{
-	viewMatrix = Matrix.create2D( Math.round(position.x), Math.round(position.y), scale, rotation);
-	//viewMatrix = Matrix.create2D( position.x, position.y, scale, rotation);
+	viewMatrix.set2Dtransformation( Math.round(position.x), Math.round(position.y), scale, rotation);
 	}
 
 	public function dispose()

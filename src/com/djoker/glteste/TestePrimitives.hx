@@ -50,9 +50,9 @@ class TestePrimitives extends Screen
 	batch.ellipse(300, 90, 55, 15, 8, 1, 1, 1, 1);
 
 	batch.fillrect(200, 200, 50, 50, 1, 0, 0, 1);
-	batch.fillrect(280, 200, 50, 50, 1, 0, 1, 1);
-	batch.fillcircle(200, 100, 8, 18, 1, 1, 1, 1);
-	batch.fillellipse(300, 100, 55, 15, 8, 1, 1, 1, 1);
+	batch.fillrect(280, 200, 50, 50, 0, 1, 1, 1);
+	batch.fillcircle(200, 100, 8, 18, 1, 0, 1, 1);
+	batch.fillellipse(300, 100, 55, 15, 8, 0, 1, 1, 1);
 
 	
 	batch.end();

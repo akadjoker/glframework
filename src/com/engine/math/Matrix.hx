@@ -156,6 +156,32 @@ class Matrix {
         return result;
 	}
 	
+	inline   public  function  Multiply4x4(A:Matrix,B :Matrix)
+	{
+	    
+		
+	m[0] = A.m[0]*B.m[0] + A.m[4]*B.m[1] + A.m[8]*B.m[2] + A.m[12]*B.m[3];
+	m[1] = A.m[1]*B.m[0] + A.m[5]*B.m[1] + A.m[9]*B.m[2] + A.m[13]*B.m[3];
+	m[2] = A.m[2]*B.m[0] + A.m[6]*B.m[1] + A.m[10]*B.m[2] + A.m[14]*B.m[3];
+	m[3] = A.m[3]*B.m[0] + A.m[7]*B.m[1] + A.m[11]*B.m[2] + A.m[15]*B.m[3];
+
+	m[4] = A.m[0]*B.m[4] + A.m[4]*B.m[5] + A.m[8]*B.m[6] + A.m[12]*B.m[7];
+	m[5] = A.m[1]*B.m[4] + A.m[5]*B.m[5] + A.m[9]*B.m[6] + A.m[13]*B.m[7];
+	m[6] = A.m[2]*B.m[4] + A.m[6]*B.m[5] + A.m[10]*B.m[6] + A.m[14]*B.m[7];
+	m[7] = A.m[3]*B.m[4] + A.m[7]*B.m[5] + A.m[11]*B.m[6] + A.m[15]*B.m[7];
+
+	m[8] = A.m[0]*B.m[8] + A.m[4]*B.m[9] + A.m[8]*B.m[10] + A.m[12]*B.m[11];
+	m[9] = A.m[1]*B.m[8] + A.m[5]*B.m[9] + A.m[9]*B.m[10] + A.m[13]*B.m[11];
+	m[10] = A.m[2]*B.m[8] + A.m[6]*B.m[9] + A.m[10]*B.m[10] + A.m[14]*B.m[11];
+	m[11] = A.m[3]*B.m[8] + A.m[7]*B.m[9] + A.m[11]*B.m[10] + A.m[15]*B.m[11];
+
+	m[12] = A.m[0]*B.m[12] + A.m[4]*B.m[13] + A.m[8]*B.m[14] + A.m[12]*B.m[15];
+	m[13] = A.m[1]*B.m[12] + A.m[5]*B.m[13] + A.m[9]*B.m[14] + A.m[13]*B.m[15];
+	m[14] = A.m[2]*B.m[12] + A.m[6]*B.m[13] + A.m[10]*B.m[14] + A.m[14]*B.m[15];
+	m[15]  = A.m[3] * B.m[12] + A.m[7] * B.m[13] + A.m[11] * B.m[14] + A.m[15] * B.m[15];
+	
+	}
+	
 	
 	inline public function multiplyToArray(other:Matrix, result:Array<Float>, offset:Int):Array<Float> {
 	
@@ -242,6 +268,14 @@ class Matrix {
             result.m[index] = array[index + offset];
         }
 		return result;
+	}
+	
+	inline public  function fillArrayTo(array:Array<Float>) 
+	{
+		for (index in 0...16) 
+		{
+            m[index] = array[index];
+        }
 	}
 	
 	inline public static function FromValues(m11:Float, m12:Float, m13:Float, m14:Float,
@@ -672,7 +706,22 @@ class Matrix {
 
         return matrix;
 	}
-	
+
+   public  function set2Dtransformation(x:Float, y:Float, scale:Float = 1, rotation:Float = 0) 
+   {
+      var theta = rotation * Math.PI / 180.0;
+      var c = Math.cos(theta);
+      var s = Math.sin(theta);
+
+	 fillArrayTo([
+        c*scale,  -s*scale, 0,  0,
+        s*scale,  c*scale, 0,  0,
+        0,        0,        1,  0,
+       x,        y,        0,  1
+      ]);
+	  
+   }
+   
 	inline   public static function create2D(x:Float, y:Float, scale:Float = 1, rotation:Float = 0) 
    {
       var theta = rotation * Math.PI / 180.0;
@@ -686,12 +735,6 @@ class Matrix {
        x,        y,        0,  1
       ]);
 	  
-      //return new Matrix([
-       //  c*scale,  -s*scale, 0,  0,
-       //  s*scale,  c*scale, 0,  0,
-       //  0,        0,        1,  0,
-        // x,        y,        0,  1
-      //]);
    }
    
 	inline public static function ReflectionToRef(plane:Plane, result:Matrix):Matrix {

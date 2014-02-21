@@ -181,11 +181,11 @@ class TesteBatchTiles extends Screen
 		
 
 	primitives.begin();
-	primitives.renderMode(false);
+
 
 	primitives.line(lastToutch.x, lastToutch.y, Toutch.x, Toutch.y, 1, 0, 0);
 	
-	primitives.render();
+;
 	primitives.end;
 
     }

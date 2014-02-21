@@ -4,7 +4,7 @@ import com.engine.game.Screen;
 
 import com.engine.render.BatchPrimitives;
 import com.engine.render.Texture;
-import com.engine.render.OrthoCamera;
+
 
 import flash.events.Event;
 import flash.text.TextField;
@@ -19,8 +19,6 @@ class TestePrimitives extends Screen
 
  
  var batch:BatchPrimitives;
- var camera:OrthoCamera;
-
 
 
 
@@ -30,12 +28,12 @@ class TestePrimitives extends Screen
 	{
 	
 		
-        camera = new OrthoCamera(640, 480);
-		batch = new  BatchPrimitives(camera, 500);
+  
+		batch = new  BatchPrimitives( 500);
 		
 
 		 var caption:TextField = new TextField();
-		 caption.x =  game.screnWidth / 2-100;
+		 caption.x =  game.gameWidth / 2-100;
 		 caption.y = 20;
 		 caption.width = 200;
 		 caption.defaultTextFormat = new TextFormat ("_sans", 12, 0xaa00ff);
@@ -47,8 +45,7 @@ class TestePrimitives extends Screen
 
 	override public function render(dt:Float) 
 	{ 
-    camera.Update();
-	
+   
 
 	batch.begin();
 	
@@ -69,11 +66,7 @@ class TestePrimitives extends Screen
 	batch.end();
 	
     }
-	override public function resize(width:Int, height:Int) 
-	{
-	game.setViewPort(0, 0, width, height);
-	}
-		
+
 		
 		
 

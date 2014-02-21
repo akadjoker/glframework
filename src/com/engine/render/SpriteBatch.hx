@@ -249,6 +249,95 @@ this.currentBatchSize++;
 	
 		
 }
+public function RenderTileScale(texture:Texture,x:Float,y:Float,width:Float,height:Float,scaleX:Float,scaleY:Float,clip:Clip,flipx:Bool,flipy:Bool,blendMode:Int)
+{
+	if(texture!= this.currentBaseTexture || this.currentBatchSize >= this.capacity)
+    {
+       		switchTexture(texture);
+    }
+
+
+    // check blend mode
+    if(blendMode != this.currentBlendMode)
+    {
+       this.setBlendMode(blendMode);
+    }	
+	
+
+
+
+
+
+	    var fx:Float = x;
+		var fy:Float = y;
+		var fx2:Float = x+width ;
+		var fy2:Float = y+height ;
+		
+		if (scaleX != 1 || scaleY != 1)
+		{
+			fx *= scaleX;
+			fy *= scaleY;
+			fx2 *= scaleX;
+			fy2 *= scaleY;
+		}
+		
+		
+				
+ var u:Float  = clip.x * invTexWidth;
+ var u2:Float = (clip.x + clip.width) * invTexWidth;
+ 
+ var v:Float  = (clip.y + clip.height) * invTexHeight;
+ var v2:Float = clip.y * invTexHeight;
+
+ if (flipx) 
+ {
+			var tmp:Float = u;
+			u = u2;
+			u2 = tmp;
+		}
+
+		if (flipy)
+		{
+			var tmp:Float = v;
+			v = v2;
+			v2 = tmp;
+		}
+		
+		
+		var index:Int = currentBatchSize *  vertexStrideSize;
+
+vertices[index++] = fx;
+vertices[index++] = fy;
+vertices[index++] = 0;
+vertices[index++] = u;vertices[index++] = v;
+vertices[index++] = 1;vertices[index++] = 1;vertices[index++] = 1;vertices[index++] = 1;
+	
+vertices[index++] = fx;
+vertices[index++] = fy2;
+vertices[index++] = 0;
+vertices[index++] = u;vertices[index++] = v2;
+vertices[index++] = 1; vertices[index++] = 1; vertices[index++] = 1; vertices[index++] = 1;
+
+vertices[index++] = fx2;
+vertices[index++] = fy2;
+vertices[index++] = 0;
+vertices[index++] = u2;vertices[index++] = v2;
+vertices[index++] = 1; vertices[index++] = 1; vertices[index++] = 1; vertices[index++] = 1;
+
+vertices[index++] = fx2;
+vertices[index++] = fy;
+vertices[index++] = 0;
+vertices[index++] = u2;vertices[index++] = v;
+vertices[index++] = 1; vertices[index++] = 1; vertices[index++] = 1; vertices[index++] = 1;
+
+
+ 
+ 
+this.currentBatchSize++;
+	
+	
+		
+}
     public function Blt(texture:Texture, src:Clip,dst:Clip,flipX:Bool,flipY:Bool,blendMode:Int)
 	{
 	if(texture!= this.currentBaseTexture || this.currentBatchSize >= this.capacity)

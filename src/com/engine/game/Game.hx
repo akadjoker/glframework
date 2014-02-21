@@ -300,7 +300,7 @@ private function renderView(rect:Rectangle):Void
    
 	nextFrame = Lib.getTimer();
     deltaTime = (nextFrame - prevFrame) * 0.001;
-    GL.clearColor(0, 0, 0.4, 1);
+    GL.clearColor(1, 0, 1, 1);
 	GL.clearDepth(1);
     
     GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);

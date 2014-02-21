@@ -52,10 +52,10 @@ class TesteCloudTiles extends Screen
 		primitives = new BatchPrimitives( 100);
 		//tilemap = new TileMap(Assets.getText ("assets/scrol.tmx"));
 		//tilemap = new TileMap(Assets.getText ("assets/map.tmx"));
-		//tilemap = new TileMap(Assets.getText ("assets/sewers.tmx"));
-		tilemap = new TileMap(Assets.getText ("assets/desert.tmx"));
+		tilemap = new TileMap(Assets.getText ("assets/sewers.tmx"));
+		//tilemap = new TileMap(Assets.getText ("assets/desert.tmx"));
 		
-        batch = new SpriteCloud(tilemap.image,  3000);
+        batch = new SpriteCloud(tilemap.image,  tilemap.widthInTiles*tilemap.heightInTiles);
 		//trace( "map : w" + tilemap.widthInTiles + " h:" + tilemap.heightInTiles);
 		
 			
@@ -80,13 +80,7 @@ class TesteCloudTiles extends Screen
 
 
 		 
-		 var caption:TextField = new TextField();
-		 caption.x =  game.screenWidth / 2-100;
-		 caption.y = 20;
-		 caption.width = 200;
-		 caption.defaultTextFormat = new TextFormat ("_sans", 12, 0xffff00);
-		 caption.text = "Test "+batch.currentBatchSize+" statics sprites ";
-		 game.addChild(caption);
+
 		 
 		 Toutch = new Vector3(0, 0);
 		 lastToutch = new Vector3(0, 0);

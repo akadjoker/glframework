@@ -33,7 +33,8 @@ class Buffer
 	}
     public function update()
 	{
-	viewMatrix = Matrix.create2D( position.x, position.y, scale, rotation);
+	viewMatrix = Matrix.create2D( Math.round(position.x), Math.round(position.y), scale, rotation);
+	//viewMatrix = Matrix.create2D( position.x, position.y, scale, rotation);
 	}
 
 	public function dispose()

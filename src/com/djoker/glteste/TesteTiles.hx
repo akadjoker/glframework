@@ -56,23 +56,16 @@ class TesteTiles extends Screen
 		
 		primitives = new BatchPrimitives( 100);
 		//tilemap = new TileMap(Assets.getText ("assets/scrol.tmx"));
-		tilemap = new TileMap(Assets.getText ("assets/map.tmx"));
+		//tilemap = new TileMap(Assets.getText ("assets/map.tmx"));
 		//tilemap = new TileMap(Assets.getText ("assets/sewers.tmx"));
-		//tilemap = new TileMap(Assets.getText ("assets/desert.tmx"));
+		tilemap = new TileMap(Assets.getText ("assets/desert.tmx"));
 		
        // batch = new SpriteBatch( camera, 3000);
 		//trace( "map : w" + tilemap.widthInTiles + " h:" + tilemap.heightInTiles);
 		
 			
 		 
-		 var caption:TextField = new TextField();
-		 caption.x =  game.screenWidth / 2-100;
-		 caption.y = 20;
-		 caption.width = 200;
-		 caption.defaultTextFormat = new TextFormat ("_sans", 12, 0xffff00);
-		 caption.text = "Test  statics sprites ";
-		 game.addChild(caption);
-		 
+	
 		 Toutch = new Vector3(0, 0);
 		 lastToutch = new Vector3(0, 0);
 		 
@@ -92,7 +85,7 @@ class TesteTiles extends Screen
 
 	
 	tilemap.render();
-	//tilemap.renderDinamic(scroll,0);
+	//tilemap.renderDinamic(0,0);
 	
 	
 		

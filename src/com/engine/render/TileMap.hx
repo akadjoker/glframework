@@ -28,9 +28,7 @@ typedef Array2D = Array<Array<Int>>
 class TileMap extends Buffer
 {
 
-	private var _map:Array2D;
-	private var _columns:Int;
-	private var _rows:Int;
+
 	public var widthInTiles:Int;
 	public var heightInTiles:Int;
 	public var tileWidth:Int;
@@ -38,7 +36,6 @@ class TileMap extends Buffer
 	public var margin:Int=0;
 	public var spacing:Int=0;
 	public var tilesIDs:Array<Int>;
-	public var clips:Array<Clip>;
 	public var columns:Int;
 	public var image:Texture;
 	private var isBuild:Bool;
@@ -53,7 +50,6 @@ class TileMap extends Buffer
 	private var currentBlendMode:Int;
 	private var currentBaseTexture:Texture;
 
-	private var trasform:Matrix3D;
 
 
 private var vertexBuffer:GLBuffer;
@@ -174,19 +170,18 @@ public  function new (xml:String):Void
     //upload the index data
     GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, indexBuffer);
     GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STATIC_DRAW);
- //   GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, null);
+
 	
     GL.bindBuffer(GL.ARRAY_BUFFER, vertexBuffer);
     GL.bufferData(GL.ARRAY_BUFFER, vertices, GL.DYNAMIC_DRAW);
-	//GL.bufferData(GL.ARRAY_BUFFER, vertices, null);
+	
 	
 	
 	shader = new SpriteShader();
 	isBuild = false;
 	
 				
-		trasform = new Matrix3D();
-			
+		
 		
 		}
 		
@@ -204,9 +199,9 @@ public  function new (xml:String):Void
 				{
 					//id = 1;
 					var t:Clip = getClip(id - 1);
-			  	       var DrawX:Int =Std.int((x * tileWidth));
-                       var DrawY:Int =Std.int((y * tileHeight));
-					 var dst:Clip = new Clip(DrawX, DrawY, tileWidth, tileHeight);
+			  	       var DrawX:Int =Math.round((x * tileWidth));
+                       var DrawY:Int =Math.round((y * tileHeight));
+					 var dst:Clip = new Clip(Math.round(DrawX),Math.round( DrawY), tileWidth, tileHeight);
 					 this.addQuad(t,dst);
 				}
 			}
@@ -292,7 +287,8 @@ public function render()
     shader.Disable();
     }
 	
-public function renderDinamic(posx:Float,posy:Float)
+	
+public function renderDinamic(pointx:Float,pointy:Float)
 	{
 	 this.update();
 	 isBuild = false;
@@ -301,29 +297,55 @@ public function renderDinamic(posx:Float,posy:Float)
      GL.bindBuffer(GL.ARRAY_BUFFER, this.vertexBuffer);
      GL.vertexAttribPointer(shader.vertexAttribute, 3, GL.FLOAT, false, vertexStrideSize, 0);
      GL.vertexAttribPointer(shader.texCoordAttribute  , 2, GL.FLOAT, false, vertexStrideSize, 3 * 4);
-     GL.vertexAttribPointer(shader.colorAttribute, 4, GL.FLOAT, false, vertexStrideSize, (3+2) * 4);
+     GL.vertexAttribPointer(shader.colorAttribute, 4, GL.FLOAT, false, vertexStrideSize, (3 + 2) * 4);
+	 
+	 	var tw:Int = Math.ceil(tileWidth), th:Int = Math.ceil(tileHeight);
 
-	for (y in 0...heightInTiles)
+	
+
+		// determine start and end tiles to draw (optimization)
+		var startx = Math.floor( -pointx / tw ),
+			starty = Math.floor( -pointy / th ),
+			destx = startx + 1 + Math.ceil(Game.viewWidth  / tw ),
+			desty = starty + 1 + Math.ceil(Game.viewHeight / th );
+
+		// nothing will render if we're completely off screen
+		if (startx > widthInTiles || starty > heightInTiles || destx < 0 || desty < 0)
+			return;
+
+		// clamp values to boundaries
+		if (startx < 0) startx = 0;
+		if (destx > widthInTiles) destx = widthInTiles;
+		if (starty < 0) starty = 0;
+		if (desty > heightInTiles) desty = heightInTiles;
+
+		var wx:Float, sx:Float = (pointx + startx * tw ) ,
+			wy:Float = (pointy + starty * th ) ,
+			stepx:Float = tw ,
+			stepy:Float = th ,
+			tile:Int = 0;
+
+		// adjust scale to fill gaps
+		var scx = Math.ceil(stepx) / tileWidth;
+		var scy = Math.ceil(stepy) / tileHeight;
+
+		for (y in starty...desty)
 		{
-			for (x in 0...widthInTiles)
+			wx = sx;
+			for (x in startx...destx)
 			{
-
-					
-				var id =  getCell(x, y);
+				
+				var id =  getCell(x%widthInTiles, y%heightInTiles);
 				if (id >= 1)
 				{
 					var t:Clip = getClip(id - 1);
-			  	       var DrawX:Int =Std.int(posx+(x * tileWidth));
-                       var DrawY:Int =Std.int(posy+(y * tileHeight));
-					 var dst:Clip = new Clip(DrawX, DrawY, tileWidth, tileHeight);
-					 if (((DrawX >= -tileWidth) && (DrawX <= Game.viewWidth+tileWidth)) &&  ((DrawY >= -tileHeight) && (DrawY < Game.viewHeight+tileHeight)))
-					 {
-					  this.addQuad(t, dst);
-					 }
-				}
+					this.addQuad(t,new Clip(Math.round(wx), Math.round(wy), tileWidth,tileHeight));
+				}				
+	  		wx += stepx;
 			}
+			wy += stepy;
 		}
-	
+
 	 
   if (currentBatchSize == 0) return;
    	GL.activeTexture(GL.TEXTURE0);
@@ -361,24 +383,12 @@ public function renderDinamic(posx:Float,posy:Float)
 
 			
 		}
-   	   public function getClipNum(num:Int):Clip
-		{
-			if (num <= 0) 
-			{
-				//trace("id <0:" + num);
-				return clips[0];
-			}
-			if (num >= clips.length) 
-			{
-				//trace("id: >" +clips.length +" : "+ num);
-				return clips[clips.length];
-			}
-			
-			return clips[num];
-		}
+   	  
 		
 		public function addClips()
 		{
+			/*
+		}
 		clips = [];
 		var columns:Int =Std.int( image.width  / this.tileWidth );
 		var rows:Int    =Std.int( image.height / this.tileHeight ); 
@@ -400,6 +410,7 @@ public function renderDinamic(posx:Float,posy:Float)
 			
 		}
 	}
+	*/
  }
 		
 	public function loadFromString(str:String, columnSep:String = ",", rowSep:String = "\n")
@@ -415,7 +426,7 @@ public function renderDinamic(posx:Float,posy:Float)
 			for (x in 0...cols)
 			{
 				if (col[x] == '') continue;
-				_map[y][x] = Std.parseInt(col[x]);
+				//_map[y][x] = Std.parseInt(col[x]);
 			}
 		}
 	}

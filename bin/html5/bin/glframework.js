@@ -974,7 +974,7 @@ com.engine.game.Game.prototype = $extend(openfl.display.OpenGLView.prototype,{
 		com.engine.game.Game.viewMatrix = com.engine.math.Matrix.create2D(0,0,1,0);
 		this.nextFrame = flash.Lib.getTimer();
 		this.deltaTime = (this.nextFrame - this.prevFrame) * 0.001;
-		openfl.gl.GL.clearColor(0,0,0.4,1);
+		openfl.gl.GL.clearColor(1,0,1,1);
 		openfl.gl.GL.clearDepth(1);
 		openfl.gl.GL.clear(16640);
 		if(this.ready) this.update(this.deltaTime);
@@ -2386,7 +2386,7 @@ com.djoker.glteste.TesteTiles.prototype = $extend(com.engine.game.Screen.prototy
 	,show: function() {
 		this.position = new com.engine.math.Vector3(0,0,0);
 		this.primitives = new com.engine.render.BatchPrimitives(100);
-		this.tilemap = new com.engine.render.TileMap(openfl.Assets.getText("assets/map.tmx"));
+		this.tilemap = new com.engine.render.TileMap(openfl.Assets.getText("assets/sewers.tmx"));
 		var caption = new flash.text.TextField();
 		caption.set_x(this.game.screenWidth / 2 - 100);
 		caption.set_y(20);

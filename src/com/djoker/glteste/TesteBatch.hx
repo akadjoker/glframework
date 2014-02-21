@@ -3,7 +3,7 @@ package com.djoker.glteste;
 import com.engine.game.Screen;
 import com.engine.render.SpriteBatch;
 import com.engine.render.Texture;
-import com.engine.render.OrthoCamera;
+import com.engine.render.BlendMode;
 
 import flash.events.Event;
 import flash.text.TextField;
@@ -18,7 +18,7 @@ class TesteBatch extends Screen
 
  var tex :Texture;
  var batch:SpriteBatch;
- var camera:OrthoCamera;
+
 
 
 
@@ -29,15 +29,14 @@ class TesteBatch extends Screen
 	{
 	
 		tex = new Texture("assets/texture.png");
-        camera = new OrthoCamera(640,480);
-        batch = new SpriteBatch(camera,500);
+         batch = new SpriteBatch(500);
         particles = [];
         for(i in 0...200)
          addParticle();
 		 
 	
 		 var caption:TextField = new TextField();
-		 caption.x =  game.screnWidth / 2-100;
+		 caption.x =  game.gameWidth / 2-100;
 		 caption.y = 20;
 		 caption.width = 200;
 		 caption.defaultTextFormat = new TextFormat ("_sans", 12, 0xffff00);
@@ -55,16 +54,12 @@ class TesteBatch extends Screen
       for(p in particles)
       {
          p.move(dt);
-		 //batch.RenderNormal(p.texture,p.x, p.y,p.blendMode);
+	
         batch.drawImage(p);
       }
       batch.End();
 	}
-	override public function resize(width:Int, height:Int) 
-	{
-	game.setViewPort(0, 0, width, height);
-	}
-		
+
 		
 		
 
@@ -72,6 +67,7 @@ public function addParticle()
 {
 	var particle:Particle = new Particle(tex);
 	particle.Init();
+	particle.blendMode = BlendMode.NORMAL;
     particles.push(particle);
 }
 public function addParticle2(x:Float,y:Float)
@@ -79,7 +75,8 @@ public function addParticle2(x:Float,y:Float)
 	var particle:Particle = new Particle(tex);
 	particle.Init();
 	particle.x = x;
-	particle.y=y;
+	particle.y = y;
+	particle.blendMode = BlendMode.NORMAL;
     particles.push(particle);
 }
 

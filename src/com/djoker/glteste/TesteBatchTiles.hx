@@ -50,8 +50,8 @@ class TesteBatchTiles extends Screen
        	
 		primitives = new BatchPrimitives( 100);
 		//tilemap = new TileMap(Assets.getText ("assets/scrol.tmx"));
-		tilemap = new TileMap(Assets.getText ("assets/map.tmx"));
-		//tilemap = new TileMap(Assets.getText ("assets/sewers.tmx"));
+		//tilemap = new TileMap(Assets.getText ("assets/map.tmx"));
+		tilemap = new TileMap(Assets.getText ("assets/sewers.tmx"));
 		//tilemap = new TileMap(Assets.getText ("assets/desert.tmx"));
 		
         batch = new SpriteBatch(  3000);
@@ -75,76 +75,66 @@ class TesteBatchTiles extends Screen
 
 	}
 
-	    public function renderTiles( x:Float , y:Float ,  sx:Int ,  sy:Int ,  width:Int ,  height:Int)
-	     {
-	    		
-	    	      for (ty in 0...height) 
-	    	      {
-	    	      renderTile(x,y,sx,sy,width,ty);
-	    	      }
-	    		
-	    
-	     }
-	public function renderTile( x:Float , y:Float ,  sx:Int ,  sy:Int ,  width:Int ,  ty:Int )
-	{
-			 var tw:Int = tilemap.tileWidth;
-			var th:Int = tilemap.tileHeight;
-			
-	 			for ( tx in 0...width)
-	 			{
-	 				if ((sx+tx < 0) || (sy+ty < 0)) 
-	 				{
-	 					continue;
-	 				}
-	 				if ((sx+tx >= tilemap.widthInTiles) || (sy+ty >= tilemap.heightInTiles)) {
-						continue;
-					}
-					
-				var id =  tilemap.getCell(sx+tx, sy+ty);
-				if (id >= 1)
-				{
-					var t:Clip = tilemap.getClip(id - 1);
-					
-					 var x:Float = x+(tx*tw);
-			         var y:Float = y+(ty*(th));
-					 batch.RenderTile(tilemap.image,x,y,tw,th,t, false, true,0);
-				}		
-					
-				}
-	}
-	
 
 
-	public function draw_orthogonal( sx:Float,  sy:Float,  sw:Float,  sh:Float,  dx:Float,  dy:Float)
-	{
-            var tw:Int = tilemap.tileWidth;
-			var th:Int = tilemap.tileHeight;
-				
-	var mx, my:Int=0;
-	var ystart:Int = Std.int(sy / th);
-	var yend:Int = Std.int((sy + sh) / th);
-	var xstart:Int = Std.int(sx / tw);
-	var xend:Int = Std.int((sx + sw) / th);
 	
-	
-	for (my in  ystart...yend) 
+
+ public function renderMap(pointx:Float,pointy:Float)
 	{
-		for (mx in xstart...xend)
+		
+	
+
+		var tw:Int = Math.ceil(tilemap.tileWidth), th:Int = Math.ceil(tilemap.tileHeight);
+
+	
+
+		// determine start and end tiles to draw (optimization)
+		var startx = Math.floor( -pointx / tw ),
+			starty = Math.floor( -pointy / th ),
+			destx = startx + 1 + Math.ceil(Game.viewWidth  / tw ),
+			desty = starty + 1 + Math.ceil(Game.viewHeight / th );
+
+		// nothing will render if we're completely off screen
+		if (startx > tilemap.widthInTiles || starty > tilemap.heightInTiles || destx < 0 || desty < 0)
+			return;
+
+		// clamp values to boundaries
+		if (startx < 0) startx = 0;
+		if (destx > tilemap.widthInTiles) destx = tilemap.widthInTiles;
+		if (starty < 0) starty = 0;
+		if (desty > tilemap.heightInTiles) desty = tilemap.heightInTiles;
+
+		var wx:Float, sx:Float = (pointx + startx * tw ) ,
+			wy:Float = (pointy + starty * th ) ,
+			stepx:Float = tw ,
+			stepy:Float = th ,
+			tile:Int = 0;
+
+		// adjust scale to fill gaps
+		var scx = Math.ceil(stepx) / tilemap.tileWidth;
+		var scy = Math.ceil(stepy) / tilemap.tileHeight;
+
+		for (y in starty...desty)
 		{
-			
+			wx = sx;
+			for (x in startx...destx)
+			{
 				
-				var id =  tilemap.getCell(mx, my);
+				var id =  tilemap.getCell(x%tilemap.widthInTiles, y%tilemap.heightInTiles);
 				if (id >= 1)
 				{
 					var t:Clip = tilemap.getClip(id - 1);
 					
-					var x:Float = mx*tw - sx + dx;
-			        var y:Float = my*th - sy + dy;
-					 batch.RenderTile(tilemap.image,x,y,tw,th,t, false, true,0);
+					
+					 batch.RenderTile(tilemap.image,Math.round(wx),Math.round(wy), tilemap.tileWidth*scx,tilemap.tileHeight*scy, t, false, true, 0);
+					 //batch.RenderTileScale(tilemap.image,Math.round(wx),Math.round(wy),tilemap.tileWidth,tilemap.tileHeight, scx, scy, t, false, true, 0);
 				}				
+	  		wx += stepx;
+			}
+			wy += stepy;
 		}
 	}
-}
+	
 	override public function render(dt:Float) 
 	{ 
 	
@@ -154,7 +144,8 @@ class TesteBatchTiles extends Screen
 		
 		batch.Begin();	
 		
-	draw_orthogonal(scroll, 0, 480,320, 20, 20);
+	//draw_orthogonal(scroll, 0, 480,320, 20, 20);
+	renderMap(position.x, position.y);
 	//scroll++;
 //	renderTiles(0,0, scroll,5, 22,22);
 					

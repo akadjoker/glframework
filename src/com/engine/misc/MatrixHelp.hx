@@ -18,7 +18,7 @@ class MatrixHelp
 		var m:flash.geom.Matrix = new flash.geom.Matrix();
 		m.scale(newWidth / source.width, newHeight / source.height);
 	
-		var bmp:BitmapData = new BitmapData(newWidth, newHeight, true,0xff);
+		var bmp:BitmapData = new BitmapData(newWidth, newHeight, true);
 	
 		bmp.draw(source, m);
 		return bmp;

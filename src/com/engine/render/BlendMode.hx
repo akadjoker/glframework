@@ -20,9 +20,10 @@ static 	public function setBlend(mode:Int )
 	{
 	 switch( mode ) {
     case 0:
-       GL.blendFunc(GL.ONE,GL.ONE_MINUS_SRC_ALPHA );
+       GL.blendFunc(GL.SRC_ALPHA,GL.ONE_MINUS_SRC_ALPHA );
+	  
     case 1:
-        GL.blendFunc(GL.SRC_ALPHA,GL.DST_ALPHA );
+        GL.blendFunc(GL.SRC_ALPHA, GL.DST_ALPHA );
     case 2:
         GL.blendFunc(GL.DST_COLOR,GL.ONE_MINUS_SRC_ALPHA );
     case 3:

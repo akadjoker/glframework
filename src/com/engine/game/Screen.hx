@@ -6,10 +6,13 @@ package com.engine.game;
  */
 class Screen extends GameObject
 {
+	public var width:Int;
+	public var height:Int;
+	
 
     public var game:Game = null;
 	
-	public function show() { }
+	public function show() {  }
 	public function render(dt:Float) { }
 	public function resize(width:Int, height:Int) {}
 	

@@ -1,11 +1,7 @@
 package com.engine.misc;
 
 
-import flash.display.Bitmap;
-import flash.display.BitmapData;
 
-import com.engine.math.Matrix;
-import com.engine.math.Vector3;
 
 /**
  * ...

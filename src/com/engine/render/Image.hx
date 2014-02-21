@@ -1,6 +1,7 @@
 package com.engine.render;
 
 import flash.geom.Rectangle;
+import com.engine.render.BlendMode;
 /**
  * ...
  * @author djoker
@@ -47,7 +48,11 @@ public var flipY:Bool;
         height = Tex.height;
 		flipX = false;
 		flipY = false;
-		blendMode = BlendMode.SCREEN;
+		blendMode = BlendMode.NORMAL;
+		red = 1;
+		green = 1;
+		blue = 1;
+		alpha = 1;
 
 		texture = Tex;
 	}

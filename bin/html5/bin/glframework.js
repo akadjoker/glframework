@@ -25,7 +25,52 @@ ApplicationMain.main = function() {
 	ApplicationMain.preloader.onInit();
 	var urlLoader = new flash.net.URLLoader();
 	urlLoader.set_dataFormat(flash.net.URLLoaderDataFormat.BINARY);
-	
+	ApplicationMain.urlLoaders.set("assets/desert.tmx",urlLoader);
+	ApplicationMain.total++;
+	var loader = new flash.display.Loader();
+	ApplicationMain.loaders.set("assets/hxlogo.png",loader);
+	ApplicationMain.total++;
+	var urlLoader1 = new flash.net.URLLoader();
+	urlLoader1.set_dataFormat(flash.net.URLLoaderDataFormat.BINARY);
+	ApplicationMain.urlLoaders.set("assets/map.tmx",urlLoader1);
+	ApplicationMain.total++;
+	var urlLoader2 = new flash.net.URLLoader();
+	urlLoader2.set_dataFormat(flash.net.URLLoaderDataFormat.BINARY);
+	ApplicationMain.urlLoaders.set("assets/mapxml.tmx",urlLoader2);
+	ApplicationMain.total++;
+	var loader1 = new flash.display.Loader();
+	ApplicationMain.loaders.set("assets/player.png",loader1);
+	ApplicationMain.total++;
+	var urlLoader3 = new flash.net.URLLoader();
+	urlLoader3.set_dataFormat(flash.net.URLLoaderDataFormat.BINARY);
+	ApplicationMain.urlLoaders.set("assets/scrol.tmx",urlLoader3);
+	ApplicationMain.total++;
+	var urlLoader4 = new flash.net.URLLoader();
+	urlLoader4.set_dataFormat(flash.net.URLLoaderDataFormat.BINARY);
+	ApplicationMain.urlLoaders.set("assets/sewers.tmx",urlLoader4);
+	ApplicationMain.total++;
+	var loader2 = new flash.display.Loader();
+	ApplicationMain.loaders.set("assets/sewer_tileset.png",loader2);
+	ApplicationMain.total++;
+	var loader3 = new flash.display.Loader();
+	ApplicationMain.loaders.set("assets/sprites.png",loader3);
+	ApplicationMain.total++;
+	var loader4 = new flash.display.Loader();
+	ApplicationMain.loaders.set("assets/texture.png",loader4);
+	ApplicationMain.total++;
+	var urlLoader5 = new flash.net.URLLoader();
+	urlLoader5.set_dataFormat(flash.net.URLLoaderDataFormat.BINARY);
+	ApplicationMain.urlLoaders.set("assets/TileMap.tmx",urlLoader5);
+	ApplicationMain.total++;
+	var loader5 = new flash.display.Loader();
+	ApplicationMain.loaders.set("assets/tiles.png",loader5);
+	ApplicationMain.total++;
+	var loader6 = new flash.display.Loader();
+	ApplicationMain.loaders.set("assets/tmw_desert_spacing.png",loader6);
+	ApplicationMain.total++;
+	var loader7 = new flash.display.Loader();
+	ApplicationMain.loaders.set("assets/zazaka.png",loader7);
+	ApplicationMain.total++;
 	var resourcePrefix = "__ASSET__:bitmap_";
 	var _g = 0, _g1 = haxe.Resource.listNames();
 	while(_g < _g1.length) {
@@ -883,7 +928,6 @@ com.engine.game.Game = function() {
 	openfl.display.OpenGLView.call(this);
 	this.ready = false;
 	this.set_render($bind(this,this.renderView));
-	this.viewPort = new flash.geom.Rectangle(0,0,flash.Lib.get_current().get_stage().get_stageWidth(),flash.Lib.get_current().get_stage().get_stageHeight());
 	this.screenWidth = flash.Lib.get_current().get_stage().get_stageWidth();
 	this.screenHeight = flash.Lib.get_current().get_stage().get_stageHeight();
 	com.engine.game.Game.viewWidth = this.screenHeight;
@@ -891,7 +935,6 @@ com.engine.game.Game = function() {
 	this.gameWidth = this.screenWidth;
 	this.gameHeight = this.screenHeight;
 	com.engine.game.Game.projMatrix = com.engine.math.Matrix.OrthoOffCenterLH(0,this.gameWidth,this.gameHeight,0,-1,1);
-	com.engine.game.Game.viewMatrix = com.engine.math.Matrix.FromValues(1.0,0,0,0,0,1.0,0,0,0,0,1.0,0,0,0,0,1.0);
 	this.get_stage().addEventListener(flash.events.Event.RESIZE,$bind(this,this.onResize));
 	this.get_stage().addEventListener(flash.events.Event.ADDED,$bind(this,this.focusGained));
 	this.get_stage().addEventListener(flash.events.Event.DEACTIVATE,$bind(this,this.focusLost));
@@ -900,17 +943,14 @@ com.engine.game.Game = function() {
 	this.get_stage().addChild(this.container);
 	this.addChild(new openfl.display.FPS(10,10,1044735));
 	this.prevFrame = flash.Lib.getTimer();
-	openfl.gl.GL.disable(2884);
-	openfl.gl.GL.enable(2929);
-	openfl.gl.GL.depthFunc(515);
 };
 $hxClasses["com.engine.game.Game"] = com.engine.game.Game;
 com.engine.game.Game.__name__ = ["com","engine","game","Game"];
 com.engine.game.Game.__super__ = openfl.display.OpenGLView;
 com.engine.game.Game.prototype = $extend(openfl.display.OpenGLView.prototype,{
 	renderView: function(rect) {
-		com.engine.game.Game.viewWidth = rect.width;
-		com.engine.game.Game.viewHeight = rect.height;
+		com.engine.game.Game.viewWidth = rect.width | 0;
+		com.engine.game.Game.viewHeight = rect.height | 0;
 		if(this.rescale == true) {
 			var ar_origin = this.gameWidth / this.gameHeight;
 			var ar_new = this.screenWidth / this.screenHeight;
@@ -925,12 +965,10 @@ com.engine.game.Game.prototype = $extend(openfl.display.OpenGLView.prototype,{
 			openfl.gl.GL.viewport(rect.x | 0,rect.y | 0,rect.width | 0,rect.height | 0);
 			com.engine.game.Game.projMatrix = com.engine.math.Matrix.OrthoOffCenterLH(0,this.gameWidth,this.gameHeight,0,-1,1);
 		}
-		com.engine.game.Game.viewMatrix = com.engine.math.Matrix.create2D(0,0,1,0);
 		this.nextFrame = flash.Lib.getTimer();
 		this.deltaTime = (this.nextFrame - this.prevFrame) * 0.001;
-		openfl.gl.GL.clearColor(1,0,1,1);
-		openfl.gl.GL.clearDepth(1);
-		openfl.gl.GL.clear(16640);
+		openfl.gl.GL.clearColor(this.red,this.green,this.blue,1);
+		if(this.enableDepth == true) openfl.gl.GL.clear(16640); else openfl.gl.GL.clear(16384);
 		if(this.ready) this.update(this.deltaTime);
 		openfl.gl.GL.bindBuffer(34962,null);
 		openfl.gl.GL.useProgram(null);
@@ -942,6 +980,8 @@ com.engine.game.Game.prototype = $extend(openfl.display.OpenGLView.prototype,{
 		this.screen = screen;
 		this.screen.game = this;
 		if(this.screen != null) {
+			this.screen.width = this.screenWidth;
+			this.screen.height = this.screenHeight;
 			this.screen.show();
 			this.screen.resize(com.engine.game.Game.viewWidth | 0,com.engine.game.Game.viewHeight | 0);
 		}
@@ -1017,10 +1057,13 @@ com.engine.game.Game.prototype = $extend(openfl.display.OpenGLView.prototype,{
 			flash.Lib.get_current().get_stage().addEventListener("touchMove",$bind(this,this.doTouchMove));
 			flash.Lib.get_current().get_stage().addEventListener("touchEnd",$bind(this,this.doTouchUp));
 		}
-		openfl.gl.GL.disable(2929);
 		openfl.gl.GL.disable(2884);
 		openfl.gl.GL.enable(3042);
+		openfl.gl.GL.blendFunc(770,772);
 		openfl.gl.GL.pixelStorei(3333,2);
+		this.setDeph(true);
+		this.clarColor(0,1,0.4);
+		openfl.gl.GL.clearColor(this.red,this.green,this.blue,1);
 		openfl.gl.GL.depthMask(true);
 		this.begin();
 		this.ready = true;
@@ -1030,6 +1073,18 @@ com.engine.game.Game.prototype = $extend(openfl.display.OpenGLView.prototype,{
 	}
 	,removeChild: function(child) {
 		this.container.removeChild(child);
+	}
+	,clarColor: function(r,g,b) {
+		this.red = r;
+		this.green = g;
+		this.blue = b;
+	}
+	,setDeph: function(v) {
+		this.enableDepth = v;
+		if(v == true) openfl.gl.GL.disable(2929); else {
+			openfl.gl.GL.enable(2929);
+			openfl.gl.GL.depthFunc(4353);
+		}
 	}
 	,fixRatio: function(w,h) {
 		this.rescale = true;
@@ -1048,7 +1103,7 @@ com.djoker.glteste.Main.__name__ = ["com","djoker","glteste","Main"];
 com.djoker.glteste.Main.__super__ = com.engine.game.Game;
 com.djoker.glteste.Main.prototype = $extend(com.engine.game.Game.prototype,{
 	begin: function() {
-		this.setScreen(new com.djoker.glteste.TestePrimitives());
+		this.setScreen(new com.djoker.glteste.TestTrasform());
 	}
 	,__class__: com.djoker.glteste.Main
 });
@@ -1121,7 +1176,48 @@ openfl.AssetLibrary.prototype = {
 }
 var DefaultAssetLibrary = function() {
 	openfl.AssetLibrary.call(this);
-
+	DefaultAssetLibrary.path.set("assets/desert.tmx","assets/desert.tmx");
+	var value = Reflect.field(openfl.AssetType,"binary".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/desert.tmx",value);
+	DefaultAssetLibrary.path.set("assets/hxlogo.png","assets/hxlogo.png");
+	var value = Reflect.field(openfl.AssetType,"image".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/hxlogo.png",value);
+	DefaultAssetLibrary.path.set("assets/map.tmx","assets/map.tmx");
+	var value = Reflect.field(openfl.AssetType,"binary".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/map.tmx",value);
+	DefaultAssetLibrary.path.set("assets/mapxml.tmx","assets/mapxml.tmx");
+	var value = Reflect.field(openfl.AssetType,"binary".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/mapxml.tmx",value);
+	DefaultAssetLibrary.path.set("assets/player.png","assets/player.png");
+	var value = Reflect.field(openfl.AssetType,"image".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/player.png",value);
+	DefaultAssetLibrary.path.set("assets/scrol.tmx","assets/scrol.tmx");
+	var value = Reflect.field(openfl.AssetType,"binary".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/scrol.tmx",value);
+	DefaultAssetLibrary.path.set("assets/sewers.tmx","assets/sewers.tmx");
+	var value = Reflect.field(openfl.AssetType,"binary".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/sewers.tmx",value);
+	DefaultAssetLibrary.path.set("assets/sewer_tileset.png","assets/sewer_tileset.png");
+	var value = Reflect.field(openfl.AssetType,"image".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/sewer_tileset.png",value);
+	DefaultAssetLibrary.path.set("assets/sprites.png","assets/sprites.png");
+	var value = Reflect.field(openfl.AssetType,"image".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/sprites.png",value);
+	DefaultAssetLibrary.path.set("assets/texture.png","assets/texture.png");
+	var value = Reflect.field(openfl.AssetType,"image".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/texture.png",value);
+	DefaultAssetLibrary.path.set("assets/TileMap.tmx","assets/TileMap.tmx");
+	var value = Reflect.field(openfl.AssetType,"binary".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/TileMap.tmx",value);
+	DefaultAssetLibrary.path.set("assets/tiles.png","assets/tiles.png");
+	var value = Reflect.field(openfl.AssetType,"image".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/tiles.png",value);
+	DefaultAssetLibrary.path.set("assets/tmw_desert_spacing.png","assets/tmw_desert_spacing.png");
+	var value = Reflect.field(openfl.AssetType,"image".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/tmw_desert_spacing.png",value);
+	DefaultAssetLibrary.path.set("assets/zazaka.png","assets/zazaka.png");
+	var value = Reflect.field(openfl.AssetType,"image".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/zazaka.png",value);
 };
 $hxClasses["DefaultAssetLibrary"] = DefaultAssetLibrary;
 DefaultAssetLibrary.__name__ = ["DefaultAssetLibrary"];
@@ -1304,21 +1400,6 @@ List.prototype = {
 			this.h = this.h[1];
 			return x;
 		}};
-	}
-	,remove: function(v) {
-		var prev = null;
-		var l = this.h;
-		while(l != null) {
-			if(l[0] == v) {
-				if(prev == null) this.h = l[1]; else prev[1] = l[1];
-				if(this.q == l) this.q = prev;
-				this.length--;
-				return true;
-			}
-			prev = l;
-			l = l[1];
-		}
-		return false;
 	}
 	,isEmpty: function() {
 		return this.h == null;
@@ -1976,8 +2057,8 @@ Type.getEnumConstructs = function(e) {
 	return a.slice();
 }
 com.engine.game.Transform = function() {
-	this.scrollFactorY = 1;
-	this.scrollFactorX = 1;
+	this.scrollFactorY = 0;
+	this.scrollFactorX = 0;
 	this.y = 0;
 	this.x = 0;
 	this.pivotY = 0;
@@ -1987,16 +2068,17 @@ com.engine.game.Transform = function() {
 	this.scaleY = 1;
 	this.scaleX = 1;
 	this.rotation = 0;
-	this.isDirty = false;
 	this.parent = null;
 	this.mTransformationMatrix = new flash.geom.Matrix();
-	this.children = new List();
 };
 $hxClasses["com.engine.game.Transform"] = com.engine.game.Transform;
 com.engine.game.Transform.__name__ = ["com","engine","game","Transform"];
 com.engine.game.Transform.prototype = {
-	getLocalToWorldMatrix: function() {
-		if(this.parent == null) return this.getTransformationMatrix(); else return this.parent.getTransformationMatrix().mult(this.getTransformationMatrix());
+	dispose: function() {
+		this.mTransformationMatrix = null;
+	}
+	,getLocalToWorldMatrix: function() {
+		if(this.parent == null) return this.getTransformationMatrix(); else return this.getTransformationMatrix().mult(this.parent.getTransformationMatrix());
 	}
 	,getTransformationMatrix: function() {
 		this.mTransformationMatrix.identity();
@@ -2014,22 +2096,39 @@ com.engine.game.Transform.prototype = {
 		}
 		return this.mTransformationMatrix;
 	}
-	,remove: function(child) {
-		this.children.remove(child);
-	}
-	,add: function(child) {
-		this.children.add(child);
-	}
 	,__class__: com.engine.game.Transform
 }
+com.engine.game.GameObject = function() {
+	com.engine.game.Transform.call(this);
+	this.children = new Array();
+};
+$hxClasses["com.engine.game.GameObject"] = com.engine.game.GameObject;
+com.engine.game.GameObject.__name__ = ["com","engine","game","GameObject"];
+com.engine.game.GameObject.__super__ = com.engine.game.Transform;
+com.engine.game.GameObject.prototype = $extend(com.engine.game.Transform.prototype,{
+	dispose: function() {
+		this.children = null;
+		this.mTransformationMatrix = null;
+		com.engine.game.Transform.prototype.dispose.call(this);
+	}
+	,remove: function(child) {
+		child.parent = null;
+		HxOverrides.remove(this.children,child);
+	}
+	,add: function(child) {
+		child.parent = this;
+		this.children.push(child);
+	}
+	,__class__: com.engine.game.GameObject
+});
 com.engine.game.Screen = function() {
 	this.game = null;
-	com.engine.game.Transform.call(this);
+	com.engine.game.GameObject.call(this);
 };
 $hxClasses["com.engine.game.Screen"] = com.engine.game.Screen;
 com.engine.game.Screen.__name__ = ["com","engine","game","Screen"];
-com.engine.game.Screen.__super__ = com.engine.game.Transform;
-com.engine.game.Screen.prototype = $extend(com.engine.game.Transform.prototype,{
+com.engine.game.Screen.__super__ = com.engine.game.GameObject;
+com.engine.game.Screen.prototype = $extend(com.engine.game.GameObject.prototype,{
 	keyUp: function(key) {
 	}
 	,keyDown: function(key) {
@@ -2044,35 +2143,80 @@ com.engine.game.Screen.prototype = $extend(com.engine.game.Transform.prototype,{
 	}
 	,render: function(dt) {
 	}
-	,dispose: function() {
-	}
 	,show: function() {
 	}
 	,__class__: com.engine.game.Screen
 });
-com.djoker.glteste.TestePrimitives = function() {
+com.djoker.glteste.TestTrasform = function() {
+	this.skew = 0;
 	com.engine.game.Screen.call(this);
 };
-$hxClasses["com.djoker.glteste.TestePrimitives"] = com.djoker.glteste.TestePrimitives;
-com.djoker.glteste.TestePrimitives.__name__ = ["com","djoker","glteste","TestePrimitives"];
-com.djoker.glteste.TestePrimitives.__super__ = com.engine.game.Screen;
-com.djoker.glteste.TestePrimitives.prototype = $extend(com.engine.game.Screen.prototype,{
-	render: function(dt) {
-		this.batch.begin();
-		this.batch.line(10,10,100,100,1,0,1);
-		this.batch.rect(100,100,90,120,1,1,1);
-		this.batch.circle(100,100,12,8,1,1,1,1);
-		this.batch.ellipse(300,90,55,15,8,1,1,1,1);
-		this.batch.fillrect(200,200,50,50,1,0,0,1);
-		this.batch.fillrect(280,200,50,50,0,1,1,1);
-		this.batch.fillcircle(200,100,8,18,1,0,1,1);
-		this.batch.fillellipse(300,100,55,15,8,0,1,1,1);
-		this.batch.end();
+$hxClasses["com.djoker.glteste.TestTrasform"] = com.djoker.glteste.TestTrasform;
+com.djoker.glteste.TestTrasform.__name__ = ["com","djoker","glteste","TestTrasform"];
+com.djoker.glteste.TestTrasform.__super__ = com.engine.game.Screen;
+com.djoker.glteste.TestTrasform.prototype = $extend(com.engine.game.Screen.prototype,{
+	mouseDown: function(mousex,mousey) {
+		this.player.x = mousex;
+		this.player.y = mousey;
+	}
+	,render: function(dt) {
+		this.player.rotation += dt * 2.1;
+		this.child.rotation -= dt * 2.5;
+		this.player.skewX += dt * 0.1;
+		this.skew += dt;
+		this.logo.skewX = Math.sin(this.skew);
+		this.logo.skewY = Math.cos(this.skew);
+		this.batch.Begin();
+		this.batch.drawEntity(this.logo);
+		this.batch.drawEntity(this.player);
+		this.batch.drawEntity(this.child);
+		this.batch.End();
 	}
 	,show: function() {
-		this.batch = new com.engine.render.BatchPrimitives(500);
+		this.playerTex = new com.engine.render.Texture("assets/zazaka.png",true);
+		this.batch = new com.engine.render.SpriteBatch(500);
+		var caption = new flash.text.TextField();
+		caption.set_x(this.game.gameWidth / 2 - 100);
+		caption.set_y(20);
+		caption.set_width(200);
+		caption.set_defaultTextFormat(new flash.text.TextFormat("_sans",12,16776960));
+		caption.set_text("Test trasform sprites by parent ");
+		caption.selectable = false;
+		this.game.addChild(caption);
+		this.logo = new com.engine.game.Entity(this.width / 2,this.height / 2,new com.engine.render.Texture("assets/hxlogo.png",true));
+		this.logo.blendMode = com.engine.render.BlendMode.SCREEN;
+		this.player = new com.engine.game.Entity(300,200,this.playerTex);
+		this.child = new com.engine.game.Entity(0,0,this.playerTex);
+		this.child.blue = 0;
+		this.player.add(this.child);
+		this.game.clarColor(0,0,0);
 	}
-	,__class__: com.djoker.glteste.TestePrimitives
+	,__class__: com.djoker.glteste.TestTrasform
+});
+com.engine.game.Entity = function(x,y,image,name) {
+	if(name == null) name = "solid";
+	com.engine.game.GameObject.call(this);
+	this.flipx = false;
+	this.flipy = true;
+	this.image = image;
+	this.blendMode = com.engine.render.BlendMode.NORMAL;
+	this.clip = new com.engine.render.Clip(0,0,image.width,image.height);
+	this.pivotX = this.clip.width / 2;
+	this.pivotY = this.clip.height / 2;
+	this.x = x;
+	this.y = y;
+	this.depth = 0.0;
+	this.name = name;
+	this.red = 1;
+	this.green = 1;
+	this.blue = 1;
+	this.alpha = 1;
+};
+$hxClasses["com.engine.game.Entity"] = com.engine.game.Entity;
+com.engine.game.Entity.__name__ = ["com","engine","game","Entity"];
+com.engine.game.Entity.__super__ = com.engine.game.GameObject;
+com.engine.game.Entity.prototype = $extend(com.engine.game.GameObject.prototype,{
+	__class__: com.engine.game.Entity
 });
 com.engine.math = {}
 com.engine.math.Matrix = function() {
@@ -2543,7 +2687,22 @@ com.engine.math.Matrix.ReflectionToRef = function(plane,result) {
 	return result;
 }
 com.engine.math.Matrix.prototype = {
-	clone: function() {
+	set2Dtransformation: function(x,y,scale,rotation) {
+		if(rotation == null) rotation = 0;
+		if(scale == null) scale = 1;
+		var theta = rotation * Math.PI / 180.0;
+		var c = Math.cos(theta);
+		var s = Math.sin(theta);
+		this.fillArrayTo([c * scale,-s * scale,0,0,s * scale,c * scale,0,0,0,0,1,0,x,y,0,1]);
+	}
+	,fillArrayTo: function(array) {
+		var _g = 0;
+		while(_g < 16) {
+			var index = _g++;
+			this.m[index] = array[index];
+		}
+	}
+	,clone: function() {
 		return com.engine.math.Matrix.FromValues(this.m[0],this.m[1],this.m[2],this.m[3],this.m[4],this.m[5],this.m[6],this.m[7],this.m[8],this.m[9],this.m[10],this.m[11],this.m[12],this.m[13],this.m[14],this.m[15]);
 	}
 	,equals: function(value) {
@@ -2599,6 +2758,24 @@ com.engine.math.Matrix.prototype = {
 		result[offset + 14] = tm12 * om2 + tm13 * om6 + tm14 * om10 + tm15 * om14;
 		result[offset + 15] = tm12 * om3 + tm13 * om7 + tm14 * om11 + tm15 * om15;
 		return result;
+	}
+	,Multiply4x4: function(A,B) {
+		this.m[0] = A.m[0] * B.m[0] + A.m[4] * B.m[1] + A.m[8] * B.m[2] + A.m[12] * B.m[3];
+		this.m[1] = A.m[1] * B.m[0] + A.m[5] * B.m[1] + A.m[9] * B.m[2] + A.m[13] * B.m[3];
+		this.m[2] = A.m[2] * B.m[0] + A.m[6] * B.m[1] + A.m[10] * B.m[2] + A.m[14] * B.m[3];
+		this.m[3] = A.m[3] * B.m[0] + A.m[7] * B.m[1] + A.m[11] * B.m[2] + A.m[15] * B.m[3];
+		this.m[4] = A.m[0] * B.m[4] + A.m[4] * B.m[5] + A.m[8] * B.m[6] + A.m[12] * B.m[7];
+		this.m[5] = A.m[1] * B.m[4] + A.m[5] * B.m[5] + A.m[9] * B.m[6] + A.m[13] * B.m[7];
+		this.m[6] = A.m[2] * B.m[4] + A.m[6] * B.m[5] + A.m[10] * B.m[6] + A.m[14] * B.m[7];
+		this.m[7] = A.m[3] * B.m[4] + A.m[7] * B.m[5] + A.m[11] * B.m[6] + A.m[15] * B.m[7];
+		this.m[8] = A.m[0] * B.m[8] + A.m[4] * B.m[9] + A.m[8] * B.m[10] + A.m[12] * B.m[11];
+		this.m[9] = A.m[1] * B.m[8] + A.m[5] * B.m[9] + A.m[9] * B.m[10] + A.m[13] * B.m[11];
+		this.m[10] = A.m[2] * B.m[8] + A.m[6] * B.m[9] + A.m[10] * B.m[10] + A.m[14] * B.m[11];
+		this.m[11] = A.m[3] * B.m[8] + A.m[7] * B.m[9] + A.m[11] * B.m[10] + A.m[15] * B.m[11];
+		this.m[12] = A.m[0] * B.m[12] + A.m[4] * B.m[13] + A.m[8] * B.m[14] + A.m[12] * B.m[15];
+		this.m[13] = A.m[1] * B.m[12] + A.m[5] * B.m[13] + A.m[9] * B.m[14] + A.m[13] * B.m[15];
+		this.m[14] = A.m[2] * B.m[12] + A.m[6] * B.m[13] + A.m[10] * B.m[14] + A.m[14] * B.m[15];
+		this.m[15] = A.m[3] * B.m[12] + A.m[7] * B.m[13] + A.m[11] * B.m[14] + A.m[15] * B.m[15];
 	}
 	,multiplyToRef: function(other,result) {
 		this.multiplyToArray(other,result.m,0);
@@ -3394,7 +3571,7 @@ com.engine.misc.MatrixHelp.__name__ = ["com","engine","misc","MatrixHelp"];
 com.engine.misc.MatrixHelp.getScaled = function(source,newWidth,newHeight) {
 	var m = new flash.geom.Matrix();
 	m.scale(newWidth / (source.___textureBuffer != null?source.___textureBuffer.width:0),newHeight / (source.___textureBuffer != null?source.___textureBuffer.height:0));
-	var bmp = new flash.display.BitmapData(newWidth,newHeight,true,255);
+	var bmp = new flash.display.BitmapData(newWidth,newHeight,true);
 	bmp.draw(source,m);
 	return bmp;
 }
@@ -3477,263 +3654,13 @@ com.engine.misc.Util.prototype = {
 	,__class__: com.engine.misc.Util
 }
 com.engine.render = {}
-com.engine.render.Buffer = function() {
-	this.position = new com.engine.math.Vector2(0,0);
-	this.rotation = 0;
-	this.scale = 1;
-	this.viewMatrix = com.engine.math.Matrix.create2D(this.position.x,this.position.y,this.scale,this.rotation);
-};
-$hxClasses["com.engine.render.Buffer"] = com.engine.render.Buffer;
-com.engine.render.Buffer.__name__ = ["com","engine","render","Buffer"];
-com.engine.render.Buffer.prototype = {
-	dispose: function() {
-	}
-	,update: function() {
-		this.viewMatrix = com.engine.math.Matrix.create2D(Math.round(this.position.x),Math.round(this.position.y),this.scale,this.rotation);
-	}
-	,combineMatrix: function(m) {
-		this.viewMatrix = com.engine.math.Matrix.MatrixMultiply4x4(this.viewMatrix,m);
-	}
-	,getMatrix: function() {
-		return this.viewMatrix;
-	}
-	,__class__: com.engine.render.Buffer
-}
-com.engine.render.BatchPrimitives = function(capacity) {
-	com.engine.render.Buffer.call(this);
-	this.vertexBuffer = openfl.gl.GL.createBuffer();
-	this.colorBuffer = openfl.gl.GL.createBuffer();
-	this.fvertexBuffer = openfl.gl.GL.createBuffer();
-	this.fcolorBuffer = openfl.gl.GL.createBuffer();
-	this.capacity = capacity;
-	this.idxPos = 0;
-	this.idxCols = 0;
-	this.fidxPos = 0;
-	this.fidxCols = 0;
-	this.vertices = new Float32Array(capacity * 3 * 4);
-	openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
-	openfl.gl.GL.bufferData(34962,this.vertices,35048);
-	this.colors = new Float32Array(capacity * 4 * 4);
-	openfl.gl.GL.bindBuffer(34962,this.colorBuffer);
-	openfl.gl.GL.bufferData(34962,this.colors,35048);
-	this.fvertices = new Float32Array(capacity * 3 * 4);
-	openfl.gl.GL.bindBuffer(34962,this.fvertexBuffer);
-	openfl.gl.GL.bufferData(34962,this.fvertices,35048);
-	this.fcolors = new Float32Array(capacity * 4 * 4);
-	openfl.gl.GL.bindBuffer(34962,this.fcolorBuffer);
-	openfl.gl.GL.bufferData(34962,this.fcolors,35048);
-	this.currentBlendMode = com.engine.render.BlendMode.NORMAL;
-	this.shader = new com.engine.render.PrimitiveShader();
-};
-$hxClasses["com.engine.render.BatchPrimitives"] = com.engine.render.BatchPrimitives;
-com.engine.render.BatchPrimitives.__name__ = ["com","engine","render","BatchPrimitives"];
-com.engine.render.BatchPrimitives.__super__ = com.engine.render.Buffer;
-com.engine.render.BatchPrimitives.prototype = $extend(com.engine.render.Buffer.prototype,{
-	dispose: function() {
-		this.vertices = null;
-		this.colors = null;
-		openfl.gl.GL.deleteBuffer(this.vertexBuffer);
-		openfl.gl.GL.deleteBuffer(this.colorBuffer);
-		this.fvertices = null;
-		this.fcolors = null;
-		openfl.gl.GL.deleteBuffer(this.fvertexBuffer);
-		openfl.gl.GL.deleteBuffer(this.fcolorBuffer);
-		com.engine.render.Buffer.prototype.dispose.call(this);
-	}
-	,fillrect: function(x,y,width,height,r,g,b,a) {
-		if(a == null) a = 1;
-		this.fvertex(x,y,0);
-		this.fcolor(r,g,b,a);
-		this.fvertex(x + width,y,0);
-		this.fcolor(r,g,b,a);
-		this.fvertex(x + width,y + height,0);
-		this.fcolor(r,g,b,a);
-		this.fvertex(x + width,y + height,0);
-		this.fcolor(r,g,b,a);
-		this.fvertex(x,y + height,0);
-		this.fcolor(r,g,b,a);
-		this.fvertex(x,y,0);
-		this.fcolor(r,g,b,a);
-	}
-	,rect: function(x,y,width,height,r,g,b,a) {
-		if(a == null) a = 1;
-		this.vertex(x,y,0);
-		this.color(r,g,b,a);
-		this.vertex(x + width,y,0);
-		this.color(r,g,b,a);
-		this.vertex(x + width,y,0);
-		this.color(r,g,b,a);
-		this.vertex(x + width,y + height,0);
-		this.color(r,g,b,a);
-		this.vertex(x + width,y + height,0);
-		this.color(r,g,b,a);
-		this.vertex(x,y + height,0);
-		this.color(r,g,b,a);
-		this.vertex(x,y + height,0);
-		this.color(r,g,b,a);
-		this.vertex(x,y,0);
-		this.color(r,g,b,a);
-	}
-	,line: function(x1,y1,x2,y2,r,g,b,a) {
-		if(a == null) a = 1;
-		this.vertex(x1,y1);
-		this.color(r,g,b,a);
-		this.vertex(x2,y2);
-		this.color(r,g,b,a);
-	}
-	,fillellipse: function(x,y,width,height,segments,r,g,b,a) {
-		if(a == null) a = 1;
-		var angle = 6.2831852 / segments;
-		var cx = x + width / 2;
-		var cy = y + height / 2;
-		var _g = 0;
-		while(_g < segments) {
-			var i = _g++;
-			this.fvertex(cx + width * 0.5 * Math.cos(i * angle),cy + height * 0.5 * Math.sin(i * angle),0);
-			this.fcolor(r,g,b,a);
-			this.fvertex(cx,cy,0);
-			this.fcolor(r,g,b,a);
-			this.fvertex(cx + width * 0.5 * Math.cos((i + 1) * angle),cy + height * 0.5 * Math.sin((i + 1) * angle),0);
-			this.fcolor(r,g,b,a);
-		}
-	}
-	,ellipse: function(x,y,width,height,segments,r,g,b,a) {
-		if(a == null) a = 1;
-		var angle = 6.2831852 / segments;
-		var cx = x + width / 2;
-		var cy = y + height / 2;
-		var _g = 0;
-		while(_g < segments) {
-			var i = _g++;
-			this.vertex(cx + width * 0.5 * Math.cos(i * angle),cy + height * 0.5 * Math.sin(i * angle),0);
-			this.color(r,g,b,a);
-			this.vertex(cx + width * 0.5 * Math.cos((i + 1) * angle),cy + height * 0.5 * Math.sin((i + 1) * angle),0);
-			this.color(r,g,b,a);
-		}
-	}
-	,fillcircle: function(x,y,radius,segments,r,g,b,a) {
-		if(a == null) a = 1;
-		var angle = 6.2831852 / segments;
-		var cos = Math.cos(angle);
-		var sin = Math.sin(angle);
-		var cx = radius;
-		var cy = 0;
-		segments--;
-		var _g = 0;
-		while(_g < segments) {
-			var i = _g++;
-			this.fvertex(x,y,0);
-			this.fcolor(r,g,b,a);
-			this.fvertex(x + cx,y + cy,0);
-			this.fcolor(r,g,b,a);
-			var temp = cx;
-			cx = cos * cx - sin * cy;
-			cy = sin * temp + cos * cy;
-			this.fvertex(x + cx,y + cy,0);
-			this.fcolor(r,g,b,a);
-		}
-		this.fvertex(x,y,0);
-		this.fcolor(r,g,b,a);
-		this.fvertex(x + cx,y + cy,0);
-		this.fcolor(r,g,b,a);
-		var temp = cx;
-		cx = radius;
-		cy = 0;
-		this.fvertex(x + cx,y + cy,0);
-		this.fcolor(r,g,b,a);
-	}
-	,circle: function(x,y,radius,segments,r,g,b,a) {
-		if(a == null) a = 1;
-		var angle = 6.2831852 / segments;
-		var cos = Math.cos(angle);
-		var sin = Math.sin(angle);
-		var cx = radius;
-		var cy = 0;
-		var _g = 0;
-		while(_g < segments) {
-			var i = _g++;
-			this.vertex(x + cx,y + cy,0);
-			this.color(r,g,b,a);
-			var temp = cx;
-			cx = cos * cx - sin * cy;
-			cy = sin * temp + cos * cy;
-			this.vertex(x + cx,y + cy,0);
-			this.color(r,g,b,a);
-		}
-		this.vertex(x + cx,y + cy,0);
-		this.color(r,g,b,a);
-		this.vertex(x,y,0);
-		this.color(r,g,b,a);
-		this.vertex(x + cx,y + cy,0);
-		this.color(r,g,b,a);
-		var temp = cx;
-		cx = radius;
-		cy = 0;
-		this.vertex(x + cx,y + cy,0);
-		this.color(r,g,b,a);
-	}
-	,end: function() {
-		this.shader.Enable();
-		com.engine.render.BlendMode.setBlend(this.currentBlendMode);
-		openfl.gl.GL.uniformMatrix4fv(this.shader.projectionMatrixUniform,false,new Float32Array(com.engine.game.Game.projMatrix.m));
-		openfl.gl.GL.uniformMatrix4fv(this.shader.modelViewMatrixUniform,false,new Float32Array(this.viewMatrix.m));
-		openfl.gl.GL.bindBuffer(34962,this.fvertexBuffer);
-		openfl.gl.GL.bufferSubData(34962,0,this.fvertices);
-		openfl.gl.GL.vertexAttribPointer(this.shader.vertexAttribute,3,5126,false,0,0);
-		openfl.gl.GL.bindBuffer(34962,this.fcolorBuffer);
-		openfl.gl.GL.bufferSubData(34962,0,this.fcolors);
-		openfl.gl.GL.vertexAttribPointer(this.shader.colorAttribute,4,5126,false,0,0);
-		openfl.gl.GL.drawArrays(4,0,this.fidxPos / 3 | 0);
-		openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
-		openfl.gl.GL.bufferSubData(34962,0,this.vertices);
-		openfl.gl.GL.vertexAttribPointer(this.shader.vertexAttribute,3,5126,false,0,0);
-		openfl.gl.GL.bindBuffer(34962,this.colorBuffer);
-		openfl.gl.GL.bufferSubData(34962,0,this.colors);
-		openfl.gl.GL.vertexAttribPointer(this.shader.colorAttribute,4,5126,false,0,0);
-		openfl.gl.GL.drawArrays(1,0,this.idxPos / 3 | 0);
-		this.shader.Disable();
-	}
-	,begin: function() {
-		this.idxPos = 0;
-		this.idxCols = 0;
-		this.fidxPos = 0;
-		this.fidxCols = 0;
-	}
-	,fcolor: function(r,g,b,a) {
-		if(a == null) a = 0.0;
-		this.fcolors[this.fidxCols++] = r;
-		this.fcolors[this.fidxCols++] = g;
-		this.fcolors[this.fidxCols++] = b;
-		this.fcolors[this.fidxCols++] = a;
-	}
-	,fvertex: function(x,y,z) {
-		if(z == null) z = 0.0;
-		this.fvertices[this.fidxPos++] = x;
-		this.fvertices[this.fidxPos++] = y;
-		this.fvertices[this.fidxPos++] = z;
-	}
-	,color: function(r,g,b,a) {
-		if(a == null) a = 0.0;
-		this.colors[this.idxCols++] = r;
-		this.colors[this.idxCols++] = g;
-		this.colors[this.idxCols++] = b;
-		this.colors[this.idxCols++] = a;
-	}
-	,vertex: function(x,y,z) {
-		if(z == null) z = 0.0;
-		this.vertices[this.idxPos++] = x;
-		this.vertices[this.idxPos++] = y;
-		this.vertices[this.idxPos++] = z;
-	}
-	,__class__: com.engine.render.BatchPrimitives
-});
 com.engine.render.BlendMode = function() { }
 $hxClasses["com.engine.render.BlendMode"] = com.engine.render.BlendMode;
 com.engine.render.BlendMode.__name__ = ["com","engine","render","BlendMode"];
 com.engine.render.BlendMode.setBlend = function(mode) {
 	switch(mode) {
 	case 0:
-		openfl.gl.GL.blendFunc(1,771);
+		openfl.gl.GL.blendFunc(770,771);
 		break;
 	case 1:
 		openfl.gl.GL.blendFunc(770,772);
@@ -3747,6 +3674,28 @@ com.engine.render.BlendMode.setBlend = function(mode) {
 	default:
 		openfl.gl.GL.blendFunc(1,771);
 	}
+}
+com.engine.render.Buffer = function() {
+	this.position = new com.engine.math.Vector2(0,0);
+	this.rotation = 0;
+	this.scale = 1;
+	this.viewMatrix = com.engine.math.Matrix.FromValues(1.0,0,0,0,0,1.0,0,0,0,0,1.0,0,0,0,0,1.0);
+};
+$hxClasses["com.engine.render.Buffer"] = com.engine.render.Buffer;
+com.engine.render.Buffer.__name__ = ["com","engine","render","Buffer"];
+com.engine.render.Buffer.prototype = {
+	dispose: function() {
+	}
+	,update: function() {
+		this.viewMatrix.set2Dtransformation(Math.round(this.position.x),Math.round(this.position.y),this.scale,this.rotation);
+	}
+	,combineMatrix: function(m) {
+		this.viewMatrix.Multiply4x4(this.viewMatrix,m);
+	}
+	,getMatrix: function() {
+		return this.viewMatrix;
+	}
+	,__class__: com.engine.render.Buffer
 }
 com.engine.render.Clip = function(x,y,width,height) {
 	if(height == null) height = 0;
@@ -3769,13 +3718,676 @@ com.engine.render.Clip.prototype = {
 	}
 	,__class__: com.engine.render.Clip
 }
-com.engine.render.PrimitiveShader = function() {
-	var vertexShaderSource = "\r\nattribute vec3 aVertexPosition;\r\nattribute vec4 aColor;\r\n\r\nvarying vec4 vColor;\r\n\r\nuniform mat4 uModelViewMatrix;\r\nuniform mat4 uProjectionMatrix;\r\nvoid main(void) \r\n{\r\nvColor = aColor;\r\ngl_Position = uProjectionMatrix * uModelViewMatrix * vec4 (aVertexPosition, 1.0);\r\n}";
+com.engine.render.Image = function(Tex) {
+	this.clip = new com.engine.render.Clip(0,0,Tex.width,Tex.height);
+	this.angle = 0;
+	this.scaleX = 1;
+	this.scaleY = 1;
+	this.originX = 0;
+	this.originY = 0;
+	this.red = 1;
+	this.green = 1;
+	this.blue = 1;
+	this.alpha = 1;
+	this.x = 0;
+	this.y = 0;
+	this.width = Tex.width;
+	this.height = Tex.height;
+	this.flipX = false;
+	this.flipY = false;
+	this.blendMode = com.engine.render.BlendMode.NORMAL;
+	this.red = 1;
+	this.green = 1;
+	this.blue = 1;
+	this.alpha = 1;
+	this.texture = Tex;
+};
+$hxClasses["com.engine.render.Image"] = com.engine.render.Image;
+com.engine.render.Image.__name__ = ["com","engine","render","Image"];
+com.engine.render.Image.prototype = {
+	__class__: com.engine.render.Image
+}
+com.engine.render.SpriteBatch = function(capacity) {
+	this.invTexHeight = 0;
+	this.invTexWidth = 0;
+	this.numBlend = 0;
+	this.numTex = 0;
+	com.engine.render.Buffer.call(this);
+	this.capacity = capacity;
+	this.vertexStrideSize = 36;
+	this.numVerts = capacity * this.vertexStrideSize * 4;
+	this.numIndices = capacity * 6;
+	this.vertices = new Float32Array(this.numVerts);
+	var indices = [];
+	var index = 0;
+	var _g1 = 0, _g = this.numIndices;
+	while(_g1 < _g) {
+		var count = _g1++;
+		indices.push(index);
+		indices.push(index + 1);
+		indices.push(index + 2);
+		indices.push(index);
+		indices.push(index + 2);
+		indices.push(index + 3);
+		index += 4;
+	}
+	this.drawing = false;
+	this.currentBatchSize = 0;
+	this.currentBlendMode = com.engine.render.BlendMode.NORMAL;
+	this.currentBaseTexture = null;
+	this.vertexBuffer = openfl.gl.GL.createBuffer();
+	this.indexBuffer = openfl.gl.GL.createBuffer();
+	openfl.gl.GL.bindBuffer(34963,this.indexBuffer);
+	openfl.gl.GL.bufferData(34963,new Int16Array(indices),35044);
+	openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
+	openfl.gl.GL.bufferData(34962,this.vertices,35048);
+	this.shader = new com.engine.render.SpriteShader();
+	this.start();
+};
+$hxClasses["com.engine.render.SpriteBatch"] = com.engine.render.SpriteBatch;
+com.engine.render.SpriteBatch.__name__ = ["com","engine","render","SpriteBatch"];
+com.engine.render.SpriteBatch.__super__ = com.engine.render.Buffer;
+com.engine.render.SpriteBatch.prototype = $extend(com.engine.render.Buffer.prototype,{
+	dispose: function() {
+		this.vertices = null;
+		openfl.gl.GL.deleteBuffer(this.indexBuffer);
+		openfl.gl.GL.deleteBuffer(this.vertexBuffer);
+		com.engine.render.Buffer.prototype.dispose.call(this);
+	}
+	,setBlendMode: function(blendMode) {
+		this.flush();
+		this.currentBlendMode = blendMode;
+		com.engine.render.BlendMode.setBlend(this.currentBlendMode);
+		this.numBlend++;
+	}
+	,switchTexture: function(texture) {
+		this.flush();
+		this.currentBaseTexture = texture;
+		this.invTexWidth = 1.0 / texture.width;
+		this.invTexHeight = 1.0 / texture.height;
+	}
+	,flush: function() {
+		if(this.currentBatchSize == 0) return;
+		this.update();
+		this.currentBaseTexture.Bind();
+		this.numTex++;
+		openfl.gl.GL.uniformMatrix4fv(this.shader.projectionMatrixUniform,false,new Float32Array(com.engine.game.Game.projMatrix.m));
+		openfl.gl.GL.uniformMatrix4fv(this.shader.modelViewMatrixUniform,false,new Float32Array(this.viewMatrix.m));
+		openfl.gl.GL.uniform1i(this.shader.imageUniform,0);
+		openfl.gl.GL.bufferSubData(34962,0,this.vertices);
+		openfl.gl.GL.bindBuffer(34963,this.indexBuffer);
+		openfl.gl.GL.drawElements(4,this.currentBatchSize * 6,5123,0);
+		this.currentBatchSize = 0;
+	}
+	,start: function() {
+		this.shader.Enable();
+		openfl.gl.GL.activeTexture(33984);
+		openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
+		openfl.gl.GL.vertexAttribPointer(this.shader.vertexAttribute,3,5126,false,this.vertexStrideSize,0);
+		openfl.gl.GL.vertexAttribPointer(this.shader.texCoordAttribute,2,5126,false,this.vertexStrideSize,12);
+		openfl.gl.GL.vertexAttribPointer(this.shader.colorAttribute,4,5126,false,this.vertexStrideSize,20);
+		if(this.currentBlendMode != com.engine.render.BlendMode.NORMAL) this.setBlendMode(this.currentBlendMode);
+	}
+	,End: function() {
+		this.flush();
+		this.shader.Disable();
+	}
+	,Begin: function() {
+		this.numTex = 0;
+		this.numBlend = 0;
+		this.currentBatchSize = 0;
+		this.start();
+	}
+	,RenderNormal: function(texture,x,y,blendMode) {
+		if(texture != this.currentBaseTexture || this.currentBatchSize >= this.capacity) this.switchTexture(texture);
+		if(blendMode != this.currentBlendMode) this.setBlendMode(blendMode);
+		var u = 0;
+		var v = 1;
+		var u2 = 1;
+		var v2 = 0;
+		var fx2 = x + texture.width;
+		var fy2 = y + texture.height;
+		var index = this.currentBatchSize * this.vertexStrideSize;
+		this.vertices[index++] = x;
+		this.vertices[index++] = y;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u;
+		this.vertices[index++] = v;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = x;
+		this.vertices[index++] = fy2;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u;
+		this.vertices[index++] = v2;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = fx2;
+		this.vertices[index++] = fy2;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u2;
+		this.vertices[index++] = v2;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = fx2;
+		this.vertices[index++] = y;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u2;
+		this.vertices[index++] = v;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.currentBatchSize++;
+	}
+	,drawImage: function(img) {
+		if(img.texture != this.currentBaseTexture || this.currentBatchSize >= this.capacity) this.switchTexture(img.texture);
+		if(img.blendMode != this.currentBlendMode) this.setBlendMode(img.blendMode);
+		var r, g, b, a;
+		r = img.red;
+		g = img.green;
+		b = img.blue;
+		a = img.alpha;
+		var index = this.currentBatchSize * this.vertexStrideSize;
+		var worldOriginX = img.x + img.originX;
+		var worldOriginY = img.y + img.originY;
+		var fx = -img.originX;
+		var fy = -img.originY;
+		var fx2 = img.width - img.originX;
+		var fy2 = img.height - img.originY;
+		if(img.scaleX != 1 || img.scaleY != 1) {
+			fx *= img.scaleX;
+			fy *= img.scaleY;
+			fx2 *= img.scaleX;
+			fy2 *= img.scaleY;
+		}
+		var p1x = fx;
+		var p1y = fy;
+		var p2x = fx;
+		var p2y = fy2;
+		var p3x = fx2;
+		var p3y = fy2;
+		var p4x = fx2;
+		var p4y = fy;
+		var x1;
+		var y1;
+		var x2;
+		var y2;
+		var x3;
+		var y3;
+		var x4;
+		var y4;
+		if(img.angle != 0) {
+			var angle = img.angle * Math.PI / 180;
+			var cos = Math.cos(angle);
+			var sin = Math.sin(angle);
+			x1 = cos * p1x - sin * p1y;
+			y1 = sin * p1x + cos * p1y;
+			x2 = cos * p2x - sin * p2y;
+			y2 = sin * p2x + cos * p2y;
+			x3 = cos * p3x - sin * p3y;
+			y3 = sin * p3x + cos * p3y;
+			x4 = x1 + (x3 - x2);
+			y4 = y3 - (y2 - y1);
+		} else {
+			x1 = p1x;
+			y1 = p1y;
+			x2 = p2x;
+			y2 = p2y;
+			x3 = p3x;
+			y3 = p3y;
+			x4 = p4x;
+			y4 = p4y;
+		}
+		x1 += worldOriginX;
+		y1 += worldOriginY;
+		x2 += worldOriginX;
+		y2 += worldOriginY;
+		x3 += worldOriginX;
+		y3 += worldOriginY;
+		x4 += worldOriginX;
+		y4 += worldOriginY;
+		var u = img.clip.x * this.invTexWidth;
+		var u2 = (img.clip.x + img.clip.width) * this.invTexWidth;
+		var v = (img.clip.y + img.clip.height) * this.invTexHeight;
+		var v2 = img.clip.y * this.invTexHeight;
+		if(img.flipX) {
+			var tmp = u;
+			u = u2;
+			u2 = tmp;
+		}
+		if(img.flipY) {
+			var tmp = v;
+			v = v2;
+			v2 = tmp;
+		}
+		this.vertices[index++] = x1;
+		this.vertices[index++] = y1;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u;
+		this.vertices[index++] = v;
+		this.vertices[index++] = r;
+		this.vertices[index++] = g;
+		this.vertices[index++] = b;
+		this.vertices[index++] = a;
+		this.vertices[index++] = x2;
+		this.vertices[index++] = y2;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u;
+		this.vertices[index++] = v2;
+		this.vertices[index++] = r;
+		this.vertices[index++] = g;
+		this.vertices[index++] = b;
+		this.vertices[index++] = a;
+		this.vertices[index++] = x3;
+		this.vertices[index++] = y3;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u2;
+		this.vertices[index++] = v2;
+		this.vertices[index++] = r;
+		this.vertices[index++] = g;
+		this.vertices[index++] = b;
+		this.vertices[index++] = a;
+		this.vertices[index++] = x4;
+		this.vertices[index++] = y4;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u2;
+		this.vertices[index++] = v;
+		this.vertices[index++] = r;
+		this.vertices[index++] = g;
+		this.vertices[index++] = b;
+		this.vertices[index++] = a;
+		this.currentBatchSize++;
+	}
+	,RenderClip: function(texture,x,y,c,flipX,flipY,blendMode) {
+		if(texture != this.currentBaseTexture || this.currentBatchSize >= this.capacity) this.switchTexture(texture);
+		if(blendMode != this.currentBlendMode) this.setBlendMode(blendMode);
+		var u = c.x * this.invTexWidth;
+		var u2 = (c.x + c.width) * this.invTexWidth;
+		var v = (c.y + c.height) * this.invTexHeight;
+		var v2 = c.y * this.invTexHeight;
+		var fx2 = x + c.width;
+		var fy2 = y + c.height;
+		if(flipX) {
+			var tmp = u;
+			u = u2;
+			u2 = tmp;
+		}
+		if(flipY) {
+			var tmp = v;
+			v = v2;
+			v2 = tmp;
+		}
+		var index = this.currentBatchSize * this.vertexStrideSize;
+		this.vertices[index++] = x;
+		this.vertices[index++] = y;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u;
+		this.vertices[index++] = v;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = x;
+		this.vertices[index++] = fy2;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u;
+		this.vertices[index++] = v2;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = fx2;
+		this.vertices[index++] = fy2;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u2;
+		this.vertices[index++] = v2;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = fx2;
+		this.vertices[index++] = y;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u2;
+		this.vertices[index++] = v;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.currentBatchSize++;
+	}
+	,Blt: function(texture,src,dst,flipX,flipY,blendMode) {
+		if(texture != this.currentBaseTexture || this.currentBatchSize >= this.capacity) this.switchTexture(texture);
+		if(blendMode != this.currentBlendMode) this.setBlendMode(blendMode);
+		var fx2 = src.x + src.width;
+		var fy2 = src.y + src.height;
+		var u = dst.x * this.invTexWidth;
+		var u2 = (dst.x + dst.width) * this.invTexWidth;
+		var v = (dst.y + dst.height) * this.invTexHeight;
+		var v2 = dst.y * this.invTexHeight;
+		if(flipX) {
+			var tmp = u;
+			u = u2;
+			u2 = tmp;
+		}
+		if(flipY) {
+			var tmp = v;
+			v = v2;
+			v2 = tmp;
+		}
+		var index = this.currentBatchSize * this.vertexStrideSize;
+		this.vertices[index++] = src.x;
+		this.vertices[index++] = src.y;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u;
+		this.vertices[index++] = v;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = src.x;
+		this.vertices[index++] = fy2;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u;
+		this.vertices[index++] = v2;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = fx2;
+		this.vertices[index++] = fy2;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u2;
+		this.vertices[index++] = v2;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = fx2;
+		this.vertices[index++] = src.y;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u2;
+		this.vertices[index++] = v;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.currentBatchSize++;
+	}
+	,drawEntity: function(obj) {
+		if(obj.image != this.currentBaseTexture || this.currentBatchSize >= this.capacity) this.switchTexture(obj.image);
+		if(obj.blendMode != this.currentBlendMode) this.setBlendMode(obj.blendMode);
+		var u = obj.clip.x * this.invTexWidth;
+		var u2 = (obj.clip.x + obj.clip.width) * this.invTexWidth;
+		var v = (obj.clip.y + obj.clip.height) * this.invTexHeight;
+		var v2 = obj.clip.y * this.invTexHeight;
+		if(obj.flipx) {
+			var tmp = u;
+			u = u2;
+			u2 = tmp;
+		}
+		if(obj.flipy) {
+			var tmp = v;
+			v = v2;
+			v2 = tmp;
+		}
+		var index = this.currentBatchSize * this.vertexStrideSize;
+		var TempX1 = 0;
+		var TempY1 = 0;
+		var TempX2 = obj.clip.width;
+		var TempY2 = obj.clip.height;
+		var r = obj.red;
+		var g = obj.green;
+		var b = obj.blue;
+		var a = obj.alpha;
+		this.vertices[index + 2] = obj.depth;
+		this.vertices[index + 9 + 2] = obj.depth;
+		this.vertices[index + 18 + 2] = obj.depth;
+		this.vertices[index + 27 + 2] = obj.depth;
+		this.vertices[index] = TempX1;
+		this.vertices[index + 1] = TempY1;
+		this.vertices[index + 9] = TempX1;
+		this.vertices[index + 9 + 1] = TempY2;
+		this.vertices[index + 18] = TempX2;
+		this.vertices[index + 18 + 1] = TempX2;
+		this.vertices[index + 27] = TempX2;
+		this.vertices[index + 27 + 1] = TempY1;
+		this.vertices[index + 3] = u;
+		this.vertices[index + 4] = v2;
+		this.vertices[index + 9 + 3] = u;
+		this.vertices[index + 9 + 4] = v;
+		this.vertices[index + 18 + 3] = u2;
+		this.vertices[index + 18 + 4] = v;
+		this.vertices[index + 27 + 3] = u2;
+		this.vertices[index + 27 + 4] = v2;
+		this.vertices[index + 5] = r;
+		this.vertices[index + 6] = g;
+		this.vertices[index + 7] = b;
+		this.vertices[index + 8] = a;
+		this.vertices[index + 9 + 5] = r;
+		this.vertices[index + 9 + 6] = g;
+		this.vertices[index + 9 + 7] = b;
+		this.vertices[index + 9 + 8] = a;
+		this.vertices[index + 18 + 5] = r;
+		this.vertices[index + 18 + 6] = g;
+		this.vertices[index + 18 + 7] = b;
+		this.vertices[index + 18 + 8] = a;
+		this.vertices[index + 27 + 5] = r;
+		this.vertices[index + 27 + 6] = g;
+		this.vertices[index + 27 + 7] = b;
+		this.vertices[index + 27 + 8] = a;
+		var matrix = obj.getLocalToWorldMatrix();
+		var _g = 0;
+		while(_g < 4) {
+			var i = _g++;
+			var x = this.vertices[index + i * 9];
+			var y = this.vertices[index + i * 9 + 1];
+			this.vertices[index + i * 9] = matrix.a * x + matrix.c * y + matrix.tx;
+			this.vertices[index + i * 9 + 1] = matrix.d * y + matrix.b * x + matrix.ty;
+		}
+		this.currentBatchSize++;
+	}
+	,drawEntitys: function(obj) {
+		var _g1 = 0, _g = obj.children.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var o = obj.children[i];
+			this.drawEntity(o);
+		}
+	}
+	,RenderTileScale: function(texture,x,y,width,height,scaleX,scaleY,clip,flipx,flipy,blendMode) {
+		if(texture != this.currentBaseTexture || this.currentBatchSize >= this.capacity) this.switchTexture(texture);
+		if(blendMode != this.currentBlendMode) this.setBlendMode(blendMode);
+		var fx = x;
+		var fy = y;
+		var fx2 = x + width;
+		var fy2 = y + height;
+		if(scaleX != 1 || scaleY != 1) {
+			fx *= scaleX;
+			fy *= scaleY;
+			fx2 *= scaleX;
+			fy2 *= scaleY;
+		}
+		var u = clip.x * this.invTexWidth;
+		var u2 = (clip.x + clip.width) * this.invTexWidth;
+		var v = (clip.y + clip.height) * this.invTexHeight;
+		var v2 = clip.y * this.invTexHeight;
+		if(flipx) {
+			var tmp = u;
+			u = u2;
+			u2 = tmp;
+		}
+		if(flipy) {
+			var tmp = v;
+			v = v2;
+			v2 = tmp;
+		}
+		var index = this.currentBatchSize * this.vertexStrideSize;
+		this.vertices[index++] = fx;
+		this.vertices[index++] = fy;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u;
+		this.vertices[index++] = v;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = fx;
+		this.vertices[index++] = fy2;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u;
+		this.vertices[index++] = v2;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = fx2;
+		this.vertices[index++] = fy2;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u2;
+		this.vertices[index++] = v2;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = fx2;
+		this.vertices[index++] = fy;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u2;
+		this.vertices[index++] = v;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.currentBatchSize++;
+	}
+	,RenderTile: function(texture,x,y,width,height,clip,flipx,flipy,blendMode) {
+		if(texture != this.currentBaseTexture || this.currentBatchSize >= this.capacity) this.switchTexture(texture);
+		if(blendMode != this.currentBlendMode) this.setBlendMode(blendMode);
+		var fx2 = x + width;
+		var fy2 = y + height;
+		var u = clip.x * this.invTexWidth;
+		var u2 = (clip.x + clip.width) * this.invTexWidth;
+		var v = (clip.y + clip.height) * this.invTexHeight;
+		var v2 = clip.y * this.invTexHeight;
+		if(flipx) {
+			var tmp = u;
+			u = u2;
+			u2 = tmp;
+		}
+		if(flipy) {
+			var tmp = v;
+			v = v2;
+			v2 = tmp;
+		}
+		var index = this.currentBatchSize * this.vertexStrideSize;
+		this.vertices[index++] = x;
+		this.vertices[index++] = y;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u;
+		this.vertices[index++] = v;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = x;
+		this.vertices[index++] = fy2;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u;
+		this.vertices[index++] = v2;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = fx2;
+		this.vertices[index++] = fy2;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u2;
+		this.vertices[index++] = v2;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = fx2;
+		this.vertices[index++] = y;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u2;
+		this.vertices[index++] = v;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.currentBatchSize++;
+	}
+	,Render: function(texture,x,y,srcX,srcY,srcWidth,srcHeight,blendMode) {
+		if(texture != this.currentBaseTexture || this.currentBatchSize >= this.capacity) this.switchTexture(texture);
+		if(blendMode != this.currentBlendMode) this.setBlendMode(blendMode);
+		var u = srcX * this.invTexWidth;
+		var v = (srcY + srcHeight) * this.invTexHeight;
+		var u2 = (srcX + srcWidth) * this.invTexWidth;
+		var v2 = srcY * this.invTexHeight;
+		var fx2 = x + srcWidth;
+		var fy2 = y + srcHeight;
+		var r, g, b, a;
+		r = 1;
+		g = 1;
+		b = 1;
+		a = 1;
+		var index = this.currentBatchSize * this.vertexStrideSize;
+		this.vertices[index++] = x;
+		this.vertices[index++] = y;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u;
+		this.vertices[index++] = v;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = x;
+		this.vertices[index++] = fy2;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u;
+		this.vertices[index++] = v2;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = fx2;
+		this.vertices[index++] = fy2;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u2;
+		this.vertices[index++] = v2;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = fx2;
+		this.vertices[index++] = y;
+		this.vertices[index++] = 0;
+		this.vertices[index++] = u2;
+		this.vertices[index++] = v;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.vertices[index++] = 1;
+		this.currentBatchSize++;
+	}
+	,__class__: com.engine.render.SpriteBatch
+});
+com.engine.render.SpriteShader = function() {
+	var vertexShaderSource = "\r\nattribute vec3 aVertexPosition;\r\nattribute vec2 aTexCoord;\r\nattribute vec4 aColor;\r\n\r\nvarying vec2 vTexCoord;\r\nvarying vec4 vColor;\r\n\r\nuniform mat4 uModelViewMatrix;\r\nuniform mat4 uProjectionMatrix;\r\nvoid main(void) \r\n{\r\nvTexCoord = aTexCoord;\r\nvColor = aColor;\r\ngl_Position = uProjectionMatrix * uModelViewMatrix *  vec4 (aVertexPosition, 1.0);\r\n\r\n}";
 	var vertexShader = openfl.gl.GL.createShader(35633);
 	openfl.gl.GL.shaderSource(vertexShader,vertexShaderSource);
 	openfl.gl.GL.compileShader(vertexShader);
 	if(openfl.gl.GL.getShaderParameter(vertexShader,35713) == 0) throw openfl.gl.GL.getShaderInfoLog(vertexShader);
-	var fragmentShaderSource = "precision mediump float;" + "\r\n\r\nvarying vec4 vColor;\r\nvoid main(void)\r\n{\r\n\tgl_FragColor =  vColor;\r\n}";
+	var fragmentShaderSource = "precision mediump float;" + "\r\nvarying vec2 vTexCoord;\r\nvarying vec4 vColor;\r\nuniform sampler2D uImage0;\r\n\r\nvoid main(void)\r\n{\r\n\tgl_FragColor = texture2D (uImage0, vTexCoord) * vColor;\r\n\r\n}";
 	var fragmentShader = openfl.gl.GL.createShader(35632);
 	openfl.gl.GL.shaderSource(fragmentShader,fragmentShaderSource);
 	openfl.gl.GL.compileShader(fragmentShader);
@@ -3786,26 +4398,32 @@ com.engine.render.PrimitiveShader = function() {
 	openfl.gl.GL.linkProgram(this.shaderProgram);
 	if(openfl.gl.GL.getProgramParameter(this.shaderProgram,35714) == 0) throw "Unable to initialize the shader program.";
 	this.vertexAttribute = openfl.gl.GL.getAttribLocation(this.shaderProgram,"aVertexPosition");
+	this.texCoordAttribute = openfl.gl.GL.getAttribLocation(this.shaderProgram,"aTexCoord");
 	this.colorAttribute = openfl.gl.GL.getAttribLocation(this.shaderProgram,"aColor");
 	this.projectionMatrixUniform = openfl.gl.GL.getUniformLocation(this.shaderProgram,"uProjectionMatrix");
 	this.modelViewMatrixUniform = openfl.gl.GL.getUniformLocation(this.shaderProgram,"uModelViewMatrix");
+	this.imageUniform = openfl.gl.GL.getUniformLocation(this.shaderProgram,"uImage0");
 };
-$hxClasses["com.engine.render.PrimitiveShader"] = com.engine.render.PrimitiveShader;
-com.engine.render.PrimitiveShader.__name__ = ["com","engine","render","PrimitiveShader"];
-com.engine.render.PrimitiveShader.prototype = {
+$hxClasses["com.engine.render.SpriteShader"] = com.engine.render.SpriteShader;
+com.engine.render.SpriteShader.__name__ = ["com","engine","render","SpriteShader"];
+com.engine.render.SpriteShader.prototype = {
 	Disable: function() {
 		openfl.gl.GL.disableVertexAttribArray(this.vertexAttribute);
+		openfl.gl.GL.disableVertexAttribArray(this.texCoordAttribute);
 		openfl.gl.GL.disableVertexAttribArray(this.colorAttribute);
 	}
 	,Enable: function() {
 		openfl.gl.GL.useProgram(this.shaderProgram);
 		openfl.gl.GL.enableVertexAttribArray(this.vertexAttribute);
+		openfl.gl.GL.enableVertexAttribArray(this.texCoordAttribute);
 		openfl.gl.GL.enableVertexAttribArray(this.colorAttribute);
 	}
-	,__class__: com.engine.render.PrimitiveShader
+	,__class__: com.engine.render.SpriteShader
 }
-com.engine.render.Texture = function(url) {
+com.engine.render.Texture = function(url,flip) {
+	if(flip == null) flip = false;
 	this.bitmapData = openfl.Assets.getBitmapData(url);
+	if(flip) this.bitmapData = com.engine.misc.MatrixHelp.flipBitmapData(this.bitmapData,null);
 	this.data = openfl.gl.GL.createTexture();
 	openfl.gl.GL.bindTexture(3553,this.data);
 	this.width = this.bitmapData.get_width();
@@ -9727,17 +10345,6 @@ flash.ui.Keyboard.__convertWebkitCode = function(code) {
 	if(code.indexOf("U+") == 0) return Std.parseInt("0x" + HxOverrides.substr(code,3,null));
 	throw "Unrecognized key code: " + code;
 	return 0;
-}
-flash.ui.Mouse = function() {
-};
-$hxClasses["flash.ui.Mouse"] = flash.ui.Mouse;
-flash.ui.Mouse.__name__ = ["flash","ui","Mouse"];
-flash.ui.Mouse.hide = function() {
-}
-flash.ui.Mouse.show = function() {
-}
-flash.ui.Mouse.prototype = {
-	__class__: flash.ui.Mouse
 }
 flash.ui.Multitouch = function() { }
 $hxClasses["flash.ui.Multitouch"] = flash.ui.Multitouch;

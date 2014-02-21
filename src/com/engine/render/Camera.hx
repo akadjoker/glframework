@@ -1,23 +1,13 @@
 package com.engine.render;
 
-import flash.display.Sprite;
-import flash.geom.Rectangle;
-
-
-
-
-import openfl.display.OpenGLView;
-import openfl.gl.GL;
-import openfl.gl.GLBuffer;
-import openfl.gl.GLProgram;
-import openfl.utils.Float32Array;
-import openfl.utils.Int16Array;
-import openfl.display.FPS;
-
-import com.engine.misc.Util;
-import com.engine.math.Vector3;
-import com.engine.math.Matrix;
 import com.engine.game.Game;
+import com.engine.math.Matrix;
+import com.engine.math.Vector3;
+
+
+
+
+
 
 
 /**

@@ -70,7 +70,7 @@ class Transform
             }
            	else
             {
-			return  parent.getTransformationMatrix().mult(getTransformationMatrix());
+			return  getTransformationMatrix().mult(parent.getTransformationMatrix());
             }
             
        

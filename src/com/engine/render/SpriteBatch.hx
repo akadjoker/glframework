@@ -1,20 +1,16 @@
 package com.engine.render;
 
+import com.engine.game.Entity;
+import com.engine.game.Game;
+import com.engine.render.BlendMode;
 import flash.geom.Matrix;
-
-import openfl.display.OpenGLView;
 import openfl.gl.GL;
 import openfl.gl.GLBuffer;
-import openfl.gl.GLProgram;
 import openfl.utils.Float32Array;
 import openfl.utils.Int16Array;
-import openfl.display.FPS;
 
 
-import com.engine.render.BlendMode;
-import com.engine.game.Game;
-import com.engine.game.GameObject;
-import com.engine.game.Entity;
+
 
 /**
  * ...
@@ -341,6 +337,15 @@ this.currentBatchSize++;
 		
 }
 
+    public function drawEntitys(obj:Entity)
+	{	
+		for (i in 0...obj.children.length)
+		{
+			var o:Entity = cast obj.children[i];
+			
+			this.drawEntity(o);
+		}
+	}
 	public function drawEntity(obj:Entity)
 	{	
 		
@@ -355,11 +360,8 @@ this.currentBatchSize++;
         this.setBlendMode(obj.blendMode);
     }
 
+		
 
-	
-		
-		
-				
  var u:Float  = obj.clip.x * invTexWidth;
  var u2:Float = ( obj.clip.x +  obj.clip.width) * invTexWidth;
  var v:Float  = ( obj.clip.y +  obj.clip.height) * invTexHeight;
@@ -389,32 +391,43 @@ var TempX2:Float = obj.clip.width;
 var TempY2:Float = obj.clip.height;
 
 
+var r:Float=  obj.red;
+var g:Float = obj.green;
+var b:Float=  obj.blue;
+var a:Float = obj.alpha;
+
+
+//z
+vertices[index+0*9+2] = obj.depth;
+vertices[index+1*9+2] = obj.depth;
+vertices[index+2*9+2] = obj.depth;
+vertices[index+3*9+2] = obj.depth;
 
 
 
 vertices[index + 0 * 9 + 0] = TempX1;
 vertices[index + 0 * 9 + 1] = TempY1;
-vertices[index+0*9+2] = 0;
-vertices[index+0*9+3] = u;vertices[index+0*9+4] = v;
-vertices[index+0*9+5] = 1;vertices[index+0*9+6] = 1;vertices[index+0*9+7] = 1;vertices[index+0*9+8] = 1;
-	
 vertices[index + 1 * 9 + 0] = TempX1;
 vertices[index + 1 * 9 + 1] = TempY2;
-vertices[index+1*9+2] = 0;
-vertices[index+1*9+3] = u;vertices[index+1*9+4] = v2;
-vertices[index+1*9+5] = 1;vertices[index+1*9+5] = 1; vertices[index+1*9+7] = 1; vertices[index+1*9+8] = 1;
-
 vertices[index + 2 * 9 + 0] = TempX2;
 vertices[index + 2 * 9 + 1] = TempX2;
-vertices[index+2*9+2] = 0;
-vertices[index+2*9+3] = u2;vertices[index+2*9+4] = v2;
-vertices[index+2*9+5] = 1; vertices[index+2*9+6] = 1; vertices[index+2*9+7] = 1; vertices[index+2*9+8] = 1;
-
 vertices[index + 3 * 9 + 0] = TempX2;
 vertices[index + 3 * 9 + 1] = TempY1;
-vertices[index+3*9+2] = 0;
-vertices[index+3*9+3] = u2;vertices[index+3*9+4] = v;
-vertices[index + 3 * 9 + 5] = 1; vertices[index + 3 * 9 + 6] = 1; vertices[index + 3 * 9 + 7] = 1; vertices[index + 3 * 9 + 8] = 1;
+
+
+
+vertices[index+0*9+3] = u;vertices[index+0*9+4] =v2;
+vertices[index+1*9+3] = u;vertices[index+1*9+4] =v;
+vertices[index+2*9+3] =u2;vertices[index+2*9+4] =v;
+vertices[index+3*9+3] =u2;vertices[index+3*9+4] =v2;
+
+	
+
+
+vertices[index+0*9+5] = r;vertices[index+0*9+6] = g;vertices[index+0*9+7] = b;vertices[index+0*9+8] = a;
+vertices[index+1*9+5] = r;vertices[index+1*9+6] = g;vertices[index+1*9+7] = b;vertices[index+1*9+8] = a;
+vertices[index+2*9+5] = r;vertices[index+2*9+6] = g;vertices[index+2*9+7] = b;vertices[index+2*9+8] = a;
+vertices[index+3*9+5] = r;vertices[index+3*9+6] = g;vertices[index+3*9+7] = b;vertices[index+3*9+8] = a;
 
 var matrix:Matrix = obj.getLocalToWorldMatrix();
 

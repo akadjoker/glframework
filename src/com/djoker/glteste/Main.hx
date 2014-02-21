@@ -54,7 +54,7 @@ override function begin()
 
 
 
-this.setScreen(new TesteBatch());
+//this.setScreen(new TesteBatch());
 //this.setScreen(new TesteAtlas());
 //this.setScreen(new TestneBatch());
 //this.setScreen(new TesteCloud());
@@ -64,6 +64,9 @@ this.setScreen(new TesteBatch());
 //this.setScreen(new TestePrimitives());
 //this.setScreen(new TesteBitmap());
 //this.setScreen(new TesteDraTiles());
+this.setScreen(new TestTrasform());
+
+
 
 
 }

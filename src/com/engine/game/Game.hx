@@ -1,41 +1,23 @@
 package com.engine.game;
 
-import flash.display.Sprite;
-import flash.geom.Rectangle;
-import flash.geom.Matrix3D;
-import flash.text.TextField;
-import flash.text.TextFormat;
-import flash.events.MouseEvent;
-import flash.events.KeyboardEvent;
-import flash.ui.Keyboard;
-import flash.ui.Mouse;
-
-import flash.events.TouchEvent;
-import flash.display.BitmapData;
+import com.engine.math.Matrix;
 import flash.display.DisplayObject;
 import flash.display.Sprite;
-import flash.display.StageAlign;
-import flash.display.StageDisplayState;
-import flash.display.StageQuality;
-import flash.display.StageScaleMode;
 import flash.events.Event;
+import flash.events.KeyboardEvent;
+import flash.events.MouseEvent;
+import flash.events.TouchEvent;
 import flash.geom.Rectangle;
 import flash.Lib;
-
 import flash.ui.Multitouch;
 import flash.ui.MultitouchInputMode;
-
-import com.engine.misc.Util;
-import com.engine.math.Vector3;
-import com.engine.math.Matrix;
-
+import openfl.display.FPS;
 import openfl.display.OpenGLView;
 import openfl.gl.GL;
-import openfl.gl.GLBuffer;
-import openfl.gl.GLProgram;
-import openfl.utils.Float32Array;
-import openfl.utils.Int16Array;
-import openfl.display.FPS;
+
+
+
+
 /**
  * ...
  * @author djoker
@@ -43,7 +25,7 @@ import openfl.display.FPS;
  */
 class Game extends OpenGLView
 {
-	public var viewPort:Rectangle;
+
 	private var ready:Bool;
 	public var deltaTime:Float;
     private var prevFrame:Int;
@@ -53,18 +35,21 @@ class Game extends OpenGLView
 	private var container:Sprite;
 	static public var scrollX:Float = 0;
 	static public var scrollY:Float = 0;
-	static public var viewWidth:Float = 0;
-	static public var viewHeight:Float = 0;
+	static public var viewWidth:Int = 0;
+	static public var viewHeight:Int = 0;
 	public var screenWidth:Int = 0;
 	public var screenHeight:Int = 0;
 	public var gameWidth:Int=0;
 	public var gameHeight:Int = 0;
 	private var rescale:Bool = false;
+	private var enableDepth:Bool;
 	
+public var red:Float;
+public var green:Float;
+public var blue:Float;
 
 	
 	static public var projMatrix:Matrix;
-	static public var viewMatrix:Matrix;
 
 		
 
@@ -81,8 +66,14 @@ class Game extends OpenGLView
 	super();
 	ready = false;
     this.render = renderView;
-	viewPort = new Rectangle(0, 0, Lib.current.stage.stageWidth,Lib.current.stage.stageHeight);
-
+	
+	
+    		
+	
+	
+    
+	
+	
 		screenWidth = Lib.current.stage.stageWidth;
 		screenHeight = Lib.current.stage.stageHeight;
 	    Game.viewWidth = screenHeight;
@@ -93,8 +84,7 @@ class Game extends OpenGLView
 	
 
 		Game.projMatrix=Matrix.OrthoOffCenterLH(0, gameWidth,gameHeight,0,  -1, 1);
-		Game.viewMatrix = Matrix.Identity();
- 
+	
 
 	stage.addEventListener(Event.RESIZE, onResize);
 	stage.addEventListener(Event.ADDED, focusGained);
@@ -108,17 +98,28 @@ class Game extends OpenGLView
 	prevFrame = Lib.getTimer();
 	
 	
-		
 
-
-    GL.disable(GL.CULL_FACE);
-	GL.enable(GL.DEPTH_TEST);
-        GL.depthFunc(GL.LEQUAL);
-			
 	
 	}
 	
-
+	public function setDeph(v:Bool)
+	{
+		enableDepth = v;
+		if (v == true)
+		{
+		 GL.disable(GL.DEPTH_TEST);
+		} else
+		{
+		GL.enable(GL.DEPTH_TEST);
+		GL.depthFunc(GL.FASTEST);
+    	}
+	}
+	public function clarColor(r:Float, g:Float, b:Float)
+	{
+		red = r;
+		green = g;
+		blue = b;
+	}
 	
 	public	function removeChild(child : DisplayObject)
 	{
@@ -153,17 +154,22 @@ class Game extends OpenGLView
     Lib.current.stage.addEventListener(TouchEvent.TOUCH_END, doTouchUp);
 	}
 	
-	GL.disable(GL.DEPTH_TEST);
+			
+ 
+ 		  
+		   //
     GL.disable(GL.CULL_FACE);
     GL.enable(GL.BLEND);
+	GL.blendFunc(GL.SRC_ALPHA,GL.DST_ALPHA );
 	GL.pixelStorei(GL.PACK_ALIGNMENT, 2);
+//	GL.enable(GL.DEPTH_TEST);
+    setDeph(true);
+	clarColor(0, 1, 0.4);
+	GL.clearColor(red, green, blue, 1);
 	GL.depthMask(true);
+	 
+	  
 
- 	
-	 // GL.enable(GL.DEPTH_TEST);
-     // GL.enable(GL.STENCIL_TEST);
-	
- 		
 		begin(); 
 		ready = true; 
 	
@@ -256,6 +262,8 @@ class Game extends OpenGLView
 		this.screen.game = this;
 		if (this.screen != null)
 		{
+			this.screen.width  = screenWidth;
+			this.screen.height = screenHeight;
 			this.screen.show();
 			this.screen.resize(Std.int(Game.viewWidth),Std.int(Game.viewHeight));
 		}
@@ -264,8 +272,8 @@ class Game extends OpenGLView
 		
 private function renderView(rect:Rectangle):Void 
 { 
-	viewWidth   = rect.width;
-	viewHeight  = rect.height;
+	viewWidth   = Std.int(rect.width);
+	viewHeight  = Std.int(rect.height);
 	
 	if (rescale==true)
 	{
@@ -289,21 +297,26 @@ private function renderView(rect:Rectangle):Void
 	} else
 	{
 	GL.viewport (Std.int (rect.x), Std.int (rect.y), Std.int (rect.width), Std.int (rect.height));
-    //Game.projMatrix=Matrix.OrthoOffCenterLH(0, rect.width, rect.height,0,  -1, 1);
-	Game.projMatrix=Matrix.OrthoOffCenterLH(0, gameWidth,gameHeight,0,  -1, 1);
+ 	Game.projMatrix=Matrix.OrthoOffCenterLH(0, gameWidth,gameHeight,0,  -1, 1);
 	}
 	
-	Game.viewMatrix=Matrix.create2D( 0, 0, 1, 0);
-	
+
 
 	
    
 	nextFrame = Lib.getTimer();
     deltaTime = (nextFrame - prevFrame) * 0.001;
-    GL.clearColor(1, 0, 1, 1);
-	GL.clearDepth(1);
+    GL.clearColor(red, green, blue, 1);
+	
+	if (enableDepth == true)
+	{
+	 GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
+	} else
+	{
+	GL.clear(GL.COLOR_BUFFER_BIT );	
+	}
+  //  GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
     
-    GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
  
 
 
@@ -311,6 +324,8 @@ private function renderView(rect:Rectangle):Void
 	{
 	  update(deltaTime);
     }
+	
+	
  GL.bindBuffer (GL.ARRAY_BUFFER, null);	
  GL.useProgram (null);	
  GL.blendFunc(GL.SRC_ALPHA,GL.DST_ALPHA );

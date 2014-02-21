@@ -9,19 +9,21 @@ import flash.geom.Matrix;
  */
 class GameObject extends Transform
 {
-    public var children:List<Transform>;
+    public var children:Array<GameObject>;
    
 	public function new() 
 	{
 	super();
-	children = new List<Transform>();
+	children = new Array<GameObject>();
 	}
-	public function add(child:Transform)
+	public function add(child:GameObject)
 	{
-	this.children.add(child);
+	child.parent=this	;
+	this.children.push(child);
 	}
-	public function remove(child:Transform)
+	public function remove(child:GameObject)
 	{
+	child.parent = null;	
 	this.children.remove(child);
 	}
 		

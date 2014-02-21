@@ -4,13 +4,12 @@ package com.engine.game;
  * ...
  * @author djoker
  */
-class Screen extends Transform
+class Screen extends GameObject
 {
 
     public var game:Game = null;
 	
 	public function show() { }
-	public function dispose() { }
 	public function render(dt:Float) { }
 	public function resize(width:Int, height:Int) {}
 	

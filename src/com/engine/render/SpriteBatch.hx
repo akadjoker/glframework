@@ -1,6 +1,6 @@
 package com.engine.render;
 
-import flash.geom.Matrix3D;
+import flash.geom.Matrix;
 
 import openfl.display.OpenGLView;
 import openfl.gl.GL;
@@ -13,6 +13,8 @@ import openfl.display.FPS;
 
 import com.engine.render.BlendMode;
 import com.engine.game.Game;
+import com.engine.game.GameObject;
+import com.engine.game.Entity;
 
 /**
  * ...
@@ -338,6 +340,102 @@ this.currentBatchSize++;
 	
 		
 }
+
+	public function drawEntity(obj:Entity)
+	{	
+		
+		if(obj.image!= this.currentBaseTexture || this.currentBatchSize >= this.capacity)
+        {
+       		switchTexture(obj.image);
+        }
+
+
+    if(obj.blendMode != this.currentBlendMode)
+    {
+        this.setBlendMode(obj.blendMode);
+    }
+
+
+	
+		
+		
+				
+ var u:Float  = obj.clip.x * invTexWidth;
+ var u2:Float = ( obj.clip.x +  obj.clip.width) * invTexWidth;
+ var v:Float  = ( obj.clip.y +  obj.clip.height) * invTexHeight;
+ var v2:Float =  obj.clip.y * invTexHeight;
+
+ if (obj.flipx) 
+ {
+			var tmp:Float = u;
+			u = u2;
+			u2 = tmp;
+		}
+
+		if (obj.flipy)
+		{
+			var tmp:Float = v;
+			v = v2;
+			v2 = tmp;
+		}
+ 
+
+
+var index:Int = currentBatchSize *  vertexStrideSize;
+
+var TempX1:Float = 0;
+var TempY1:Float = 0;
+var TempX2:Float = obj.clip.width;
+var TempY2:Float = obj.clip.height;
+
+
+
+
+
+vertices[index + 0 * 9 + 0] = TempX1;
+vertices[index + 0 * 9 + 1] = TempY1;
+vertices[index+0*9+2] = 0;
+vertices[index+0*9+3] = u;vertices[index+0*9+4] = v;
+vertices[index+0*9+5] = 1;vertices[index+0*9+6] = 1;vertices[index+0*9+7] = 1;vertices[index+0*9+8] = 1;
+	
+vertices[index + 1 * 9 + 0] = TempX1;
+vertices[index + 1 * 9 + 1] = TempY2;
+vertices[index+1*9+2] = 0;
+vertices[index+1*9+3] = u;vertices[index+1*9+4] = v2;
+vertices[index+1*9+5] = 1;vertices[index+1*9+5] = 1; vertices[index+1*9+7] = 1; vertices[index+1*9+8] = 1;
+
+vertices[index + 2 * 9 + 0] = TempX2;
+vertices[index + 2 * 9 + 1] = TempX2;
+vertices[index+2*9+2] = 0;
+vertices[index+2*9+3] = u2;vertices[index+2*9+4] = v2;
+vertices[index+2*9+5] = 1; vertices[index+2*9+6] = 1; vertices[index+2*9+7] = 1; vertices[index+2*9+8] = 1;
+
+vertices[index + 3 * 9 + 0] = TempX2;
+vertices[index + 3 * 9 + 1] = TempY1;
+vertices[index+3*9+2] = 0;
+vertices[index+3*9+3] = u2;vertices[index+3*9+4] = v;
+vertices[index + 3 * 9 + 5] = 1; vertices[index + 3 * 9 + 6] = 1; vertices[index + 3 * 9 + 7] = 1; vertices[index + 3 * 9 + 8] = 1;
+
+var matrix:Matrix = obj.getLocalToWorldMatrix();
+
+	for (i in 0...4)
+		{
+			var x:Float = vertices[index + i * 9 + 0];
+			var y:Float = vertices[index + i * 9 + 1];
+			vertices[index + i * 9 + 0] = matrix.a * x + matrix.c * y + matrix.tx;
+		    vertices[index + i * 9 + 1] = matrix.d * y + matrix.b * x + matrix.ty;
+		}		
+	
+
+
+ 
+
+ 
+this.currentBatchSize++;
+	
+	
+	}
+	
     public function Blt(texture:Texture, src:Clip,dst:Clip,flipX:Bool,flipY:Bool,blendMode:Int)
 	{
 	if(texture!= this.currentBaseTexture || this.currentBatchSize >= this.capacity)

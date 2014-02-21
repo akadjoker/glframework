@@ -43,13 +43,16 @@ class Texture
      GL.bindTexture(GL.TEXTURE_2D, data);
 	}
 
-	public function new(url:String) 
+	public function new(url:String,?flip:Bool=false ) 
 	{
 	
 
 		
-	       bitmapData = Assets.getBitmapData(url);
-	//   bitmapData = flipBitmapData(bitmapData);
+	  bitmapData = Assets.getBitmapData(url);
+	if (flip)
+	{
+		bitmapData = MatrixHelp.flipBitmapData(bitmapData);
+	}
 		  
 	   
 	   	    data = GL.createTexture ();	

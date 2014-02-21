@@ -1,5 +1,6 @@
 package com.djoker.glteste;
 
+import com.engine.game.Entity;
 import com.engine.game.Screen;
 import com.engine.render.SpriteBatch;
 import com.engine.render.Texture;
@@ -20,7 +21,7 @@ class TesteBatch extends Screen
  var batch:SpriteBatch;
 
 
-
+ var player:Entity;
 
    var particles : Array<Particle>;
 
@@ -28,7 +29,7 @@ class TesteBatch extends Screen
 	override public function show()
 	{
 	
-		tex = new Texture("assets/texture.png");
+		tex = new Texture("assets/texture.png",true);
          batch = new SpriteBatch(500);
         particles = [];
         for(i in 0...200)
@@ -42,14 +43,21 @@ class TesteBatch extends Screen
 		 caption.defaultTextFormat = new TextFormat ("_sans", 12, 0xffff00);
 		 caption.text = "Test 200 sprites with  SpriteBatch ";
 		 game.addChild(caption);
+		 
+		 player = new  Entity(200,200, tex);
 
 
 	}
 
 	override public function render(dt:Float) 
 	{ 
-   //camera.Update();
-   batch.Begin();
+  
+		  //player.rotation += dt * 0.1;
+		  player.skewX += dt * 0.1;
+		  
+ 
+		  
+		  batch.Begin();
 
       for(p in particles)
       {
@@ -57,7 +65,12 @@ class TesteBatch extends Screen
 	
         batch.drawImage(p);
       }
+	  
+	  batch.drawEntity(player);
+	  
       batch.End();
+	
+
 	}
 
 		

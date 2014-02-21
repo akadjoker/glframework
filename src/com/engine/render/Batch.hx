@@ -1,5 +1,6 @@
 package com.engine.render;
 
+import com.engine.game.GameObject;
 import flash.geom.Matrix3D;
 
 import openfl.display.OpenGLView;
@@ -189,6 +190,7 @@ private var invTexHeight:Float = 0;
 	}
 	
 	
+
 	
 	public function drawImage(img:Image)
 	{

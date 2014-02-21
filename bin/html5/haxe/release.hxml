@@ -1,0 +1,12 @@
+-main ApplicationMain 
+-lib openfl
+-lib openfl-html5-dom
+-cp src
+-D tools=1.2.9
+-D html5
+-D web
+-js bin/html5/bin/glframework.js
+-cp bin/html5/haxe
+-D html5
+-D html
+--remap flash:flash

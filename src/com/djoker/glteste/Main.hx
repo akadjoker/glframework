@@ -51,20 +51,6 @@ override function begin()
 {
 
 //	fixRatio(480, 320);
- 
-/*
-var bmp:BitmapData = new BitmapData(32, 32, false);
-bmp.draw(bitmapData, null, null, BlendMode.INVERT, new Rectangle(0, 0, 32, 32));
-//bmp.draw(this.drawArea,null,null,null,null,true);
-
-var b:ByteArray = bmp.encode("png");
-var f:FileOutput = File.write("test.png");
-f.writeString(b.toString());
-//trace(b.toString());
-f.close();
-*/
-//spr = new Bitmap(bitmapData);
-//Lib.current.stage.addChild(spr);
 
 
 

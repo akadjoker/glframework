@@ -91,9 +91,9 @@ class TesteTiles extends Screen
 	{ 
 
 	
-	//tilemap.render();
-	tilemap.renderDinamic(scroll,0);
-	//tilemap.renderStatic();
+	tilemap.render();
+	//tilemap.renderDinamic(scroll,0);
+	
 	
 		
 

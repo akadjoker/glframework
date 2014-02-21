@@ -7,6 +7,7 @@ import openfl.gl.GLTexture;
 import openfl.utils.UInt8Array;
 
 import flash.display.Bitmap;
+import flash.utils.ByteArray;
 import flash.geom.Matrix;
 import flash.display.BitmapData;
 import flash.Lib;
@@ -15,6 +16,14 @@ import openfl.Assets;
 
 import com.engine.misc.Util;
 import com.engine.misc.MatrixHelp;
+
+
+	#if neko
+
+import sys.io.File;
+import sys.io.FileOutput;
+		#end
+		
 
 /**
  * ...
@@ -55,7 +64,7 @@ class Texture
 		this.texWidth =  Util.getNextPowerOfTwo(width);
 		this.texHeight = Util.getNextPowerOfTwo(height);
 	
-	//	trace(this.texWidth +"<>"+ this.texHeight);
+		
 			
 		 var isPot = (bitmapData.width == texWidth && bitmapData.height == texHeight);
 		  
@@ -71,7 +80,8 @@ class Texture
 			
 			if (!isPot)
 			{
-				var workingCanvas:BitmapData = MatrixHelp.getScaled(bitmapData, Std.int(texWidth / 2), Std.int(texHeight / 2));
+				//var workingCanvas:BitmapData = MatrixHelp.getScaled(bitmapData, Std.int(texWidth / 2), Std.int(texHeight / 2));
+				var workingCanvas:BitmapData = MatrixHelp.getScaled(bitmapData,texWidth, texHeight);
 				bitmapData = null;
 										
 			#if html5
@@ -81,6 +91,15 @@ class Texture
 			#end
 			GL.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, workingCanvas.width, workingCanvas.height, 0, GL.RGBA, GL.UNSIGNED_BYTE, pixelData);
 			
+			trace(workingCanvas.width +"<>"+ workingCanvas.height);
+#if neko
+/*
+  var b:ByteArray = workingCanvas.encode("png");
+  var f:FileOutput = File.write("rescale.png");
+  f.writeString(b.toString());
+  f.close();
+  */
+#end
            
 				
 				

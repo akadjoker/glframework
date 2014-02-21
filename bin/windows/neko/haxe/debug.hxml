@@ -1,0 +1,14 @@
+-main ApplicationMain 
+-lib openfl
+-lib openfl-native
+-cp src
+-D tools=1.2.9
+-D lime_native
+-D no-compilation
+-D windows
+-D desktop
+-cp bin/windows/neko/haxe
+-neko bin/windows/neko/obj/ApplicationMain.n
+--macro allowPackage("flash")
+--macro keep("com.djoker.glteste.Main")
+-debug

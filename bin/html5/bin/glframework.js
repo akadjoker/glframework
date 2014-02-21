@@ -865,7 +865,6 @@ openfl.display.DirectRenderer = function(inType) {
 	if(inType == "OpenGLView" && this.__graphics != null) {
 		this.__context = this.__graphics.__surface.getContext("webgl");
 		if(this.__context == null) this.__context = this.__graphics.__surface.getContext("experimental-webgl");
-		this.__context = WebGLDebugUtils.makeDebugContext(this.__context);
 	}
 };
 $hxClasses["openfl.display.DirectRenderer"] = openfl.display.DirectRenderer;
@@ -1094,7 +1093,7 @@ com.djoker.glteste.Main.__name__ = ["com","djoker","glteste","Main"];
 com.djoker.glteste.Main.__super__ = com.engine.game.Game;
 com.djoker.glteste.Main.prototype = $extend(com.engine.game.Game.prototype,{
 	begin: function() {
-		this.setScreen(new com.djoker.glteste.TesteTiles());
+		this.setScreen(new com.djoker.glteste.TestePrimitives());
 	}
 	,__class__: com.djoker.glteste.Main
 });
@@ -1564,7 +1563,6 @@ flash.display.DisplayObjectContainer.prototype = $extend(flash.display.Interacti
 		HxOverrides.remove(this.__children,child);
 		child.__removeFromStage();
 		child.set_parent(null);
-		if(this.getChildIndex(child) >= 0) throw "Not removed properly";
 		return child;
 	}
 	,__invalidateMatrix: function(local) {
@@ -1729,7 +1727,6 @@ flash.display.DisplayObjectContainer.prototype = $extend(flash.display.Interacti
 				HxOverrides.remove($this.__children,child);
 				child.__removeFromStage();
 				child.set_parent(null);
-				if($this.getChildIndex(child) >= 0) throw "Not removed properly";
 				$r = child;
 				return $r;
 			}(this));
@@ -1787,12 +1784,6 @@ flash.display.DisplayObjectContainer.prototype = $extend(flash.display.Interacti
 		if(object.parent == this) {
 			this.setChildIndex(object,this.__children.length - 1);
 			return object;
-		}
-		var _g = 0, _g1 = this.__children;
-		while(_g < _g1.length) {
-			var child = _g1[_g];
-			++_g;
-			if(child == object) throw "Internal error: child already existed at index " + this.getChildIndex(object);
 		}
 		object.set_parent(this);
 		if(this.__isOnStage()) object.__addToStage(this);
@@ -1979,10 +1970,7 @@ var StringBuf = function() {
 $hxClasses["StringBuf"] = StringBuf;
 StringBuf.__name__ = ["StringBuf"];
 StringBuf.prototype = {
-	addSub: function(s,pos,len) {
-		this.b += len == null?HxOverrides.substr(s,pos,null):HxOverrides.substr(s,pos,len);
-	}
-	,__class__: StringBuf
+	__class__: StringBuf
 }
 var StringTools = function() { }
 $hxClasses["StringTools"] = StringTools;
@@ -1993,31 +1981,8 @@ StringTools.urlEncode = function(s) {
 StringTools.urlDecode = function(s) {
 	return decodeURIComponent(s.split("+").join(" "));
 }
-StringTools.htmlEscape = function(s,quotes) {
-	s = s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
-	return quotes?s.split("\"").join("&quot;").split("'").join("&#039;"):s;
-}
 StringTools.startsWith = function(s,start) {
 	return s.length >= start.length && HxOverrides.substr(s,0,start.length) == start;
-}
-StringTools.isSpace = function(s,pos) {
-	var c = HxOverrides.cca(s,pos);
-	return c > 8 && c < 14 || c == 32;
-}
-StringTools.ltrim = function(s) {
-	var l = s.length;
-	var r = 0;
-	while(r < l && StringTools.isSpace(s,r)) r++;
-	if(r > 0) return HxOverrides.substr(s,r,l - r); else return s;
-}
-StringTools.rtrim = function(s) {
-	var l = s.length;
-	var r = 0;
-	while(r < l && StringTools.isSpace(s,l - r - 1)) r++;
-	if(r > 0) return HxOverrides.substr(s,0,l - r); else return s;
-}
-StringTools.trim = function(s) {
-	return StringTools.ltrim(StringTools.rtrim(s));
 }
 StringTools.replace = function(s,sub,by) {
 	return s.split(sub).join(by);
@@ -2096,180 +2061,6 @@ Type.getEnumConstructs = function(e) {
 	var a = e.__constructs__;
 	return a.slice();
 }
-var XmlType = $hxClasses["XmlType"] = { __ename__ : true, __constructs__ : [] }
-var Xml = function() {
-};
-$hxClasses["Xml"] = Xml;
-Xml.__name__ = ["Xml"];
-Xml.parse = function(str) {
-	return haxe.xml.Parser.parse(str);
-}
-Xml.createElement = function(name) {
-	var r = new Xml();
-	r.nodeType = Xml.Element;
-	r._children = new Array();
-	r._attributes = new haxe.ds.StringMap();
-	r.set_nodeName(name);
-	return r;
-}
-Xml.createPCData = function(data) {
-	var r = new Xml();
-	r.nodeType = Xml.PCData;
-	r.set_nodeValue(data);
-	return r;
-}
-Xml.createCData = function(data) {
-	var r = new Xml();
-	r.nodeType = Xml.CData;
-	r.set_nodeValue(data);
-	return r;
-}
-Xml.createComment = function(data) {
-	var r = new Xml();
-	r.nodeType = Xml.Comment;
-	r.set_nodeValue(data);
-	return r;
-}
-Xml.createDocType = function(data) {
-	var r = new Xml();
-	r.nodeType = Xml.DocType;
-	r.set_nodeValue(data);
-	return r;
-}
-Xml.createProcessingInstruction = function(data) {
-	var r = new Xml();
-	r.nodeType = Xml.ProcessingInstruction;
-	r.set_nodeValue(data);
-	return r;
-}
-Xml.createDocument = function() {
-	var r = new Xml();
-	r.nodeType = Xml.Document;
-	r._children = new Array();
-	return r;
-}
-Xml.prototype = {
-	toString: function() {
-		if(this.nodeType == Xml.PCData) return StringTools.htmlEscape(this._nodeValue);
-		if(this.nodeType == Xml.CData) return "<![CDATA[" + this._nodeValue + "]]>";
-		if(this.nodeType == Xml.Comment) return "<!--" + this._nodeValue + "-->";
-		if(this.nodeType == Xml.DocType) return "<!DOCTYPE " + this._nodeValue + ">";
-		if(this.nodeType == Xml.ProcessingInstruction) return "<?" + this._nodeValue + "?>";
-		var s = new StringBuf();
-		if(this.nodeType == Xml.Element) {
-			s.b += "<";
-			s.b += Std.string(this._nodeName);
-			var $it0 = this._attributes.keys();
-			while( $it0.hasNext() ) {
-				var k = $it0.next();
-				s.b += " ";
-				s.b += Std.string(k);
-				s.b += "=\"";
-				s.b += Std.string(this._attributes.get(k));
-				s.b += "\"";
-			}
-			if(this._children.length == 0) {
-				s.b += "/>";
-				return s.b;
-			}
-			s.b += ">";
-		}
-		var $it1 = this.iterator();
-		while( $it1.hasNext() ) {
-			var x = $it1.next();
-			s.b += Std.string(x.toString());
-		}
-		if(this.nodeType == Xml.Element) {
-			s.b += "</";
-			s.b += Std.string(this._nodeName);
-			s.b += ">";
-		}
-		return s.b;
-	}
-	,addChild: function(x) {
-		if(this._children == null) throw "bad nodetype";
-		if(x._parent != null) HxOverrides.remove(x._parent._children,x);
-		x._parent = this;
-		this._children.push(x);
-	}
-	,firstElement: function() {
-		if(this._children == null) throw "bad nodetype";
-		var cur = 0;
-		var l = this._children.length;
-		while(cur < l) {
-			var n = this._children[cur];
-			if(n.nodeType == Xml.Element) return n;
-			cur++;
-		}
-		return null;
-	}
-	,firstChild: function() {
-		if(this._children == null) throw "bad nodetype";
-		return this._children[0];
-	}
-	,elements: function() {
-		if(this._children == null) throw "bad nodetype";
-		return { cur : 0, x : this._children, hasNext : function() {
-			var k = this.cur;
-			var l = this.x.length;
-			while(k < l) {
-				if(this.x[k].nodeType == Xml.Element) break;
-				k += 1;
-			}
-			this.cur = k;
-			return k < l;
-		}, next : function() {
-			var k = this.cur;
-			var l = this.x.length;
-			while(k < l) {
-				var n = this.x[k];
-				k += 1;
-				if(n.nodeType == Xml.Element) {
-					this.cur = k;
-					return n;
-				}
-			}
-			return null;
-		}};
-	}
-	,iterator: function() {
-		if(this._children == null) throw "bad nodetype";
-		return { cur : 0, x : this._children, hasNext : function() {
-			return this.cur < this.x.length;
-		}, next : function() {
-			return this.x[this.cur++];
-		}};
-	}
-	,exists: function(att) {
-		if(this.nodeType != Xml.Element) throw "bad nodeType";
-		return this._attributes.exists(att);
-	}
-	,set: function(att,value) {
-		if(this.nodeType != Xml.Element) throw "bad nodeType";
-		this._attributes.set(att,value);
-	}
-	,get: function(att) {
-		if(this.nodeType != Xml.Element) throw "bad nodeType";
-		return this._attributes.get(att);
-	}
-	,set_nodeValue: function(v) {
-		if(this.nodeType == Xml.Element || this.nodeType == Xml.Document) throw "bad nodeType";
-		return this._nodeValue = v;
-	}
-	,get_nodeValue: function() {
-		if(this.nodeType == Xml.Element || this.nodeType == Xml.Document) throw "bad nodeType";
-		return this._nodeValue;
-	}
-	,set_nodeName: function(n) {
-		if(this.nodeType != Xml.Element) throw "bad nodeType";
-		return this._nodeName = n;
-	}
-	,get_nodeName: function() {
-		if(this.nodeType != Xml.Element) throw "bad nodeType";
-		return this._nodeName;
-	}
-	,__class__: Xml
-}
 com.engine.game.Transform = function() {
 	this.scrollFactorY = 1;
 	this.scrollFactorX = 1;
@@ -2345,59 +2136,29 @@ com.engine.game.Screen.prototype = $extend(com.engine.game.Transform.prototype,{
 	}
 	,__class__: com.engine.game.Screen
 });
-com.djoker.glteste.TesteTiles = function() {
-	this.scroll = 0;
+com.djoker.glteste.TestePrimitives = function() {
 	com.engine.game.Screen.call(this);
 };
-$hxClasses["com.djoker.glteste.TesteTiles"] = com.djoker.glteste.TesteTiles;
-com.djoker.glteste.TesteTiles.__name__ = ["com","djoker","glteste","TesteTiles"];
-com.djoker.glteste.TesteTiles.__super__ = com.engine.game.Screen;
-com.djoker.glteste.TesteTiles.prototype = $extend(com.engine.game.Screen.prototype,{
-	mouseUp: function(mousex,mousey) {
-		this.toutch = false;
-	}
-	,mouseMove: function(mousex,mousey) {
-		if(this.toutch == true) {
-			this.Toutch.x = mousex;
-			this.Toutch.y = mousey;
-			var dir = com.engine.math.Vector3.Sub(this.Toutch,this.lastToutch);
-			dir.normalize();
-			this.tilemap.position.x += dir.x * this.game.deltaTime * 1000;
-			this.tilemap.position.y += dir.y * this.game.deltaTime * 1000;
-		}
-	}
-	,mouseDown: function(mousex,mousey) {
-		this.toutch = true;
-		this.lastToutch.x = mousex;
-		this.lastToutch.y = mousey;
-	}
-	,render: function(dt) {
-		this.tilemap.render();
-		this.primitives.begin();
-		this.primitives.renderMode(false);
-		this.primitives.line(this.lastToutch.x,this.lastToutch.y,this.Toutch.x,this.Toutch.y,1,0,0);
-		this.primitives.render();
-		($_=this.primitives,$bind($_,$_.end));
-	}
-	,keyDown: function(key) {
-		if(key == 65) this.scroll--;
-		if(key == 68) this.scroll++;
+$hxClasses["com.djoker.glteste.TestePrimitives"] = com.djoker.glteste.TestePrimitives;
+com.djoker.glteste.TestePrimitives.__name__ = ["com","djoker","glteste","TestePrimitives"];
+com.djoker.glteste.TestePrimitives.__super__ = com.engine.game.Screen;
+com.djoker.glteste.TestePrimitives.prototype = $extend(com.engine.game.Screen.prototype,{
+	render: function(dt) {
+		this.batch.begin();
+		this.batch.line(10,10,100,100,1,0,1);
+		this.batch.rect(100,100,90,120,1,1,1);
+		this.batch.circle(100,100,12,8,1,1,1,1);
+		this.batch.ellipse(300,90,55,15,8,1,1,1,1);
+		this.batch.fillrect(200,200,50,50,1,0,0,1);
+		this.batch.fillrect(280,200,50,50,1,0,1,1);
+		this.batch.fillcircle(200,100,8,18,1,1,1,1);
+		this.batch.fillellipse(300,100,55,15,8,1,1,1,1);
+		this.batch.end();
 	}
 	,show: function() {
-		this.position = new com.engine.math.Vector3(0,0,0);
-		this.primitives = new com.engine.render.BatchPrimitives(100);
-		this.tilemap = new com.engine.render.TileMap(openfl.Assets.getText("assets/sewers.tmx"));
-		var caption = new flash.text.TextField();
-		caption.set_x(this.game.screenWidth / 2 - 100);
-		caption.set_y(20);
-		caption.set_width(200);
-		caption.set_defaultTextFormat(new flash.text.TextFormat("_sans",12,16776960));
-		caption.set_text("Test  statics sprites ");
-		this.game.addChild(caption);
-		this.Toutch = new com.engine.math.Vector3(0,0);
-		this.lastToutch = new com.engine.math.Vector3(0,0);
+		this.batch = new com.engine.render.BatchPrimitives(500);
 	}
-	,__class__: com.djoker.glteste.TesteTiles
+	,__class__: com.djoker.glteste.TestePrimitives
 });
 com.engine.math = {}
 com.engine.math.Matrix = function() {
@@ -3814,7 +3575,7 @@ com.engine.render.Buffer.prototype = {
 	dispose: function() {
 	}
 	,update: function() {
-		this.viewMatrix = com.engine.math.Matrix.create2D(this.position.x,this.position.y,this.scale,this.rotation);
+		this.viewMatrix = com.engine.math.Matrix.create2D(Math.round(this.position.x),Math.round(this.position.y),this.scale,this.rotation);
 	}
 	,combineMatrix: function(m) {
 		this.viewMatrix = com.engine.math.Matrix.MatrixMultiply4x4(this.viewMatrix,m);
@@ -3828,17 +3589,25 @@ com.engine.render.BatchPrimitives = function(capacity) {
 	com.engine.render.Buffer.call(this);
 	this.vertexBuffer = openfl.gl.GL.createBuffer();
 	this.colorBuffer = openfl.gl.GL.createBuffer();
+	this.fvertexBuffer = openfl.gl.GL.createBuffer();
+	this.fcolorBuffer = openfl.gl.GL.createBuffer();
 	this.capacity = capacity;
 	this.idxPos = 0;
 	this.idxCols = 0;
-	this.numVertices = 0;
+	this.fidxPos = 0;
+	this.fidxCols = 0;
 	this.vertices = new Float32Array(capacity * 3 * 4);
 	openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
 	openfl.gl.GL.bufferData(34962,this.vertices,35048);
 	this.colors = new Float32Array(capacity * 4 * 4);
 	openfl.gl.GL.bindBuffer(34962,this.colorBuffer);
 	openfl.gl.GL.bufferData(34962,this.colors,35048);
-	this.fillMode = false;
+	this.fvertices = new Float32Array(capacity * 3 * 4);
+	openfl.gl.GL.bindBuffer(34962,this.fvertexBuffer);
+	openfl.gl.GL.bufferData(34962,this.fvertices,35048);
+	this.fcolors = new Float32Array(capacity * 4 * 4);
+	openfl.gl.GL.bindBuffer(34962,this.fcolorBuffer);
+	openfl.gl.GL.bufferData(34962,this.fcolors,35048);
 	this.currentBlendMode = com.engine.render.BlendMode.NORMAL;
 	this.shader = new com.engine.render.PrimitiveShader();
 };
@@ -3847,26 +3616,30 @@ com.engine.render.BatchPrimitives.__name__ = ["com","engine","render","BatchPrim
 com.engine.render.BatchPrimitives.__super__ = com.engine.render.Buffer;
 com.engine.render.BatchPrimitives.prototype = $extend(com.engine.render.Buffer.prototype,{
 	dispose: function() {
-		this.vertices = new Float32Array([]);
-		this.colors = new Float32Array([]);
+		this.vertices = null;
+		this.colors = null;
 		openfl.gl.GL.deleteBuffer(this.vertexBuffer);
 		openfl.gl.GL.deleteBuffer(this.colorBuffer);
+		this.fvertices = null;
+		this.fcolors = null;
+		openfl.gl.GL.deleteBuffer(this.fvertexBuffer);
+		openfl.gl.GL.deleteBuffer(this.fcolorBuffer);
 		com.engine.render.Buffer.prototype.dispose.call(this);
 	}
 	,fillrect: function(x,y,width,height,r,g,b,a) {
 		if(a == null) a = 1;
-		this.vertex(x,y,0);
-		this.color(r,g,b,a);
-		this.vertex(x + width,y,0);
-		this.color(r,g,b,a);
-		this.vertex(x + width,y + height,0);
-		this.color(r,g,b,a);
-		this.vertex(x + width,y + height,0);
-		this.color(r,g,b,a);
-		this.vertex(x,y + height,0);
-		this.color(r,g,b,a);
-		this.vertex(x,y,0);
-		this.color(r,g,b,a);
+		this.fvertex(x,y,0);
+		this.fcolor(r,g,b,a);
+		this.fvertex(x + width,y,0);
+		this.fcolor(r,g,b,a);
+		this.fvertex(x + width,y + height,0);
+		this.fcolor(r,g,b,a);
+		this.fvertex(x + width,y + height,0);
+		this.fcolor(r,g,b,a);
+		this.fvertex(x,y + height,0);
+		this.fcolor(r,g,b,a);
+		this.fvertex(x,y,0);
+		this.fcolor(r,g,b,a);
 	}
 	,rect: function(x,y,width,height,r,g,b,a) {
 		if(a == null) a = 1;
@@ -3902,12 +3675,12 @@ com.engine.render.BatchPrimitives.prototype = $extend(com.engine.render.Buffer.p
 		var _g = 0;
 		while(_g < segments) {
 			var i = _g++;
-			this.vertex(cx + width * 0.5 * Math.cos(i * angle),cy + height * 0.5 * Math.sin(i * angle),0);
-			this.color(r,g,b,a);
-			this.vertex(cx,cy,0);
-			this.color(r,g,b,a);
-			this.vertex(cx + width * 0.5 * Math.cos((i + 1) * angle),cy + height * 0.5 * Math.sin((i + 1) * angle),0);
-			this.color(r,g,b,a);
+			this.fvertex(cx + width * 0.5 * Math.cos(i * angle),cy + height * 0.5 * Math.sin(i * angle),0);
+			this.fcolor(r,g,b,a);
+			this.fvertex(cx,cy,0);
+			this.fcolor(r,g,b,a);
+			this.fvertex(cx + width * 0.5 * Math.cos((i + 1) * angle),cy + height * 0.5 * Math.sin((i + 1) * angle),0);
+			this.fcolor(r,g,b,a);
 		}
 	}
 	,ellipse: function(x,y,width,height,segments,r,g,b,a) {
@@ -3935,25 +3708,25 @@ com.engine.render.BatchPrimitives.prototype = $extend(com.engine.render.Buffer.p
 		var _g = 0;
 		while(_g < segments) {
 			var i = _g++;
-			this.vertex(x,y,0);
-			this.color(r,g,b,a);
-			this.vertex(x + cx,y + cy,0);
-			this.color(r,g,b,a);
+			this.fvertex(x,y,0);
+			this.fcolor(r,g,b,a);
+			this.fvertex(x + cx,y + cy,0);
+			this.fcolor(r,g,b,a);
 			var temp = cx;
 			cx = cos * cx - sin * cy;
 			cy = sin * temp + cos * cy;
-			this.vertex(x + cx,y + cy,0);
-			this.color(r,g,b,a);
+			this.fvertex(x + cx,y + cy,0);
+			this.fcolor(r,g,b,a);
 		}
-		this.vertex(x,y,0);
-		this.color(r,g,b,a);
-		this.vertex(x + cx,y + cy,0);
-		this.color(r,g,b,a);
+		this.fvertex(x,y,0);
+		this.fcolor(r,g,b,a);
+		this.fvertex(x + cx,y + cy,0);
+		this.fcolor(r,g,b,a);
 		var temp = cx;
 		cx = radius;
 		cy = 0;
-		this.vertex(x + cx,y + cy,0);
-		this.color(r,g,b,a);
+		this.fvertex(x + cx,y + cy,0);
+		this.fcolor(r,g,b,a);
 	}
 	,circle: function(x,y,radius,segments,r,g,b,a) {
 		if(a == null) a = 1;
@@ -3986,31 +3759,44 @@ com.engine.render.BatchPrimitives.prototype = $extend(com.engine.render.Buffer.p
 		this.color(r,g,b,a);
 	}
 	,end: function() {
-		this.shader.Disable();
-	}
-	,begin: function() {
 		this.shader.Enable();
+		com.engine.render.BlendMode.setBlend(this.currentBlendMode);
 		openfl.gl.GL.uniformMatrix4fv(this.shader.projectionMatrixUniform,false,new Float32Array(com.engine.game.Game.projMatrix.m));
 		openfl.gl.GL.uniformMatrix4fv(this.shader.modelViewMatrixUniform,false,new Float32Array(this.viewMatrix.m));
-		com.engine.render.BlendMode.setBlend(this.currentBlendMode);
-	}
-	,render: function() {
+		openfl.gl.GL.bindBuffer(34962,this.fvertexBuffer);
+		openfl.gl.GL.bufferSubData(34962,0,this.fvertices);
+		openfl.gl.GL.vertexAttribPointer(this.shader.vertexAttribute,3,5126,false,0,0);
+		openfl.gl.GL.bindBuffer(34962,this.fcolorBuffer);
+		openfl.gl.GL.bufferSubData(34962,0,this.fcolors);
+		openfl.gl.GL.vertexAttribPointer(this.shader.colorAttribute,4,5126,false,0,0);
+		openfl.gl.GL.drawArrays(4,0,this.fidxPos / 3 | 0);
 		openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
 		openfl.gl.GL.bufferSubData(34962,0,this.vertices);
 		openfl.gl.GL.vertexAttribPointer(this.shader.vertexAttribute,3,5126,false,0,0);
 		openfl.gl.GL.bindBuffer(34962,this.colorBuffer);
 		openfl.gl.GL.bufferSubData(34962,0,this.colors);
 		openfl.gl.GL.vertexAttribPointer(this.shader.colorAttribute,4,5126,false,0,0);
-		if(this.fillMode == true) openfl.gl.GL.drawArrays(4,0,this.idxPos / 3 | 0); else openfl.gl.GL.drawArrays(1,0,this.idxPos / 3 | 0);
-		this.idxPos = 0;
-		this.idxCols = 0;
+		openfl.gl.GL.drawArrays(1,0,this.idxPos / 3 | 0);
+		this.shader.Disable();
 	}
-	,renderMode: function(fill) {
-		if(fill == null) fill = false;
+	,begin: function() {
 		this.idxPos = 0;
 		this.idxCols = 0;
-		this.numVertices = 0;
-		this.fillMode = fill;
+		this.fidxPos = 0;
+		this.fidxCols = 0;
+	}
+	,fcolor: function(r,g,b,a) {
+		if(a == null) a = 0.0;
+		this.fcolors[this.fidxCols++] = r;
+		this.fcolors[this.fidxCols++] = g;
+		this.fcolors[this.fidxCols++] = b;
+		this.fcolors[this.fidxCols++] = a;
+	}
+	,fvertex: function(x,y,z) {
+		if(z == null) z = 0.0;
+		this.fvertices[this.fidxPos++] = x;
+		this.fvertices[this.fidxPos++] = y;
+		this.fvertices[this.fidxPos++] = z;
 	}
 	,color: function(r,g,b,a) {
 		if(a == null) a = 0.0;
@@ -4024,7 +3810,6 @@ com.engine.render.BatchPrimitives.prototype = $extend(com.engine.render.Buffer.p
 		this.vertices[this.idxPos++] = x;
 		this.vertices[this.idxPos++] = y;
 		this.vertices[this.idxPos++] = z;
-		this.numVertices++;
 	}
 	,__class__: com.engine.render.BatchPrimitives
 });
@@ -4070,31 +3855,6 @@ com.engine.render.Clip.prototype = {
 	}
 	,__class__: com.engine.render.Clip
 }
-com.engine.render.Image = function(Tex) {
-	this.clip = new com.engine.render.Clip(0,0,Tex.width,Tex.height);
-	this.angle = 0;
-	this.scaleX = 1;
-	this.scaleY = 1;
-	this.originX = 0;
-	this.originY = 0;
-	this.red = 1;
-	this.green = 1;
-	this.blue = 1;
-	this.alpha = 1;
-	this.x = 0;
-	this.y = 0;
-	this.width = Tex.width;
-	this.height = Tex.height;
-	this.flipX = false;
-	this.flipY = false;
-	this.blendMode = com.engine.render.BlendMode.SCREEN;
-	this.texture = Tex;
-};
-$hxClasses["com.engine.render.Image"] = com.engine.render.Image;
-com.engine.render.Image.__name__ = ["com","engine","render","Image"];
-com.engine.render.Image.prototype = {
-	__class__: com.engine.render.Image
-}
 com.engine.render.PrimitiveShader = function() {
 	var vertexShaderSource = "\r\nattribute vec3 aVertexPosition;\r\nattribute vec4 aColor;\r\n\r\nvarying vec4 vColor;\r\n\r\nuniform mat4 uModelViewMatrix;\r\nuniform mat4 uProjectionMatrix;\r\nvoid main(void) \r\n{\r\nvColor = aColor;\r\ngl_Position = uProjectionMatrix * uModelViewMatrix * vec4 (aVertexPosition, 1.0);\r\n}";
 	var vertexShader = openfl.gl.GL.createShader(35633);
@@ -4130,532 +3890,6 @@ com.engine.render.PrimitiveShader.prototype = {
 	}
 	,__class__: com.engine.render.PrimitiveShader
 }
-com.engine.render.SpriteBatch = function(capacity) {
-	this.invTexHeight = 0;
-	this.invTexWidth = 0;
-	this.numBlend = 0;
-	this.numTex = 0;
-	com.engine.render.Buffer.call(this);
-	this.capacity = capacity;
-	this.vertexStrideSize = 36;
-	this.numVerts = capacity * this.vertexStrideSize * 4;
-	this.numIndices = capacity * 6;
-	this.vertices = new Float32Array(this.numVerts);
-	var indices = [];
-	var index = 0;
-	var _g1 = 0, _g = this.numIndices;
-	while(_g1 < _g) {
-		var count = _g1++;
-		indices.push(index);
-		indices.push(index + 1);
-		indices.push(index + 2);
-		indices.push(index);
-		indices.push(index + 2);
-		indices.push(index + 3);
-		index += 4;
-	}
-	this.drawing = false;
-	this.currentBatchSize = 0;
-	this.currentBlendMode = com.engine.render.BlendMode.NORMAL;
-	this.currentBaseTexture = null;
-	this.vertexBuffer = openfl.gl.GL.createBuffer();
-	this.indexBuffer = openfl.gl.GL.createBuffer();
-	openfl.gl.GL.bindBuffer(34963,this.indexBuffer);
-	openfl.gl.GL.bufferData(34963,new Int16Array(indices),35044);
-	openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
-	openfl.gl.GL.bufferData(34962,this.vertices,35048);
-	this.shader = new com.engine.render.SpriteShader();
-	this.start();
-};
-$hxClasses["com.engine.render.SpriteBatch"] = com.engine.render.SpriteBatch;
-com.engine.render.SpriteBatch.__name__ = ["com","engine","render","SpriteBatch"];
-com.engine.render.SpriteBatch.__super__ = com.engine.render.Buffer;
-com.engine.render.SpriteBatch.prototype = $extend(com.engine.render.Buffer.prototype,{
-	dispose: function() {
-		this.vertices = null;
-		openfl.gl.GL.deleteBuffer(this.indexBuffer);
-		openfl.gl.GL.deleteBuffer(this.vertexBuffer);
-		com.engine.render.Buffer.prototype.dispose.call(this);
-	}
-	,setBlendMode: function(blendMode) {
-		this.flush();
-		this.currentBlendMode = blendMode;
-		com.engine.render.BlendMode.setBlend(this.currentBlendMode);
-		this.numBlend++;
-	}
-	,switchTexture: function(texture) {
-		this.flush();
-		this.currentBaseTexture = texture;
-		this.invTexWidth = 1.0 / texture.width;
-		this.invTexHeight = 1.0 / texture.height;
-	}
-	,flush: function() {
-		if(this.currentBatchSize == 0) return;
-		this.update();
-		this.currentBaseTexture.Bind();
-		this.numTex++;
-		openfl.gl.GL.uniformMatrix4fv(this.shader.projectionMatrixUniform,false,new Float32Array(com.engine.game.Game.projMatrix.m));
-		openfl.gl.GL.uniformMatrix4fv(this.shader.modelViewMatrixUniform,false,new Float32Array(this.viewMatrix.m));
-		openfl.gl.GL.uniform1i(this.shader.imageUniform,0);
-		openfl.gl.GL.bufferSubData(34962,0,this.vertices);
-		openfl.gl.GL.bindBuffer(34963,this.indexBuffer);
-		openfl.gl.GL.drawElements(4,this.currentBatchSize * 6,5123,0);
-		this.currentBatchSize = 0;
-	}
-	,start: function() {
-		this.shader.Enable();
-		openfl.gl.GL.activeTexture(33984);
-		openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
-		openfl.gl.GL.vertexAttribPointer(this.shader.vertexAttribute,3,5126,false,this.vertexStrideSize,0);
-		openfl.gl.GL.vertexAttribPointer(this.shader.texCoordAttribute,2,5126,false,this.vertexStrideSize,12);
-		openfl.gl.GL.vertexAttribPointer(this.shader.colorAttribute,4,5126,false,this.vertexStrideSize,20);
-		if(this.currentBlendMode != com.engine.render.BlendMode.NORMAL) this.setBlendMode(this.currentBlendMode);
-	}
-	,End: function() {
-		this.flush();
-		this.shader.Disable();
-	}
-	,Begin: function() {
-		this.numTex = 0;
-		this.numBlend = 0;
-		this.currentBatchSize = 0;
-		this.start();
-	}
-	,RenderNormal: function(texture,x,y,blendMode) {
-		if(texture != this.currentBaseTexture || this.currentBatchSize >= this.capacity) this.switchTexture(texture);
-		if(blendMode != this.currentBlendMode) this.setBlendMode(blendMode);
-		var u = 0;
-		var v = 1;
-		var u2 = 1;
-		var v2 = 0;
-		var fx2 = x + texture.width;
-		var fy2 = y + texture.height;
-		var index = this.currentBatchSize * this.vertexStrideSize;
-		this.vertices[index++] = x;
-		this.vertices[index++] = y;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u;
-		this.vertices[index++] = v;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = x;
-		this.vertices[index++] = fy2;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u;
-		this.vertices[index++] = v2;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = fx2;
-		this.vertices[index++] = fy2;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u2;
-		this.vertices[index++] = v2;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = fx2;
-		this.vertices[index++] = y;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u2;
-		this.vertices[index++] = v;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.currentBatchSize++;
-	}
-	,drawImage: function(img) {
-		if(img.texture != this.currentBaseTexture || this.currentBatchSize >= this.capacity) this.switchTexture(img.texture);
-		if(img.blendMode != this.currentBlendMode) this.setBlendMode(img.blendMode);
-		var r, g, b, a;
-		r = img.red;
-		g = img.green;
-		b = img.blue;
-		a = img.alpha;
-		var index = this.currentBatchSize * this.vertexStrideSize;
-		var worldOriginX = img.x + img.originX;
-		var worldOriginY = img.y + img.originY;
-		var fx = -img.originX;
-		var fy = -img.originY;
-		var fx2 = img.width - img.originX;
-		var fy2 = img.height - img.originY;
-		if(img.scaleX != 1 || img.scaleY != 1) {
-			fx *= img.scaleX;
-			fy *= img.scaleY;
-			fx2 *= img.scaleX;
-			fy2 *= img.scaleY;
-		}
-		var p1x = fx;
-		var p1y = fy;
-		var p2x = fx;
-		var p2y = fy2;
-		var p3x = fx2;
-		var p3y = fy2;
-		var p4x = fx2;
-		var p4y = fy;
-		var x1;
-		var y1;
-		var x2;
-		var y2;
-		var x3;
-		var y3;
-		var x4;
-		var y4;
-		if(img.angle != 0) {
-			var angle = img.angle * Math.PI / 180;
-			var cos = Math.cos(angle);
-			var sin = Math.sin(angle);
-			x1 = cos * p1x - sin * p1y;
-			y1 = sin * p1x + cos * p1y;
-			x2 = cos * p2x - sin * p2y;
-			y2 = sin * p2x + cos * p2y;
-			x3 = cos * p3x - sin * p3y;
-			y3 = sin * p3x + cos * p3y;
-			x4 = x1 + (x3 - x2);
-			y4 = y3 - (y2 - y1);
-		} else {
-			x1 = p1x;
-			y1 = p1y;
-			x2 = p2x;
-			y2 = p2y;
-			x3 = p3x;
-			y3 = p3y;
-			x4 = p4x;
-			y4 = p4y;
-		}
-		x1 += worldOriginX;
-		y1 += worldOriginY;
-		x2 += worldOriginX;
-		y2 += worldOriginY;
-		x3 += worldOriginX;
-		y3 += worldOriginY;
-		x4 += worldOriginX;
-		y4 += worldOriginY;
-		var u = img.clip.x * this.invTexWidth;
-		var u2 = (img.clip.x + img.clip.width) * this.invTexWidth;
-		var v = (img.clip.y + img.clip.height) * this.invTexHeight;
-		var v2 = img.clip.y * this.invTexHeight;
-		if(img.flipX) {
-			var tmp = u;
-			u = u2;
-			u2 = tmp;
-		}
-		if(img.flipY) {
-			var tmp = v;
-			v = v2;
-			v2 = tmp;
-		}
-		this.vertices[index++] = x1;
-		this.vertices[index++] = y1;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u;
-		this.vertices[index++] = v;
-		this.vertices[index++] = r;
-		this.vertices[index++] = g;
-		this.vertices[index++] = b;
-		this.vertices[index++] = a;
-		this.vertices[index++] = x2;
-		this.vertices[index++] = y2;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u;
-		this.vertices[index++] = v2;
-		this.vertices[index++] = r;
-		this.vertices[index++] = g;
-		this.vertices[index++] = b;
-		this.vertices[index++] = a;
-		this.vertices[index++] = x3;
-		this.vertices[index++] = y3;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u2;
-		this.vertices[index++] = v2;
-		this.vertices[index++] = r;
-		this.vertices[index++] = g;
-		this.vertices[index++] = b;
-		this.vertices[index++] = a;
-		this.vertices[index++] = x4;
-		this.vertices[index++] = y4;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u2;
-		this.vertices[index++] = v;
-		this.vertices[index++] = r;
-		this.vertices[index++] = g;
-		this.vertices[index++] = b;
-		this.vertices[index++] = a;
-		this.currentBatchSize++;
-	}
-	,RenderClip: function(texture,x,y,c,flipX,flipY,blendMode) {
-		if(texture != this.currentBaseTexture || this.currentBatchSize >= this.capacity) this.switchTexture(texture);
-		if(blendMode != this.currentBlendMode) this.setBlendMode(blendMode);
-		var u = c.x * this.invTexWidth;
-		var u2 = (c.x + c.width) * this.invTexWidth;
-		var v = (c.y + c.height) * this.invTexHeight;
-		var v2 = c.y * this.invTexHeight;
-		var fx2 = x + c.width;
-		var fy2 = y + c.height;
-		if(flipX) {
-			var tmp = u;
-			u = u2;
-			u2 = tmp;
-		}
-		if(flipY) {
-			var tmp = v;
-			v = v2;
-			v2 = tmp;
-		}
-		var index = this.currentBatchSize * this.vertexStrideSize;
-		this.vertices[index++] = x;
-		this.vertices[index++] = y;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u;
-		this.vertices[index++] = v;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = x;
-		this.vertices[index++] = fy2;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u;
-		this.vertices[index++] = v2;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = fx2;
-		this.vertices[index++] = fy2;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u2;
-		this.vertices[index++] = v2;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = fx2;
-		this.vertices[index++] = y;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u2;
-		this.vertices[index++] = v;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.currentBatchSize++;
-	}
-	,Blt: function(texture,src,dst,flipX,flipY,blendMode) {
-		if(texture != this.currentBaseTexture || this.currentBatchSize >= this.capacity) this.switchTexture(texture);
-		if(blendMode != this.currentBlendMode) this.setBlendMode(blendMode);
-		var fx2 = src.x + src.width;
-		var fy2 = src.y + src.height;
-		var u = dst.x * this.invTexWidth;
-		var u2 = (dst.x + dst.width) * this.invTexWidth;
-		var v = (dst.y + dst.height) * this.invTexHeight;
-		var v2 = dst.y * this.invTexHeight;
-		if(flipX) {
-			var tmp = u;
-			u = u2;
-			u2 = tmp;
-		}
-		if(flipY) {
-			var tmp = v;
-			v = v2;
-			v2 = tmp;
-		}
-		var index = this.currentBatchSize * this.vertexStrideSize;
-		this.vertices[index++] = src.x;
-		this.vertices[index++] = src.y;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u;
-		this.vertices[index++] = v;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = src.x;
-		this.vertices[index++] = fy2;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u;
-		this.vertices[index++] = v2;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = fx2;
-		this.vertices[index++] = fy2;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u2;
-		this.vertices[index++] = v2;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = fx2;
-		this.vertices[index++] = src.y;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u2;
-		this.vertices[index++] = v;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.currentBatchSize++;
-	}
-	,RenderTile: function(texture,x,y,width,height,clip,flipx,flipy,blendMode) {
-		if(texture != this.currentBaseTexture || this.currentBatchSize >= this.capacity) this.switchTexture(texture);
-		if(blendMode != this.currentBlendMode) this.setBlendMode(blendMode);
-		var fx2 = x + width;
-		var fy2 = y + height;
-		var u = clip.x * this.invTexWidth;
-		var u2 = (clip.x + clip.width) * this.invTexWidth;
-		var v = (clip.y + clip.height) * this.invTexHeight;
-		var v2 = clip.y * this.invTexHeight;
-		if(flipx) {
-			var tmp = u;
-			u = u2;
-			u2 = tmp;
-		}
-		if(flipy) {
-			var tmp = v;
-			v = v2;
-			v2 = tmp;
-		}
-		var index = this.currentBatchSize * this.vertexStrideSize;
-		this.vertices[index++] = x;
-		this.vertices[index++] = y;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u;
-		this.vertices[index++] = v;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = x;
-		this.vertices[index++] = fy2;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u;
-		this.vertices[index++] = v2;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = fx2;
-		this.vertices[index++] = fy2;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u2;
-		this.vertices[index++] = v2;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = fx2;
-		this.vertices[index++] = y;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u2;
-		this.vertices[index++] = v;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.currentBatchSize++;
-	}
-	,Render: function(texture,x,y,srcX,srcY,srcWidth,srcHeight,blendMode) {
-		if(texture != this.currentBaseTexture || this.currentBatchSize >= this.capacity) this.switchTexture(texture);
-		if(blendMode != this.currentBlendMode) this.setBlendMode(blendMode);
-		var u = srcX * this.invTexWidth;
-		var v = (srcY + srcHeight) * this.invTexHeight;
-		var u2 = (srcX + srcWidth) * this.invTexWidth;
-		var v2 = srcY * this.invTexHeight;
-		var fx2 = x + srcWidth;
-		var fy2 = y + srcHeight;
-		var r, g, b, a;
-		r = 1;
-		g = 1;
-		b = 1;
-		a = 1;
-		var index = this.currentBatchSize * this.vertexStrideSize;
-		this.vertices[index++] = x;
-		this.vertices[index++] = y;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u;
-		this.vertices[index++] = v;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = x;
-		this.vertices[index++] = fy2;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u;
-		this.vertices[index++] = v2;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = fx2;
-		this.vertices[index++] = fy2;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u2;
-		this.vertices[index++] = v2;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = fx2;
-		this.vertices[index++] = y;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = u2;
-		this.vertices[index++] = v;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.currentBatchSize++;
-	}
-	,__class__: com.engine.render.SpriteBatch
-});
-com.engine.render.SpriteShader = function() {
-	var vertexShaderSource = "\r\nattribute vec3 aVertexPosition;\r\nattribute vec2 aTexCoord;\r\nattribute vec4 aColor;\r\n\r\nvarying vec2 vTexCoord;\r\nvarying vec4 vColor;\r\n\r\nuniform mat4 uModelViewMatrix;\r\nuniform mat4 uProjectionMatrix;\r\nvoid main(void) \r\n{\r\nvTexCoord = aTexCoord;\r\nvColor = aColor;\r\ngl_Position = uProjectionMatrix * uModelViewMatrix *  vec4 (aVertexPosition, 1.0);\r\n\r\n}";
-	var vertexShader = openfl.gl.GL.createShader(35633);
-	openfl.gl.GL.shaderSource(vertexShader,vertexShaderSource);
-	openfl.gl.GL.compileShader(vertexShader);
-	if(openfl.gl.GL.getShaderParameter(vertexShader,35713) == 0) throw openfl.gl.GL.getShaderInfoLog(vertexShader);
-	var fragmentShaderSource = "precision mediump float;" + "\r\nvarying vec2 vTexCoord;\r\nvarying vec4 vColor;\r\nuniform sampler2D uImage0;\r\n\r\nvoid main(void)\r\n{\r\n\tgl_FragColor = texture2D (uImage0, vTexCoord) * vColor;\r\n\r\n}";
-	var fragmentShader = openfl.gl.GL.createShader(35632);
-	openfl.gl.GL.shaderSource(fragmentShader,fragmentShaderSource);
-	openfl.gl.GL.compileShader(fragmentShader);
-	if(openfl.gl.GL.getShaderParameter(fragmentShader,35713) == 0) throw openfl.gl.GL.getShaderInfoLog(fragmentShader);
-	this.shaderProgram = openfl.gl.GL.createProgram();
-	openfl.gl.GL.attachShader(this.shaderProgram,vertexShader);
-	openfl.gl.GL.attachShader(this.shaderProgram,fragmentShader);
-	openfl.gl.GL.linkProgram(this.shaderProgram);
-	if(openfl.gl.GL.getProgramParameter(this.shaderProgram,35714) == 0) throw "Unable to initialize the shader program.";
-	this.vertexAttribute = openfl.gl.GL.getAttribLocation(this.shaderProgram,"aVertexPosition");
-	this.texCoordAttribute = openfl.gl.GL.getAttribLocation(this.shaderProgram,"aTexCoord");
-	this.colorAttribute = openfl.gl.GL.getAttribLocation(this.shaderProgram,"aColor");
-	this.projectionMatrixUniform = openfl.gl.GL.getUniformLocation(this.shaderProgram,"uProjectionMatrix");
-	this.modelViewMatrixUniform = openfl.gl.GL.getUniformLocation(this.shaderProgram,"uModelViewMatrix");
-	this.imageUniform = openfl.gl.GL.getUniformLocation(this.shaderProgram,"uImage0");
-};
-$hxClasses["com.engine.render.SpriteShader"] = com.engine.render.SpriteShader;
-com.engine.render.SpriteShader.__name__ = ["com","engine","render","SpriteShader"];
-com.engine.render.SpriteShader.prototype = {
-	Disable: function() {
-		openfl.gl.GL.disableVertexAttribArray(this.vertexAttribute);
-		openfl.gl.GL.disableVertexAttribArray(this.texCoordAttribute);
-		openfl.gl.GL.disableVertexAttribArray(this.colorAttribute);
-	}
-	,Enable: function() {
-		openfl.gl.GL.useProgram(this.shaderProgram);
-		openfl.gl.GL.enableVertexAttribArray(this.vertexAttribute);
-		openfl.gl.GL.enableVertexAttribArray(this.texCoordAttribute);
-		openfl.gl.GL.enableVertexAttribArray(this.colorAttribute);
-	}
-	,__class__: com.engine.render.SpriteShader
-}
 com.engine.render.Texture = function(url) {
 	this.bitmapData = openfl.Assets.getBitmapData(url);
 	this.data = openfl.gl.GL.createTexture();
@@ -4688,451 +3922,6 @@ com.engine.render.Texture.prototype = {
 	}
 	,__class__: com.engine.render.Texture
 }
-com.engine.render.TileMap = function(xml) {
-	this.invTexHeight = 0;
-	this.invTexWidth = 0;
-	this.spacing = 0;
-	this.margin = 0;
-	com.engine.render.Buffer.call(this);
-	var xml1 = Xml.parse(xml).firstElement();
-	this.widthInTiles = Std.parseInt(xml1.get("width"));
-	this.heightInTiles = Std.parseInt(xml1.get("height"));
-	var properties = new haxe.ds.StringMap();
-	var $it0 = xml1.iterator();
-	while( $it0.hasNext() ) {
-		var child = $it0.next();
-		if(this.isValidElement(child)) {
-			if(child.get_nodeName() == "tileset") {
-				if(child.get("source") != null) this.tilesfromGenericXml(this.getText(child.get("source"))); else this.tilesfromGenericXml(child.toString());
-			} else if(child.get_nodeName() == "properties") {
-				var $it1 = child.iterator();
-				while( $it1.hasNext() ) {
-					var property = $it1.next();
-					if(!this.isValidElement(property)) continue;
-				}
-			} else if(child.get_nodeName() == "layer") this.layerfromGenericXml(child); else if(child.get_nodeName() == "objectgroup") this.objectsfromGenericXml(child);
-		}
-	}
-	this.addClips();
-	this.capacity = this.widthInTiles * this.heightInTiles;
-	this.vertexStrideSize = 36;
-	this.numVerts = this.capacity * this.vertexStrideSize * 4;
-	this.numIndices = this.capacity * 6;
-	this.vertices = new Float32Array(this.numVerts);
-	this.indices = new Int16Array(this.numIndices);
-	var length = this.indices.length / 6 | 0;
-	var _g = 0;
-	while(_g < length) {
-		var i = _g++;
-		var index2 = i * 6;
-		var index3 = i * 4;
-		this.indices[index2] = index3;
-		this.indices[index2 + 1] = index3 + 1;
-		this.indices[index2 + 2] = index3 + 2;
-		this.indices[index2 + 3] = index3;
-		this.indices[index2 + 4] = index3 + 2;
-		this.indices[index2 + 5] = index3 + 3;
-	}
-	this.currentBatchSize = 0;
-	this.currentBlendMode = com.engine.render.BlendMode.NORMAL;
-	this.invTexWidth = 1.0 / this.image.texWidth;
-	this.invTexHeight = 1.0 / this.image.texHeight;
-	this.vertexBuffer = openfl.gl.GL.createBuffer();
-	this.indexBuffer = openfl.gl.GL.createBuffer();
-	openfl.gl.GL.bindBuffer(34963,this.indexBuffer);
-	openfl.gl.GL.bufferData(34963,this.indices,35044);
-	openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
-	openfl.gl.GL.bufferData(34962,this.vertices,35048);
-	this.shader = new com.engine.render.SpriteShader();
-	this.isBuild = false;
-	this.trasform = new flash.geom.Matrix3D();
-};
-$hxClasses["com.engine.render.TileMap"] = com.engine.render.TileMap;
-com.engine.render.TileMap.__name__ = ["com","engine","render","TileMap"];
-com.engine.render.TileMap.__super__ = com.engine.render.Buffer;
-com.engine.render.TileMap.prototype = $extend(com.engine.render.Buffer.prototype,{
-	dispose: function() {
-		openfl.gl.GL.deleteBuffer(this.indexBuffer);
-		openfl.gl.GL.deleteBuffer(this.vertexBuffer);
-		com.engine.render.Buffer.prototype.dispose.call(this);
-	}
-	,toCSV: function(width) {
-		if(width <= 0 || width == null) width = this.widthInTiles;
-		var counter = 0;
-		var csv = "";
-		var _g = 0, _g1 = this.tilesIDs;
-		while(_g < _g1.length) {
-			var tile = _g1[_g];
-			++_g;
-			var tileGID = tile;
-			if(counter >= width) {
-				csv = HxOverrides.substr(csv,0,csv.length - 1);
-				csv += "\n";
-				counter = 0;
-			}
-			csv += tileGID;
-			csv += ",";
-			counter++;
-		}
-		csv = HxOverrides.substr(csv,0,csv.length - 1);
-		return csv;
-	}
-	,layerfromGenericXml: function(xml) {
-		var name = xml.get("name");
-		var width = Std.parseInt(xml.get("width"));
-		var height = Std.parseInt(xml.get("height"));
-		var opacity = Std.parseFloat(xml.get("opacity") != null?xml.get("opacity"):"1.0");
-		this.tilesIDs = new Array();
-		var $it0 = xml.iterator();
-		while( $it0.hasNext() ) {
-			var child = $it0.next();
-			if(this.isValidElement(child)) {
-				if(child.get_nodeName() == "data") {
-					var encoding = "";
-					if(child.exists("encoding")) encoding = child.get("encoding");
-					var chunk = "";
-					switch(encoding) {
-					case "base64":
-						chunk = child.firstChild().get_nodeValue();
-						break;
-					case "csv":
-						chunk = child.firstChild().get_nodeValue();
-						this.tilesIDs = this.csvToArray(chunk);
-						break;
-					default:
-						var $it1 = child.iterator();
-						while( $it1.hasNext() ) {
-							var tile = $it1.next();
-							if(this.isValidElement(tile)) {
-								var gid = Std.parseInt(tile.get("gid"));
-								this.tilesIDs.push(gid);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	,csvToArray: function(input) {
-		var result = new Array();
-		var rows = StringTools.trim(input).split("\n");
-		var row;
-		var _g = 0;
-		while(_g < rows.length) {
-			var row1 = rows[_g];
-			++_g;
-			if(row1 == "") continue;
-			var resultRow = new Array();
-			var entries = row1.split(",");
-			var entry;
-			var _g1 = 0;
-			while(_g1 < entries.length) {
-				var entry1 = entries[_g1];
-				++_g1;
-				if(entry1 != "") result.push(Std.parseInt(entry1));
-			}
-		}
-		return result;
-	}
-	,tilesfromGenericXml: function(content) {
-		var xml = Xml.parse(content).firstElement();
-		var name = xml.get("name");
-		this.tileWidth = Std.parseInt(xml.get("tilewidth"));
-		this.tileHeight = Std.parseInt(xml.get("tileheight"));
-		this.spacing = xml.exists("spacing")?Std.parseInt(xml.get("spacing")):0;
-		this.margin = xml.exists("margin")?Std.parseInt(xml.get("margin")):0;
-		var properties = new haxe.ds.StringMap();
-		var tileOffsetX = 0;
-		var tileOffsetY = 0;
-		var $it0 = xml.elements();
-		while( $it0.hasNext() ) {
-			var child = $it0.next();
-			if(this.isValidElement(child)) {
-				if(child.get_nodeName() == "properties") {
-					var $it1 = child.iterator();
-					while( $it1.hasNext() ) {
-						var property = $it1.next();
-						if(this.isValidElement(property)) console.log("tileHeight set name:" + property.get("name") + " - Value : " + property.get("value"));
-					}
-				}
-				if(child.get_nodeName() == "tileoffset") {
-					tileOffsetX = Std.parseInt(child.get("x"));
-					tileOffsetY = Std.parseInt(child.get("y"));
-				}
-				if(child.get_nodeName() == "image") {
-					var width = Std.parseInt(child.get("width"));
-					var height = Std.parseInt(child.get("height"));
-					this.image = new com.engine.render.Texture("assets/" + child.get("source"));
-					if(this.image != null) this.columns = this.image.width / this.tileWidth | 0;
-				}
-				if(child.get_nodeName() == "terraintypes") {
-					var $it2 = child.iterator();
-					while( $it2.hasNext() ) {
-						var element = $it2.next();
-						if(this.isValidElement(element)) {
-							if(element.get_nodeName() == "terrain") {
-							}
-						}
-					}
-				}
-				if(child.get_nodeName() == "tile") {
-					var id = Std.parseInt(child.get("id"));
-					var properties1 = new haxe.ds.StringMap();
-					var $it3 = child.iterator();
-					while( $it3.hasNext() ) {
-						var element = $it3.next();
-						if(this.isValidElement(element)) {
-							if(element.get_nodeName() == "properties") {
-								var $it4 = element.iterator();
-								while( $it4.hasNext() ) {
-									var property = $it4.next();
-									if(!this.isValidElement(property)) continue;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	,getText: function(assetPath) {
-		return openfl.Assets.getText(assetPath);
-	}
-	,isValidElement: function(element) {
-		return Std.string(element.nodeType) == "element";
-	}
-	,objectsfromGenericXml: function(xml) {
-		var name = xml.get("name");
-		var color = xml.get("color");
-		var width = Std.parseInt(xml.get("width"));
-		var height = Std.parseInt(xml.get("height"));
-		var properties = new haxe.ds.StringMap();
-		var $it0 = xml.iterator();
-		while( $it0.hasNext() ) {
-			var child = $it0.next();
-			if(this.isValidElement(child)) {
-				if(child.get_nodeName() == "properties") {
-					var $it1 = child.iterator();
-					while( $it1.hasNext() ) {
-						var property = $it1.next();
-						if(this.isValidElement(property)) properties.set(property.get("name"),property.get("value"));
-					}
-				}
-				if(child.get_nodeName() == "object") this.objectfromGenericXml(child);
-			}
-		}
-	}
-	,objectfromGenericXml: function(xml) {
-		var gid = xml.get("gid") != null?Std.parseInt(xml.get("gid")):0;
-		var name = xml.get("name");
-		var type = xml.get("type");
-		var x = Std.parseInt(xml.get("x"));
-		var y = Std.parseInt(xml.get("y"));
-		var width = Std.parseInt(xml.get("width"));
-		var height = Std.parseInt(xml.get("height"));
-		var properties = new haxe.ds.StringMap();
-		var $it0 = xml.iterator();
-		while( $it0.hasNext() ) {
-			var child = $it0.next();
-			if(this.isValidElement(child)) {
-				if(child.get_nodeName() == "properties") {
-					var $it1 = child.iterator();
-					while( $it1.hasNext() ) {
-						var property = $it1.next();
-						if(this.isValidElement(property)) properties.set(property.get("name"),property.get("value"));
-					}
-				}
-				if(child.get_nodeName() == "polygon" || child.get_nodeName() == "polyline") {
-					var origin = new flash.geom.Point(x,y);
-					var points = new Array();
-					var pointsAsString = child.get("points");
-					var pointsAsStringArray = pointsAsString.split(" ");
-					var _g = 0;
-					while(_g < pointsAsStringArray.length) {
-						var p = pointsAsStringArray[_g];
-						++_g;
-					}
-					if(child.get_nodeName() == "polygon") {
-					} else if(child.get_nodeName() == "polyline") {
-					}
-				}
-			}
-		}
-	}
-	,loadFromString: function(str,columnSep,rowSep) {
-		if(rowSep == null) rowSep = "\n";
-		if(columnSep == null) columnSep = ",";
-		var row = str.split(rowSep), rows = row.length, col, cols, x, y;
-		var _g = 0;
-		while(_g < rows) {
-			var y1 = _g++;
-			if(row[y1] == "") continue;
-			col = row[y1].split(columnSep);
-			cols = col.length;
-			var _g1 = 0;
-			while(_g1 < cols) {
-				var x1 = _g1++;
-				if(col[x1] == "") continue;
-				this._map[y1][x1] = Std.parseInt(col[x1]);
-			}
-		}
-	}
-	,addClips: function() {
-		this.clips = [];
-		var columns = this.image.width / this.tileWidth | 0;
-		var rows = this.image.height / this.tileHeight | 0;
-		var _g = 0;
-		while(_g < rows) {
-			var y = _g++;
-			var _g1 = 0;
-			while(_g1 < columns) {
-				var x = _g1++;
-				var rect = new com.engine.render.Clip();
-				rect.y = y * (this.tileHeight + this.spacing);
-				rect.y += this.margin;
-				rect.height = this.tileHeight;
-				rect.x = x * (this.tileWidth + this.spacing);
-				rect.x += this.margin;
-				rect.width = this.tileWidth;
-				this.clips.push(rect);
-			}
-		}
-	}
-	,getClipNum: function(num) {
-		if(num <= 0) return this.clips[0];
-		if(num >= this.clips.length) return this.clips[this.clips.length];
-		return this.clips[num];
-	}
-	,getClip: function(num) {
-		return new com.engine.render.Clip(this.margin + (this.tileWidth + this.spacing) * (num % this.columns),this.margin + (this.tileHeight + this.spacing) * (num / this.columns | 0),this.tileWidth,this.tileHeight);
-	}
-	,getCell: function(x,y) {
-		return this.tilesIDs[y * this.widthInTiles + x];
-	}
-	,renderDinamic: function(posx,posy) {
-		this.update();
-		this.isBuild = false;
-		this.currentBatchSize = 0;
-		this.shader.Enable();
-		openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
-		openfl.gl.GL.vertexAttribPointer(this.shader.vertexAttribute,3,5126,false,this.vertexStrideSize,0);
-		openfl.gl.GL.vertexAttribPointer(this.shader.texCoordAttribute,2,5126,false,this.vertexStrideSize,12);
-		openfl.gl.GL.vertexAttribPointer(this.shader.colorAttribute,4,5126,false,this.vertexStrideSize,20);
-		var _g1 = 0, _g = this.heightInTiles;
-		while(_g1 < _g) {
-			var y = _g1++;
-			var _g3 = 0, _g2 = this.widthInTiles;
-			while(_g3 < _g2) {
-				var x = _g3++;
-				var id = this.getCell(x,y);
-				if(id >= 1) {
-					var t = this.getClip(id - 1);
-					var DrawX = posx + x * this.tileWidth | 0;
-					var DrawY = posy + y * this.tileHeight | 0;
-					var dst = new com.engine.render.Clip(DrawX,DrawY,this.tileWidth,this.tileHeight);
-					if(DrawX >= -this.tileWidth && DrawX <= com.engine.game.Game.viewWidth + this.tileWidth && (DrawY >= -this.tileHeight && DrawY < com.engine.game.Game.viewHeight + this.tileHeight)) this.addQuad(t,dst);
-				}
-			}
-		}
-		if(this.currentBatchSize == 0) return;
-		openfl.gl.GL.activeTexture(33984);
-		this.image.Bind();
-		com.engine.render.BlendMode.setBlend(this.currentBlendMode);
-		openfl.gl.GL.uniformMatrix4fv(this.shader.projectionMatrixUniform,false,new Float32Array(com.engine.game.Game.projMatrix.m));
-		openfl.gl.GL.uniformMatrix4fv(this.shader.modelViewMatrixUniform,false,new Float32Array(this.viewMatrix.m));
-		openfl.gl.GL.uniform1i(this.shader.imageUniform,0);
-		openfl.gl.GL.bufferData(34962,this.vertices,35048);
-		openfl.gl.GL.bindBuffer(34963,this.indexBuffer);
-		openfl.gl.GL.drawElements(4,this.currentBatchSize * 6,5123,0);
-		this.currentBatchSize = 0;
-		this.shader.Disable();
-	}
-	,render: function() {
-		this.update();
-		if(!this.isBuild) {
-			this.build();
-			return;
-		}
-		this.shader.Enable();
-		openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
-		openfl.gl.GL.vertexAttribPointer(this.shader.vertexAttribute,3,5126,false,this.vertexStrideSize,0);
-		openfl.gl.GL.vertexAttribPointer(this.shader.texCoordAttribute,2,5126,false,this.vertexStrideSize,12);
-		openfl.gl.GL.vertexAttribPointer(this.shader.colorAttribute,4,5126,false,this.vertexStrideSize,20);
-		if(this.currentBatchSize == 0) return;
-		openfl.gl.GL.activeTexture(33984);
-		this.image.Bind();
-		com.engine.render.BlendMode.setBlend(this.currentBlendMode);
-		openfl.gl.GL.uniformMatrix4fv(this.shader.projectionMatrixUniform,false,new Float32Array(com.engine.game.Game.projMatrix.m));
-		openfl.gl.GL.uniformMatrix4fv(this.shader.modelViewMatrixUniform,false,new Float32Array(this.viewMatrix.m));
-		openfl.gl.GL.uniform1i(this.shader.imageUniform,0);
-		openfl.gl.GL.bufferData(34962,this.vertices,35048);
-		openfl.gl.GL.bindBuffer(34963,this.indexBuffer);
-		openfl.gl.GL.drawElements(4,this.currentBatchSize * 6,5123,0);
-		this.shader.Disable();
-	}
-	,addQuad: function(srcrect,dstrect) {
-		var index = this.currentBatchSize * this.vertexStrideSize;
-		var widthTex = this.image.width;
-		var heightTex = this.image.height;
-		this.vertices[index++] = dstrect.x;
-		this.vertices[index++] = dstrect.y;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = srcrect.x / widthTex;
-		this.vertices[index++] = srcrect.y / heightTex;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = dstrect.x + dstrect.width;
-		this.vertices[index++] = dstrect.y;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = (srcrect.x + srcrect.width) / widthTex;
-		this.vertices[index++] = srcrect.y / heightTex;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = dstrect.x + dstrect.width;
-		this.vertices[index++] = dstrect.y + dstrect.height;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = (srcrect.x + srcrect.width) / widthTex;
-		this.vertices[index++] = (srcrect.y + srcrect.height) / heightTex;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = dstrect.x;
-		this.vertices[index++] = dstrect.y + dstrect.height;
-		this.vertices[index++] = 0;
-		this.vertices[index++] = srcrect.x / widthTex;
-		this.vertices[index++] = (srcrect.y + srcrect.height) / heightTex;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.vertices[index++] = 1;
-		this.currentBatchSize++;
-	}
-	,build: function() {
-		var _g1 = 0, _g = this.heightInTiles;
-		while(_g1 < _g) {
-			var y = _g1++;
-			var _g3 = 0, _g2 = this.widthInTiles;
-			while(_g3 < _g2) {
-				var x = _g3++;
-				var id = this.getCell(x,y);
-				if(id >= 1) {
-					var t = this.getClip(id - 1);
-					var DrawX = x * this.tileWidth | 0;
-					var DrawY = y * this.tileHeight | 0;
-					var dst = new com.engine.render.Clip(DrawX,DrawY,this.tileWidth,this.tileHeight);
-					this.addQuad(t,dst);
-				}
-			}
-		}
-		this.isBuild = true;
-	}
-	,__class__: com.engine.render.TileMap
-});
 var haxe = {}
 haxe.Timer = function() { }
 $hxClasses["haxe.Timer"] = haxe.Timer;
@@ -9775,7 +8564,6 @@ flash.media.Sound.prototype = $extend(flash.events.EventDispatcher.prototype,{
 	}
 	,__onSoundLoadError: function(evt) {
 		this.__removeEventListeners();
-		console.log("Error loading sound '" + this.__streamUrl + "'");
 		var evt1 = new flash.events.IOErrorEvent(flash.events.IOErrorEvent.IO_ERROR);
 		this.dispatchEvent(evt1);
 	}
@@ -9785,19 +8573,12 @@ flash.media.Sound.prototype = $extend(flash.events.EventDispatcher.prototype,{
 	}
 	,__load: function(stream,context,mime) {
 		if(mime == null) mime = "";
-		if(mime == null) {
-			var url = stream.url.split("?");
-			var extension = HxOverrides.substr(url[0],url[0].lastIndexOf(".") + 1,null);
-			mime = flash.media.Sound.__mimeForExtension(extension);
-		}
-		if(mime == null || !flash.media.Sound.__canPlayMime(mime)) console.log("Warning: '" + stream.url + "' with type '" + mime + "' may not play on this browser.");
 		this.__streamUrl = stream.url;
 		try {
 			this.__soundCache = new flash.net.URLLoader();
 			this.__addEventListeners();
 			this.__soundCache.load(stream);
 		} catch( e ) {
-			console.log("Warning: Could not preload '" + stream.url + "'");
 		}
 	}
 	,__addEventListeners: function() {
@@ -9871,7 +8652,6 @@ flash.media.SoundChannel.prototype = $extend(flash.events.EventDispatcher.protot
 		return this.soundTransform = v;
 	}
 	,__onStalled: function(evt) {
-		console.log("sound stalled");
 		if(this.__audio != null) this.__audio.load();
 	}
 	,__onSoundSeeked: function(evt) {
@@ -9897,7 +8677,6 @@ flash.media.SoundChannel.prototype = $extend(flash.events.EventDispatcher.protot
 		}
 	}
 	,__onProgress: function(evt) {
-		console.log("sound progress: " + Std.string(evt));
 	}
 	,stop: function() {
 		if(this.__audio != null) {
@@ -12246,253 +11025,6 @@ haxe.io.Error.OutsideBounds = ["OutsideBounds",2];
 haxe.io.Error.OutsideBounds.toString = $estr;
 haxe.io.Error.OutsideBounds.__enum__ = haxe.io.Error;
 haxe.io.Error.Custom = function(e) { var $x = ["Custom",3,e]; $x.__enum__ = haxe.io.Error; $x.toString = $estr; return $x; }
-haxe.xml = {}
-haxe.xml.Parser = function() { }
-$hxClasses["haxe.xml.Parser"] = haxe.xml.Parser;
-haxe.xml.Parser.__name__ = ["haxe","xml","Parser"];
-haxe.xml.Parser.parse = function(str) {
-	var doc = Xml.createDocument();
-	haxe.xml.Parser.doParse(str,0,doc);
-	return doc;
-}
-haxe.xml.Parser.doParse = function(str,p,parent) {
-	if(p == null) p = 0;
-	var xml = null;
-	var state = 1;
-	var next = 1;
-	var aname = null;
-	var start = 0;
-	var nsubs = 0;
-	var nbrackets = 0;
-	var c = str.charCodeAt(p);
-	var buf = new StringBuf();
-	while(!(c != c)) {
-		switch(state) {
-		case 0:
-			switch(c) {
-			case 10:case 13:case 9:case 32:
-				break;
-			default:
-				state = next;
-				continue;
-			}
-			break;
-		case 1:
-			switch(c) {
-			case 60:
-				state = 0;
-				next = 2;
-				break;
-			default:
-				start = p;
-				state = 13;
-				continue;
-			}
-			break;
-		case 13:
-			if(c == 60) {
-				var child = Xml.createPCData(buf.b + HxOverrides.substr(str,start,p - start));
-				buf = new StringBuf();
-				parent.addChild(child);
-				nsubs++;
-				state = 0;
-				next = 2;
-			} else if(c == 38) {
-				buf.addSub(str,start,p - start);
-				state = 18;
-				next = 13;
-				start = p + 1;
-			}
-			break;
-		case 17:
-			if(c == 93 && str.charCodeAt(p + 1) == 93 && str.charCodeAt(p + 2) == 62) {
-				var child = Xml.createCData(HxOverrides.substr(str,start,p - start));
-				parent.addChild(child);
-				nsubs++;
-				p += 2;
-				state = 1;
-			}
-			break;
-		case 2:
-			switch(c) {
-			case 33:
-				if(str.charCodeAt(p + 1) == 91) {
-					p += 2;
-					if(HxOverrides.substr(str,p,6).toUpperCase() != "CDATA[") throw "Expected <![CDATA[";
-					p += 5;
-					state = 17;
-					start = p + 1;
-				} else if(str.charCodeAt(p + 1) == 68 || str.charCodeAt(p + 1) == 100) {
-					if(HxOverrides.substr(str,p + 2,6).toUpperCase() != "OCTYPE") throw "Expected <!DOCTYPE";
-					p += 8;
-					state = 16;
-					start = p + 1;
-				} else if(str.charCodeAt(p + 1) != 45 || str.charCodeAt(p + 2) != 45) throw "Expected <!--"; else {
-					p += 2;
-					state = 15;
-					start = p + 1;
-				}
-				break;
-			case 63:
-				state = 14;
-				start = p;
-				break;
-			case 47:
-				if(parent == null) throw "Expected node name";
-				start = p + 1;
-				state = 0;
-				next = 10;
-				break;
-			default:
-				state = 3;
-				start = p;
-				continue;
-			}
-			break;
-		case 3:
-			if(!(c >= 97 && c <= 122 || c >= 65 && c <= 90 || c >= 48 && c <= 57 || c == 58 || c == 46 || c == 95 || c == 45)) {
-				if(p == start) throw "Expected node name";
-				xml = Xml.createElement(HxOverrides.substr(str,start,p - start));
-				parent.addChild(xml);
-				state = 0;
-				next = 4;
-				continue;
-			}
-			break;
-		case 4:
-			switch(c) {
-			case 47:
-				state = 11;
-				nsubs++;
-				break;
-			case 62:
-				state = 9;
-				nsubs++;
-				break;
-			default:
-				state = 5;
-				start = p;
-				continue;
-			}
-			break;
-		case 5:
-			if(!(c >= 97 && c <= 122 || c >= 65 && c <= 90 || c >= 48 && c <= 57 || c == 58 || c == 46 || c == 95 || c == 45)) {
-				var tmp;
-				if(start == p) throw "Expected attribute name";
-				tmp = HxOverrides.substr(str,start,p - start);
-				aname = tmp;
-				if(xml.exists(aname)) throw "Duplicate attribute";
-				state = 0;
-				next = 6;
-				continue;
-			}
-			break;
-		case 6:
-			switch(c) {
-			case 61:
-				state = 0;
-				next = 7;
-				break;
-			default:
-				throw "Expected =";
-			}
-			break;
-		case 7:
-			switch(c) {
-			case 34:case 39:
-				state = 8;
-				start = p;
-				break;
-			default:
-				throw "Expected \"";
-			}
-			break;
-		case 8:
-			if(c == str.charCodeAt(start)) {
-				var val = HxOverrides.substr(str,start + 1,p - start - 1);
-				xml.set(aname,val);
-				state = 0;
-				next = 4;
-			}
-			break;
-		case 9:
-			p = haxe.xml.Parser.doParse(str,p,xml);
-			start = p;
-			state = 1;
-			break;
-		case 11:
-			switch(c) {
-			case 62:
-				state = 1;
-				break;
-			default:
-				throw "Expected >";
-			}
-			break;
-		case 12:
-			switch(c) {
-			case 62:
-				if(nsubs == 0) parent.addChild(Xml.createPCData(""));
-				return p;
-			default:
-				throw "Expected >";
-			}
-			break;
-		case 10:
-			if(!(c >= 97 && c <= 122 || c >= 65 && c <= 90 || c >= 48 && c <= 57 || c == 58 || c == 46 || c == 95 || c == 45)) {
-				if(start == p) throw "Expected node name";
-				var v = HxOverrides.substr(str,start,p - start);
-				if(v != parent.get_nodeName()) throw "Expected </" + parent.get_nodeName() + ">";
-				state = 0;
-				next = 12;
-				continue;
-			}
-			break;
-		case 15:
-			if(c == 45 && str.charCodeAt(p + 1) == 45 && str.charCodeAt(p + 2) == 62) {
-				parent.addChild(Xml.createComment(HxOverrides.substr(str,start,p - start)));
-				p += 2;
-				state = 1;
-			}
-			break;
-		case 16:
-			if(c == 91) nbrackets++; else if(c == 93) nbrackets--; else if(c == 62 && nbrackets == 0) {
-				parent.addChild(Xml.createDocType(HxOverrides.substr(str,start,p - start)));
-				state = 1;
-			}
-			break;
-		case 14:
-			if(c == 63 && str.charCodeAt(p + 1) == 62) {
-				p++;
-				var str1 = HxOverrides.substr(str,start + 1,p - start - 2);
-				parent.addChild(Xml.createProcessingInstruction(str1));
-				state = 1;
-			}
-			break;
-		case 18:
-			if(c == 59) {
-				var s = HxOverrides.substr(str,start,p - start);
-				if(s.charCodeAt(0) == 35) {
-					var i = s.charCodeAt(1) == 120?Std.parseInt("0" + HxOverrides.substr(s,1,s.length - 1)):Std.parseInt(HxOverrides.substr(s,1,s.length - 1));
-					buf.b += Std.string(String.fromCharCode(i));
-				} else if(!haxe.xml.Parser.escapes.exists(s)) buf.b += Std.string("&" + s + ";"); else buf.b += Std.string(haxe.xml.Parser.escapes.get(s));
-				start = p + 1;
-				state = next;
-			}
-			break;
-		}
-		c = str.charCodeAt(++p);
-	}
-	if(state == 1) {
-		start = p;
-		state = 13;
-	}
-	if(state == 13) {
-		if(p != start || nsubs == 0) parent.addChild(Xml.createPCData(buf.b + HxOverrides.substr(str,start,p - start)));
-		return p;
-	}
-	throw "Unexpected end";
-}
 var js = {}
 js.Boot = function() { }
 $hxClasses["js.Boot"] = js.Boot;
@@ -13514,13 +12046,6 @@ var Bool = $hxClasses.Bool = Boolean;
 Bool.__ename__ = ["Bool"];
 var Class = $hxClasses.Class = { __name__ : ["Class"]};
 var Enum = { };
-Xml.Element = "element";
-Xml.PCData = "pcdata";
-Xml.CData = "cdata";
-Xml.Comment = "comment";
-Xml.DocType = "doctype";
-Xml.ProcessingInstruction = "processingInstruction";
-Xml.Document = "document";
 flash.ui.Multitouch.maxTouchPoints = 2;
 flash.ui.Multitouch.supportedGestures = [];
 flash.ui.Multitouch.supportsGestureEvents = false;
@@ -13950,18 +12475,6 @@ haxe.Template.globals = { };
 haxe.Unserializer.DEFAULT_RESOLVER = Type;
 haxe.Unserializer.BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%:";
 haxe.ds.ObjectMap.count = 0;
-haxe.xml.Parser.escapes = (function($this) {
-	var $r;
-	var h = new haxe.ds.StringMap();
-	h.set("lt","<");
-	h.set("gt",">");
-	h.set("amp","&");
-	h.set("quot","\"");
-	h.set("apos","'");
-	h.set("nbsp",String.fromCharCode(160));
-	$r = h;
-	return $r;
-}(this));
 js.Browser.window = typeof window != "undefined" ? window : null;
 js.Browser.document = typeof window != "undefined" ? window.document : null;
 openfl.Assets.cache = new openfl.AssetCache();
@@ -14275,5 +12788,3 @@ openfl.gl.GL.UNPACK_COLORSPACE_CONVERSION_WEBGL = 37443;
 openfl.gl.GL.BROWSER_DEFAULT_WEBGL = 37444;
 ApplicationMain.main();
 })();
-
-//@ sourceMappingURL=glframework.js.map

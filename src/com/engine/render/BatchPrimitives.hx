@@ -21,34 +21,37 @@ class BatchPrimitives extends Buffer
 	public var colorBuffer:GLBuffer;
 	public var colorIndex:Int;
 	public var colors:Float32Array;
-
-
-
 	public var vertexBuffer:GLBuffer;
 	public var vertices:Float32Array;
+	
+	
+	public var fcolorBuffer:GLBuffer;
+	public var fcolorIndex:Int;
+	public var fcolors:Float32Array;
+	public var fvertexBuffer:GLBuffer;
+	public var fvertices:Float32Array;
+	
 	
     private var capacity:Int;
 
 
 
-	private var fillMode:Bool;
+
 	private var currentBlendMode:Int;
 
 
 	private var idxCols:Int;
 	private var idxPos:Int;
-	private var numVertices:Int;
+
 	
+    private var fidxCols:Int;
+	private var fidxPos:Int;
 
    
     public var shader:PrimitiveShader;
   
 
 
-	public var vertexDeclaration:Array<Int>;
-	public var vertexStrideSize:Int;
-
-	
 
 
 	
@@ -57,20 +60,30 @@ class BatchPrimitives extends Buffer
 	super();
 	this.vertexBuffer =  GL.createBuffer();
 	this.colorBuffer =  GL.createBuffer();
+	this.fvertexBuffer =  GL.createBuffer();
+	this.fcolorBuffer =  GL.createBuffer();
 	this.capacity = capacity;
 
     idxPos=0;
 	idxCols = 0;
-	numVertices = 0;
-	
-//	Util.create2D(matrix, x, y, zoom, -rotation *Math.PI / 180);
+
+	fidxPos=0;
+	fidxCols = 0;
+
     vertices = new Float32Array(capacity * 3 *4);
 	GL.bindBuffer(GL.ARRAY_BUFFER, this.vertexBuffer);
 	GL.bufferData(GL.ARRAY_BUFFER,this.vertices , GL.DYNAMIC_DRAW);
 	colors = new Float32Array(capacity * 4 * 4);
 	GL.bindBuffer(GL.ARRAY_BUFFER, this.colorBuffer);
 	GL.bufferData(GL.ARRAY_BUFFER, this.colors , GL.DYNAMIC_DRAW);
-    fillMode = false;
+    
+	fvertices = new Float32Array(capacity * 3 *4);
+	GL.bindBuffer(GL.ARRAY_BUFFER, this.fvertexBuffer);
+	GL.bufferData(GL.ARRAY_BUFFER,this.fvertices , GL.DYNAMIC_DRAW);
+	fcolors = new Float32Array(capacity * 4 * 4);
+	GL.bindBuffer(GL.ARRAY_BUFFER, this.fcolorBuffer);
+	GL.bufferData(GL.ARRAY_BUFFER, this.fcolors , GL.DYNAMIC_DRAW);
+
 	currentBlendMode = BlendMode.NORMAL;
 	shader = new PrimitiveShader();
 	}
@@ -84,7 +97,7 @@ public function vertex(x:Float, y:Float, ?z:Float = 0.0)
 		vertices[idxPos++] = x;
         vertices[idxPos++] = y;
         vertices[idxPos++] = z;
-		numVertices++;
+	
 }
 public function color(r:Float, g:Float,b:Float, ?a:Float =0.0)
 	{
@@ -94,19 +107,48 @@ public function color(r:Float, g:Float,b:Float, ?a:Float =0.0)
 	colors[idxCols++] = a;	
 	}
 
-
+public function fvertex(x:Float, y:Float, ?z:Float = 0.0)
+{
+		fvertices[fidxPos++] = x;
+        fvertices[fidxPos++] = y;
+        fvertices[fidxPos++] = z;
 	
-	public function renderMode(fill:Bool=false)
+}
+public function fcolor(r:Float, g:Float,b:Float, ?a:Float =0.0)
+	{
+	fcolors[fidxCols++] = r;
+	fcolors[fidxCols++] = g;
+	fcolors[fidxCols++] = b;
+	fcolors[fidxCols++] = a;	
+	}
+
+
+	public function begin()
 	{
 	 idxPos=0;
 	 idxCols = 0;
-	 numVertices = 0;
-	 fillMode = fill;
-    }
-	
-	public function render()
+	 fidxPos=0;
+	 fidxCols = 0;
+	}
+    public function end()
 	{
 
+	shader.Enable();
+	BlendMode.setBlend(currentBlendMode);
+
+				  
+	 GL.uniformMatrix4fv(shader.projectionMatrixUniform, false,new Float32Array(Game.projMatrix.toArray()));
+     GL.uniformMatrix4fv(shader.modelViewMatrixUniform, false, new Float32Array(viewMatrix.toArray()));
+
+	 GL.bindBuffer(GL.ARRAY_BUFFER, this.fvertexBuffer);	
+     GL.bufferSubData(GL.ARRAY_BUFFER, 0, this.fvertices);
+     GL.vertexAttribPointer(shader.vertexAttribute, 3, GL.FLOAT, false, 0, 0);
+	 GL.bindBuffer(GL.ARRAY_BUFFER, this.fcolorBuffer);
+	 GL.bufferSubData(GL.ARRAY_BUFFER, 0, this.fcolors);
+     GL.vertexAttribPointer(shader.colorAttribute, 4, GL.FLOAT, false, 0, 0);
+ 	 GL.drawArrays( GL.TRIANGLES, 0, Std.int(fidxPos / 3));
+
+	 
 	 
 	 GL.bindBuffer(GL.ARRAY_BUFFER, this.vertexBuffer);	
      GL.bufferSubData(GL.ARRAY_BUFFER, 0, this.vertices);
@@ -114,30 +156,9 @@ public function color(r:Float, g:Float,b:Float, ?a:Float =0.0)
 	 GL.bindBuffer(GL.ARRAY_BUFFER, this.colorBuffer);
 	 GL.bufferSubData(GL.ARRAY_BUFFER, 0, this.colors);
      GL.vertexAttribPointer(shader.colorAttribute, 4, GL.FLOAT, false, 0, 0);
-	
-			if (fillMode == true)
-			{
-					GL.drawArrays( GL.TRIANGLES, 0, Std.int(idxPos / 3));
-			} else
-			{
-	                GL.drawArrays(GL.LINES, 0, Std.int(idxPos / 3));
-            }
-			
-	 idxPos  = 0;
-	 idxCols = 0;
-
-	}
-	public function begin()
-	{
-	    shader.Enable();
-		 GL.uniformMatrix4fv(shader.projectionMatrixUniform, false,new Float32Array(Game.projMatrix.toArray()));
-         GL.uniformMatrix4fv(shader.modelViewMatrixUniform, false, new Float32Array(viewMatrix.toArray()));
-         BlendMode.setBlend(currentBlendMode);
-	}
-    public function end()
-	{
-
-		     shader.Disable();
+	 GL.drawArrays(GL.LINES, 0, Std.int(idxPos / 3));
+  
+	 shader.Disable();
 	}
 
 
@@ -186,27 +207,27 @@ public function fillcircle (x:Float, y:Float, radius:Float , segments:Int,r:Floa
 		segments--;
 		for ( i  in 0...segments)
 		 {
-				vertex(x, y, 0);color(r, g, b, a);
-				vertex(x + cx, y + cy, 0);color(r, g, b, a);
+				fvertex(x, y, 0);fcolor(r, g, b, a);
+				fvertex(x + cx, y + cy, 0);fcolor(r, g, b, a);
 				var temp:Float = cx;
 				cx = cos * cx - sin * cy;
 				cy = sin * temp + cos * cy;
 
-				vertex(x + cx, y + cy, 0);color(r, g, b, a);
+				fvertex(x + cx, y + cy, 0);fcolor(r, g, b, a);
 				
 			}
 		
 			
 	
-			vertex(x, y, 0);color(r, g, b, a);
-			vertex(x + cx, y + cy, 0);color(r, g, b, a);
+			fvertex(x, y, 0);fcolor(r, g, b, a);
+			fvertex(x + cx, y + cy, 0);fcolor(r, g, b, a);
 		
 
 		var temp:Float = cx;
 		cx = radius;
 		cy = 0;
 		
-		vertex(x + cx, y + cy, 0);color(r, g, b, a);
+		fvertex(x + cx, y + cy, 0);fcolor(r, g, b, a);
 	}
 
 	public function ellipse ( x:Float, y:Float, width:Float, height:Float, segments:Int,r:Float,g:Float,b:Float,?a:Float=1 ) 
@@ -242,14 +263,14 @@ public function fillcircle (x:Float, y:Float, radius:Float , segments:Int,r:Floa
 			for (i in 0... segments)
 			{
 	
-				vertex(cx + (width * 0.5 * Math.cos(i * angle)), cy + (height * 0.5 * Math.sin(i * angle)), 0);
-				color(r, g, b, a);
+				fvertex(cx + (width * 0.5 * Math.cos(i * angle)), cy + (height * 0.5 * Math.sin(i * angle)), 0);
+				fcolor(r, g, b, a);
 
-		     	vertex(cx ,cy, 0);
-				color(r, g, b, a);
+		     	fvertex(cx ,cy, 0);
+				fcolor(r, g, b, a);
 				
-				vertex(cx + (width * 0.5 * Math.cos((i + 1) * angle)),cy + (height * 0.5 * Math.sin((i + 1) * angle)), 0);
-				color(r, g, b, a);
+				fvertex(cx + (width * 0.5 * Math.cos((i + 1) * angle)),cy + (height * 0.5 * Math.sin((i + 1) * angle)), 0);
+				fcolor(r, g, b, a);
 			}
 		
 	}	
@@ -277,20 +298,25 @@ public function rect(x:Float,y:Float,width:Float,height:Float,r:Float,g:Float,b:
 public function fillrect(x:Float,y:Float,width:Float,height:Float,r:Float,g:Float,b:Float,?a:Float=1)
 {
 		
-			vertex(x, y, 0);color(r, g, b, a);
-			vertex(x + width, y, 0);color(r, g, b, a);
-			vertex(x + width, y + height, 0);color(r, g, b, a);
-			vertex(x + width, y + height, 0);color(r, g, b, a);
-			vertex(x, y + height, 0);color(r, g, b, a);
-			vertex(x, y, 0);color(r, g, b, a);
+			fvertex(x, y, 0);fcolor(r, g, b, a);
+			fvertex(x + width, y, 0);fcolor(r, g, b, a);
+			fvertex(x + width, y + height, 0);fcolor(r, g, b, a);
+			fvertex(x + width, y + height, 0);fcolor(r, g, b, a);
+			fvertex(x, y + height, 0);fcolor(r, g, b, a);
+			fvertex(x, y, 0);fcolor(r, g, b, a);
 }
 override public function dispose():Void 
 {
-		this.vertices = new Float32Array ([]);
-		this.colors = new Float32Array ([]);
+		this.vertices = null;
+		this.colors = null;
     	GL.deleteBuffer(vertexBuffer);
 		GL.deleteBuffer(colorBuffer);
 	
+		this.fvertices = null;
+		this.fcolors = null;
+    	GL.deleteBuffer(fvertexBuffer);
+		GL.deleteBuffer(fcolorBuffer);
+		
 	super.dispose();
 }
 

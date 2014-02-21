@@ -60,8 +60,8 @@ override function begin()
 //this.setScreen(new TesteCloud());
 //this.setScreen(new TesteCloudTiles());
 //this.setScreen(new TesteBatchTiles());
-this.setScreen(new TesteTiles());
-//this.setScreen(new TestePrimitives());
+//this.setScreen(new TesteTiles());
+this.setScreen(new TestePrimitives());
 //this.setScreen(new TesteBitmap());
 //this.setScreen(new TesteDraTiles());
 

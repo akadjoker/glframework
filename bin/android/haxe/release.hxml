@@ -1,0 +1,17 @@
+-main ApplicationMain 
+-lib openfl
+-lib openfl-native
+-lib hxlibc
+-cp src
+-D tools=1.2.9
+-D lime_native
+-D no-compilation
+-D android
+-D mobile
+-cp bin/android/haxe
+-cpp bin/android/obj
+--macro allowPackage("flash")
+--macro keep("com.djoker.glteste.Main")
+-D android
+-D android-9
+-D no-compilation

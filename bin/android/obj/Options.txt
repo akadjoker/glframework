@@ -1,0 +1,2 @@
+ -Dandroid="1" -Dandroid-9="1" -Dandroid_9="1" -Dhaxe3="1" -Dhaxe_release="1" -Dhaxe_ver="3.01" -Dhxlibc="1" -Dlime_native="1" -Dmobile="1" -Dno-compilation="1" -Dno_compilation="1" -Dopenfl="1" -Dopenfl-native="1" -Dopenfl_native="1" -Dtools="1.2.9"
+Library hxcpp is not installed : run 'haxelib install hxcpp'

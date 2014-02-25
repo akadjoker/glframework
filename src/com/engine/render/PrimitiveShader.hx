@@ -5,7 +5,10 @@ import openfl.gl.GLBuffer;
 import openfl.gl.GLProgram;
 import openfl.utils.Float32Array;
 
-import flash.geom.Matrix3D;
+import flash.geom.Matrix;
+import flash.geom.Point;
+
+import com.engine.render.filter.Filter;
 
 
 /**
@@ -27,23 +30,9 @@ private var shaderProgram:GLProgram;
 	{
 
 
-var vertexShaderSource =
-"
-attribute vec3 aVertexPosition;
-attribute vec4 aColor;
-
-varying vec4 vColor;
-
-uniform mat4 uModelViewMatrix;
-uniform mat4 uProjectionMatrix;
-void main(void) 
-{
-vColor = aColor;
-gl_Position = uProjectionMatrix * uModelViewMatrix * vec4 (aVertexPosition, 1.0);
-}";
 
 var vertexShader = GL.createShader (GL.VERTEX_SHADER);
-GL.shaderSource (vertexShader, vertexShaderSource);
+GL.shaderSource (vertexShader, Filter.colorVertexShader);
 GL.compileShader (vertexShader);
 
 if (GL.getShaderParameter (vertexShader, GL.COMPILE_STATUS) == 0) 
@@ -53,21 +42,9 @@ throw (GL.getShaderInfoLog(vertexShader));
 
 }
 
-var fragmentShaderSource =
-
-#if !desktop
-"precision mediump float;" +
-#end
-"
-
-varying vec4 vColor;
-void main(void)
-{
-	gl_FragColor =  vColor;
-}";
 
 var fragmentShader = GL.createShader (GL.FRAGMENT_SHADER);
-GL.shaderSource (fragmentShader, fragmentShaderSource);
+GL.shaderSource (fragmentShader, Filter.colorFragmentShader);
 GL.compileShader (fragmentShader);
 
 if (GL.getShaderParameter (fragmentShader, GL.COMPILE_STATUS) == 0) {
@@ -107,5 +84,11 @@ modelViewMatrixUniform = GL.getUniformLocation (shaderProgram, "uModelViewMatrix
 	{
 		GL.disableVertexAttribArray (vertexAttribute);
 		GL.disableVertexAttribArray (colorAttribute);
+		GL.useProgram (null);
+	}
+		public function dispose()
+	{
+		GL.deleteProgram(shaderProgram);
+
 	}
 }

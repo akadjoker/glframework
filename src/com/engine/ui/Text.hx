@@ -1,4 +1,4 @@
-package com.engine.game;
+package com.engine.ui;
 
 import flash.text.TextField;
 import flash.text.TextFormat;
@@ -16,8 +16,9 @@ class Text extends TextField
 	    super ();
 		this.x = x;
 		this.y = y;
+		width = caption.length * size;
 		selectable = false;
-		defaultTextFormat = new TextFormat ("_sans", size, color);
+		defaultTextFormat = new TextFormat ("arial", size, color);
 		text = caption;
 	}
 	

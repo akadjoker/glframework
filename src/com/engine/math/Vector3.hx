@@ -210,7 +210,7 @@ class Vector3 {
 	public static function Up():Vector3 {
 		return new Vector3(0, 1.0, 0);
 	}
-	
+	/*
 	inline public static function TransformCoordinates(vector:Vector3, transformation:Matrix):Vector3 {
 		var result = Vector3.Zero();
 
@@ -263,7 +263,7 @@ class Vector3 {
         result.z = (x * transformation.m[2]) + (y * transformation.m[6]) + (z * transformation.m[10]);
 	}
 	
-
+*/
 	inline public static function CatmullRom(value1:Vector3, value2:Vector3, value3:Vector3, value4:Vector3, amount:Float):Vector3 {
 		var squared = amount * amount;
         var cubed = amount * squared;
@@ -349,7 +349,7 @@ class Vector3 {
         result.normalize();
 	}
 	
-
+/*
 	inline public static function Project(vector:Vector3, world:Matrix, transform:Matrix, viewport:Clip):Vector3 {
 		var cw = viewport.width;
         var ch = viewport.height;
@@ -381,7 +381,7 @@ class Vector3 {
 
         return vector;
 	}	
-
+*/
 	inline public static function Minimize(left:Vector3, right:Vector3):Vector3 {
 		var x = (left.x < right.x) ? left.x : right.x;
         var y = (left.y < right.y) ? left.y : right.y;

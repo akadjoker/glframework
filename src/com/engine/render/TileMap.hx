@@ -5,18 +5,19 @@ import openfl.gl.GLBuffer;
 import openfl.gl.GLProgram;
 import openfl.utils.Float32Array;
 import openfl.utils.Int16Array;
-import openfl.display.FPS;
-import com.engine.game.Game;
+
 import flash.geom.Point;
 import openfl.Assets;
 
 import com.engine.misc.Util;
 import com.engine.math.Vector3;
-import com.engine.math.Matrix;
+
 
 import flash.geom.Matrix3D;
 import flash.geom.Vector3D;
-	
+import com.engine.render.filter.Filter;	
+import com.engine.game.Game;
+import com.engine.render.tiles.Layer;
 
 /**
  * ...
@@ -28,60 +29,67 @@ typedef Array2D = Array<Array<Int>>
 class TileMap extends Buffer
 {
 
+	public var currentBlendMode:Int;
 
 	public var widthInTiles:Int;
 	public var heightInTiles:Int;
+
 	public var tileWidth:Int;
 	public var tileHeight:Int;
 	public var margin:Int=0;
 	public var spacing:Int=0;
-	public var tilesIDs:Array<Int>;
 	public var columns:Int;
 	public var image:Texture;
-	private var isBuild:Bool;
-	private var capacity:Int;
-	private var numVerts:Int;
-	private var numIndices:Int; 
-	private var vertices:Float32Array;
-	private var indices:Int16Array;
-	private var lastIndexCount:Int;
-	private var drawing:Bool;
-	private var currentBatchSize:Int;
-	private var currentBlendMode:Int;
-	private var currentBaseTexture:Texture;
+	public var ortho:Bool;
 
 
 
-private var vertexBuffer:GLBuffer;
-private var indexBuffer:GLBuffer;
+
 
 private var invTexWidth:Float = 0;
 private var invTexHeight:Float = 0;
 
 public var shader:SpriteShader;
-public var vertexStrideSize:Int;
 
-		
+
+//layers
+
+public var layers:Array<Layer>;
+
+//blocks
+ private var blocks:Array<Block>;
+ private var segmentCols:Int ;
+ private var segmentRows:Int ;
+ private var numSegments:Int ;
+ private var segmentWidth:Int;
+ private var segmentHeight:Int	;
 	
 
-public  function new (xml:String):Void 
+ public  function new (xml:String,?Build:Bool=true):Void 
 		{
-			super();
+		super();
+		
+		var initTime:Int = Util.getTime();
+		
 		var xml = Xml.parse(xml).firstElement();
 
 		 widthInTiles = Std.parseInt(xml.get("width"));
 		 heightInTiles = Std.parseInt(xml.get("height"));
-		//this.orientation = xml.get("orientation");
+		if (xml.get("orientation") == "orthogonal")
+		{
+		ortho = true;
+		} else {
+	    ortho = false;
+		}
 		// tileWidth = Std.parseInt(xml.get("tilewidth"));
 		// tileHeight = Std.parseInt(xml.get("tileheight"));
 		var properties = new Map<String, String>();
+		layers = [];
 
 		for (child in xml)
 		{
-		//	trace("node:" +child.toString());
-			if (isValidElement(child)) 
+		if (isValidElement(child)) 
 			{
-			//	trace(child.nodeName);
 				if (child.nodeName == "tileset")
 				{
 					if (child.get("source") != null) 
@@ -91,10 +99,6 @@ public  function new (xml:String):Void
 					{
 						tilesfromGenericXml(child.toString());
 					}
-
-					//tileset.setFirstGID(Std.parseInt(child.get("firstgid")));
-
-					//this.tilesets.push(tileset);
 				}
 
 				else if (child.nodeName == "properties") 
@@ -115,279 +119,185 @@ public  function new (xml:String):Void
 				else if (child.nodeName == "objectgroup") 
 				{
 				objectsfromGenericXml(child);
-
-				
 				}
 			}
 		}
 		
-		addClips();
-	
-	   capacity = (this.widthInTiles * this.heightInTiles);
-	 
-
-	     vertexStrideSize =  9 * 4; 
- 
-	   numVerts = capacity * vertexStrideSize *   4;
-       numIndices = capacity * 6;
-
-  
-
-    vertices = new Float32Array(numVerts);
-
-    
-
-	
-	
-        this.indices = new Int16Array(numIndices); 
-		var length = Std.int(this.indices.length/6);
+		var endTime:Int = Util.getTime();
 		
-		for (i in 0...length) 
-		{
-			var index2 = i * 6;
-			var index3 = i * 4;
-			this.indices[index2 + 0] = index3 + 0;
-			this.indices[index2 + 1] = index3 + 1;
-			this.indices[index2 + 2] = index3 + 2;
-			this.indices[index2 + 3] = index3 + 0;
-			this.indices[index2 + 4] = index3 + 2;
-			this.indices[index2 + 5] = index3 + 3;
-		};
+		if (Build) buildBuffers();
 		
-
-
-    currentBatchSize = 0;
-	currentBlendMode = BlendMode.NORMAL;
-    invTexWidth  = 1.0 / image.texWidth;
-    invTexHeight = 1.0 / image.texHeight;
-
-	
-
-    vertexBuffer = GL.createBuffer();
-    indexBuffer = GL.createBuffer();
-
-
-    //upload the index data
-    GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STATIC_DRAW);
-
-	
-    GL.bindBuffer(GL.ARRAY_BUFFER, vertexBuffer);
-    GL.bufferData(GL.ARRAY_BUFFER, vertices, GL.DYNAMIC_DRAW);
+	trace(" tock "+ (endTime-initTime)+" to load tilemap"); 	
 	
 	
-	
+
+}
+
+public function buildBuffers()
+{
 	shader = new SpriteShader();
-	isBuild = false;
+	currentBlendMode = BlendMode.NORMAL;
 	
-				
-		
-		
-		}
-		
+		for (l in 0...layers.length)
+	 {
+	 layers[l].build();
+	 }
+}
+
+	/*	
+public function buildSegments(segmentWidth:Int,segmentHeight:Int)
+{
 	
-	public function build()
-		{
-		for (y in 0...heightInTiles)
-		{
-			for (x in 0...widthInTiles)
+segmentCols = 0;
+segmentRows = 0;
+numSegments = 0;
+this.segmentWidth = segmentWidth;
+this.segmentHeight = segmentHeight;
+
+ 
+
+	 blocks = new  Array<Block>();
+		
+
+			var tilesetCols:Int = Math.floor(image.width / tileWidth);
+			var tilesetRows:Int = Math.floor(image.height / tileHeight);
+			
+			var viewWidthInTiles:Int  = Std.int(Game.viewWidth/ tileWidth);
+			var viewHeightInTiles:Int = Std.int(Game.viewHeight/ tileHeight);
+			
+			var cols:Int = widthInTiles;
+			var rows:Int = heightInTiles;
+		
+			
+			segmentWidth = segmentWidth == -1 ? (cols < viewWidthInTiles * 2 ? cols : viewWidthInTiles) : segmentWidth;
+			segmentHeight = segmentHeight == -1 ? (rows < viewHeightInTiles * 2 ? rows : viewHeightInTiles) : segmentHeight;
+			segmentCols = Math.ceil(cols / segmentWidth);
+			segmentRows = Math.ceil(rows / segmentHeight);
+			
+			for (y in 0...segmentCols)
 			{
+				for (x in 0...segmentRows) 
+				{
+					var sw:Int = x == segmentCols - 1 && cols % segmentWidth != 0 ? cols % segmentWidth : segmentWidth;
+					var sh:Int = y == segmentRows - 1 && rows % segmentHeight != 0 ? rows % segmentHeight : segmentHeight;
+					blocks.push(new Block(sw, sh));
+					numSegments++;
+				}
+			}
+
+			
+			var uvWidth:Float  = 1 / (image.width / tileHeight);
+			var uvHeight:Float = 1 / (image.height / tileWidth);
+		
+			
+            var tid:Int = 0;
+			var index:Int=0;
+	
+			for (y in 0...rows)
+			{
+				for (x in 0...cols) 
+				{
+	
+					var segmentRow:Int = Std.int(y / segmentHeight);
+					var segmentCol:Int = Std.int(x / segmentWidth);
+					var segmentOffset:Int = segmentRow * segmentCols + segmentCol;
+					var segment:Block = blocks[segmentOffset];
+					
+					tid = getCell(x, y);
+					if (tid == 0) 
+					{
+						continue;
+					}
+					tid -= 1;
 
 					
-				var id =  getCell(x, y);
-				if (id >= 1)
+					var tx:Int = x * tileWidth;
+					var ty:Int = y * tileHeight;
+					var u:Float = (tid % tilesetCols) * uvWidth;
+					var v:Float = Math.floor(tid / tilesetCols) * uvHeight;
+				
+					
+					
+					segment.addVertex(tx + Util.EPSILON, 	ty + Util.EPSILON,	u,				v);
+					segment.addVertex(tx + tileWidth,		ty + Util.EPSILON,	u + uvWidth,	v);
+					segment.addVertex(tx + Util.EPSILON,	ty + tileHeight,	u,				v + uvHeight);
+					segment.addVertex(tx + tileWidth,		ty + tileHeight,	u + uvWidth,	v + uvHeight);
+					
+					segment.indices.push(segment.index + 0);
+					segment.indices.push(segment.index + 1);
+					segment.indices.push(segment.index + 2);
+					segment.indices.push(segment.index + 1);
+					segment.indices.push(segment.index + 2);
+					segment.indices.push(segment.index + 3);
+					
+					
+					
+					segment.index += 4;
+						
+				}
+			}	
+			
+		shader = new  SpriteShader();
+			
+		for (i in 0...blocks.length)
+		{
+		 blocks[i].build();
+		}
+}
+
+
+public function renderSegments(viewWidth:Int,viewHeight:Int)
+{
+	update();
+	shader.Enable();
+    shader.setTexture(image);
+	BlendMode.setBlend(this.currentBlendMode);
+	GL.uniformMatrix3D(shader.projectionMatrixUniform, false,Game.camera.projMatrix);
+    GL.uniformMatrix3D(shader.modelViewMatrixUniform, false, viewMatrix);
+
+ 
+   
+   
+            var minXSegment:Int = Math.floor((Game.camera.scrollX- position.x) / tileWidth / segmentWidth);
+			var maxXSegment:Int = Math.floor((Game.camera.scrollX+ viewWidth - position.x ) / tileWidth / segmentWidth);
+			
+			var minYSegment:Int = Math.floor((Game.camera.scrollY-position.y) / tileHeight / segmentHeight);
+			var maxYSegment:Int = Math.floor((Game.camera.scrollY + viewHeight-position.y) / tileHeight / segmentHeight);
+			for ( sx in minXSegment...maxXSegment) 
+			{
+				for (sy in minYSegment...maxYSegment) 
 				{
-					//id = 1;
-					var t:Clip = getClip(id - 1);
-			  	       var DrawX:Int =Math.round((x * tileWidth));
-                       var DrawY:Int =Math.round((y * tileHeight));
-					 var dst:Clip = new Clip(Math.round(DrawX),Math.round( DrawY), tileWidth, tileHeight);
-					 this.addQuad(t,dst);
+					var si:Int = sy * segmentCols + sx;
+					if (si < 0 || si >= blocks.length) {
+						continue;
+					}
+					blocks[si].render();
+					
 				}
 			}
-		}
-		isBuild = true;
-		}
-
-	
-public function addQuad(srcrect:Clip, dstrect:Clip)
-{
-
-var index:Int = currentBatchSize *  vertexStrideSize;
-
-var widthTex:Int  = image.width;
-var heightTex:Int = image.height;
-
-
-         			
-
-vertices[index++] = dstrect.x;
-vertices[index++] = dstrect.y;
-vertices[index++] = 0;
-vertices[index++] = srcrect.x / widthTex; vertices[index++] = srcrect.y / heightTex;
-vertices[index++] = 1;vertices[index++] = 1;vertices[index++] = 1;vertices[index++] = 1;
-	
-vertices[index++] = (dstrect.x + dstrect.width);
-vertices[index++] = dstrect.y;
-vertices[index++] = 0;
-vertices[index++] = (srcrect.x + srcrect.width) / widthTex;vertices[index++] = srcrect.y / heightTex;
-vertices[index++] = 1; vertices[index++] = 1; vertices[index++] = 1; vertices[index++] = 1;
-
-vertices[index++] =(dstrect.x + dstrect.width);
-vertices[index++] =(dstrect.y + dstrect.height);
-vertices[index++] = 0;
-vertices[index++] = (srcrect.x + srcrect.width) / widthTex;vertices[index++] = (srcrect.y + srcrect.height) / heightTex;
-vertices[index++] = 1; vertices[index++] = 1; vertices[index++] = 1; vertices[index++] = 1;
-
-vertices[index++] = dstrect.x;  
-vertices[index++] = (dstrect.y + dstrect.height);
-vertices[index++] = 0;
-vertices[index++] = srcrect.x / widthTex; vertices[index++] = (srcrect.y + srcrect.height) / heightTex;
-vertices[index++] = 1; vertices[index++] = 1; vertices[index++] = 1; vertices[index++] = 1;
-
-
- 
- 
-this.currentBatchSize++;
-	 
-}
-public function render()
-	{
-	 this.update();
-	 
-	
-	 
-	 if (!isBuild)
-	 {
-		 build();
-		 return;
-	 }
-	 shader.Enable();
-     GL.bindBuffer(GL.ARRAY_BUFFER, this.vertexBuffer);
-     GL.vertexAttribPointer(shader.vertexAttribute, 3, GL.FLOAT, false, vertexStrideSize, 0);
-     GL.vertexAttribPointer(shader.texCoordAttribute  , 2, GL.FLOAT, false, vertexStrideSize, 3 * 4);
-     GL.vertexAttribPointer(shader.colorAttribute, 4, GL.FLOAT, false, vertexStrideSize, (3+2) * 4);
-
-
-	 
-  if (currentBatchSize == 0) return;
-
 			
-	
-   	GL.activeTexture(GL.TEXTURE0);
-	image.Bind();
-	BlendMode.setBlend(this.currentBlendMode);
-	GL.uniformMatrix4fv(shader.projectionMatrixUniform, false,new Float32Array(Game.projMatrix.toArray()));
-    GL.uniformMatrix4fv(shader.modelViewMatrixUniform, false, new Float32Array(viewMatrix.toArray()));
-   
-    GL.uniform1i (shader.imageUniform, 0);
-    GL.bufferData(GL.ARRAY_BUFFER, vertices, GL.DYNAMIC_DRAW);
-	GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-    GL.drawElements(GL.TRIANGLES, currentBatchSize * 6, GL.UNSIGNED_SHORT, 0);
-    shader.Disable();
-    }
-	
-	
-public function renderDinamic(pointx:Float,pointy:Float)
-	{
-	 this.update();
-	 isBuild = false;
-	 currentBatchSize = 0;
-	 shader.Enable();
-     GL.bindBuffer(GL.ARRAY_BUFFER, this.vertexBuffer);
-     GL.vertexAttribPointer(shader.vertexAttribute, 3, GL.FLOAT, false, vertexStrideSize, 0);
-     GL.vertexAttribPointer(shader.texCoordAttribute  , 2, GL.FLOAT, false, vertexStrideSize, 3 * 4);
-     GL.vertexAttribPointer(shader.colorAttribute, 4, GL.FLOAT, false, vertexStrideSize, (3 + 2) * 4);
-	 
-	 	var tw:Int = Math.ceil(tileWidth), th:Int = Math.ceil(tileHeight);
-
-	
-
-		// determine start and end tiles to draw (optimization)
-		var startx = Math.floor( -pointx / tw ),
-			starty = Math.floor( -pointy / th ),
-			destx = startx + 1 + Math.ceil(Game.viewWidth  / tw ),
-			desty = starty + 1 + Math.ceil(Game.viewHeight / th );
-
-		// nothing will render if we're completely off screen
-		if (startx > widthInTiles || starty > heightInTiles || destx < 0 || desty < 0)
-			return;
-
-		// clamp values to boundaries
-		if (startx < 0) startx = 0;
-		if (destx > widthInTiles) destx = widthInTiles;
-		if (starty < 0) starty = 0;
-		if (desty > heightInTiles) desty = heightInTiles;
-
-		var wx:Float, sx:Float = (pointx + startx * tw ) ,
-			wy:Float = (pointy + starty * th ) ,
-			stepx:Float = tw ,
-			stepy:Float = th ,
-			tile:Int = 0;
-
-		// adjust scale to fill gaps
-		var scx = Math.ceil(stepx) / tileWidth;
-		var scy = Math.ceil(stepy) / tileHeight;
-
-		for (y in starty...desty)
-		{
-			wx = sx;
-			for (x in startx...destx)
-			{
 				
-				var id =  getCell(x%widthInTiles, y%heightInTiles);
-				if (id >= 1)
-				{
-					var t:Clip = getClip(id - 1);
-					this.addQuad(t,new Clip(Math.round(wx), Math.round(wy), tileWidth,tileHeight));
-				}				
-	  		wx += stepx;
-			}
-			wy += stepy;
-		}
+   
+ 
+   shader.Disable();
+}
+	*/
 
-	 
-  if (currentBatchSize == 0) return;
-   	GL.activeTexture(GL.TEXTURE0);
-	image.Bind();
-	BlendMode.setBlend(this.currentBlendMode);
-	GL.uniformMatrix4fv(shader.projectionMatrixUniform, false,new Float32Array(Game.projMatrix.toArray()));
-    GL.uniformMatrix4fv(shader.modelViewMatrixUniform, false, new Float32Array(viewMatrix.toArray()));
-    GL.uniform1i (shader.imageUniform, 0);
-    GL.bufferData(GL.ARRAY_BUFFER, vertices, GL.DYNAMIC_DRAW);
-	GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-    GL.drawElements(GL.TRIANGLES, currentBatchSize * 6, GL.UNSIGNED_SHORT, 0);
-    currentBatchSize = 0;
-    shader.Disable();
-	}
-	
+
 	
 			
-		 public function getCell(x:Int, y:Int):Int
-		{
-			 return  tilesIDs[y * this.widthInTiles + x];
-			
-		}
+
 		public function getClip(num:Int):Clip
 		{
-	
-	
-  
 		//	return new Clip(this.tileWidth * (num % columns), this.tileHeight * Std.int(num / columns), this.tileWidth, this.tileHeight);
 			return new Clip(
 			this.margin + (this.tileWidth  + this.spacing) * num % columns,
 			this.margin + (this.tileHeight + this.spacing) * Std.int(num / columns),
 			this.tileWidth, this.tileHeight);
-			
-			
-
-			
 		}
    	  
 		
-		public function addClips()
-		{
-			/*
+/*
 		}
 		clips = [];
 		var columns:Int =Std.int( image.width  / this.tileWidth );
@@ -411,7 +321,7 @@ public function renderDinamic(pointx:Float,pointy:Float)
 		}
 	}
 	*/
- }
+ 
 		
 	public function loadFromString(str:String, columnSep:String = ",", rowSep:String = "\n")
 	{
@@ -570,10 +480,13 @@ public function renderDinamic(pointx:Float,pointy:Float)
 
 				if (child.nodeName == "image")
 				{
+					
 					var width = Std.parseInt(child.get("width"));
 					var height = Std.parseInt(child.get("height"));
                    // trace("Tile set: Image: " + child.get("source"));
-					this.image = new Texture("assets/" + child.get("source"));
+				   
+					this.image =new  Texture();
+					this.image.load("assets/" + child.get("source"));
 					if (image!=null)
 					{
 					this.columns = Std.int(image.width / this.tileWidth);
@@ -581,7 +494,7 @@ public function renderDinamic(pointx:Float,pointy:Float)
 					
 					//trace("Columns:" + columns);
 					}
-					//image = new TilesetImage(child.get("source"), width, height);
+					
 				}
 
 				if (child.nodeName == "terraintypes") 
@@ -663,15 +576,21 @@ public function renderDinamic(pointx:Float,pointy:Float)
 	
 		public  function layerfromGenericXml(xml:Xml)
 		{
+			
+			
+		
 		var name:String = xml.get("name");
 		var width:Int = Std.parseInt(xml.get("width"));
 		var height:Int = Std.parseInt(xml.get("height"));
 		var opacity:Float = Std.parseFloat(xml.get("opacity") != null ?			xml.get("opacity") : "1.0");
 
-	    tilesIDs= new Array<Int>();
+		var layer:Layer = new Layer(width, height, tileWidth, tileHeight, opacity, name);
+		layer.parent = this;
+	 
 
 		for (child in xml) 
 		{
+	
 			if (isValidElement(child)) 
 			{
 				if (child.nodeName == "data") 
@@ -691,18 +610,16 @@ public function renderDinamic(pointx:Float,pointy:Float)
 						case "csv":
 							{
 							chunk = child.firstChild().nodeValue;
-								//trace("csv");
-							   tilesIDs = csvToArray(chunk);
+							layer.tilesIDs= csvToArray(chunk);
 				     	}
 						default:
 							{
-							//trace("string tiles");
 							for (tile in child) 
 							{
 								if (isValidElement(tile)) 
 								{
 									var gid = Std.parseInt(tile.get("gid"));
-									tilesIDs.push(gid);
+									layer.tilesIDs.push(gid);
 								}
 							}
 							}
@@ -710,48 +627,48 @@ public function renderDinamic(pointx:Float,pointy:Float)
 				}
 			}
 		}
+		
+		layers.push(layer);
 	}
-	public function toCSV(?width:Int):String 
-	{
-		if (width <= 0 || width == null) 
-		{
-			width = this.widthInTiles;
-		}
+	
+public function renderLayer(layer:Int)
+{
+	this.update();
+	 if (layer >= layers.length) layer = layers.length;
+	 shader.Enable();
+	 shader.setTexture(image);
+     GL.uniformMatrix3D(shader.modelViewMatrixUniform, false, viewMatrix);
+     GL.uniformMatrix3D(shader.projectionMatrixUniform, false,Game.camera.projMatrix);
+	 BlendMode.setBlend(currentBlendMode); 
+	 layers[layer].render();
+}
 
-		var counter:Int = 0;
-		var csv:String = "";
+public function render()
+{
+	this.update();
+	
+	 shader.Enable();
+	 shader.setTexture(image);
+     GL.uniformMatrix3D(shader.modelViewMatrixUniform, false, viewMatrix);
+     GL.uniformMatrix3D(shader.projectionMatrixUniform, false,Game.camera.projMatrix);
+	 BlendMode.setBlend(currentBlendMode); 
+    
+	 for (l in 0...layers.length)
+	 {
+	 layers[l].render();
+	 }
 
-		for (tile in tilesIDs) 
-		{
-			var tileGID = tile;
-
-			if (counter >= width) 
-			{
-				// remove the last ","
-				csv = csv.substr(0, csv.length - 1);
-
-				// add a new line and reset counter
-				csv += '\n';
-				counter = 0;
-			}
-
-			csv += tileGID;
-			csv += ',';
-
-			counter++;
-		}
-
-		// remove the last ","
-		csv = csv.substr(0, csv.length - 1);
-
-		return csv;
-	}
+}
 		
 override public function dispose():Void 
 {
-	   GL.deleteBuffer(indexBuffer);
-		GL.deleteBuffer(vertexBuffer);
-	super.dispose();
+	 for (l in 0...layers.length)
+	 {
+	 layers[l].dispose();
+	 }
+	 layers = null;
+	 shader.dispose();
+	 super.dispose();
 	
 }
 }

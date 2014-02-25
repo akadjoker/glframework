@@ -24,15 +24,15 @@ class TesteCloud extends Screen
  var tex :Texture;
  var batch:SpriteCloud;
 
- var tilemap:TileMap;
+
 
 	
 	override public function show()
 	{
 	
-		tex = new Texture("assets/texture.png");
+		tex = getTexture("assets/texture.png");
 
-        batch = new SpriteCloud(tex,500);
+        batch = new SpriteCloud(tex,1000);
          for (i in 0...1000)
 		 {
           var particle:Particle = new Particle(tex);
@@ -47,16 +47,18 @@ class TesteCloud extends Screen
 		 caption.x =  Game.viewWidth / 2-100;
 		 caption.y = 20;
 		 caption.width = 200;
+		 caption.selectable = false;
 		 caption.defaultTextFormat = new TextFormat ("_sans", 12, 0xffff00);
 		 caption.text = "Test 1000 statics sprites ";
 		 game.addChild(caption);
 		 
 		 
-		 tilemap= new TileMap(Assets.getText ("assets/map.tmx"));
+	 
+		 game.clarColor(0, 0, 0.4);
 
 	}
 
-	override public function render(dt:Float) 
+	override public function render() 
 	{ 
 
     batch.render();

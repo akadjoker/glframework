@@ -54,6 +54,8 @@ class DefaultAssetLibrary extends AssetLibrary {
 		type.set ("assets/sewer_tileset.png", Reflect.field (AssetType, "image".toUpperCase ()));
 		className.set ("assets/sprites.png", __ASSET__assets_sprites_png);
 		type.set ("assets/sprites.png", Reflect.field (AssetType, "image".toUpperCase ()));
+		className.set ("assets/texture.jpg", __ASSET__assets_texture_jpg);
+		type.set ("assets/texture.jpg", Reflect.field (AssetType, "image".toUpperCase ()));
 		className.set ("assets/texture.png", __ASSET__assets_texture_png);
 		type.set ("assets/texture.png", Reflect.field (AssetType, "image".toUpperCase ()));
 		className.set ("assets/TileMap.tmx", __ASSET__assets_tilemap_tmx);
@@ -86,6 +88,8 @@ class DefaultAssetLibrary extends AssetLibrary {
 		type.set ("assets/sewer_tileset.png", Reflect.field (AssetType, "image".toUpperCase ()));
 		path.set ("assets/sprites.png", "assets/sprites.png");
 		type.set ("assets/sprites.png", Reflect.field (AssetType, "image".toUpperCase ()));
+		path.set ("assets/texture.jpg", "assets/texture.jpg");
+		type.set ("assets/texture.jpg", Reflect.field (AssetType, "image".toUpperCase ()));
 		path.set ("assets/texture.png", "assets/texture.png");
 		type.set ("assets/texture.png", Reflect.field (AssetType, "image".toUpperCase ()));
 		path.set ("assets/TileMap.tmx", "assets/TileMap.tmx");
@@ -548,6 +552,7 @@ class __ASSET__assets_scrol_tmx extends null { }
 class __ASSET__assets_sewers_tmx extends null { }
 class __ASSET__assets_sewer_tileset_png extends flash.display.BitmapData { public function new () { super (0, 0); } }
 class __ASSET__assets_sprites_png extends flash.display.BitmapData { public function new () { super (0, 0); } }
+class __ASSET__assets_texture_jpg extends flash.display.BitmapData { public function new () { super (0, 0); } }
 class __ASSET__assets_texture_png extends flash.display.BitmapData { public function new () { super (0, 0); } }
 class __ASSET__assets_tilemap_tmx extends null { }
 class __ASSET__assets_tiles_png extends flash.display.BitmapData { public function new () { super (0, 0); } }
@@ -556,6 +561,7 @@ class __ASSET__assets_zazaka_png extends flash.display.BitmapData { public funct
 
 
 #elseif html5
+
 
 
 

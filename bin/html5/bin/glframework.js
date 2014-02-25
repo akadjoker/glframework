@@ -23,12 +23,15 @@ ApplicationMain.main = function() {
 	ApplicationMain.preloader = new NMEPreloader();
 	flash.Lib.get_current().addChild(ApplicationMain.preloader);
 	ApplicationMain.preloader.onInit();
+	var loader = new flash.display.Loader();
+	ApplicationMain.loaders.set("assets/Background.jpg",loader);
+	ApplicationMain.total++;
 	var urlLoader = new flash.net.URLLoader();
 	urlLoader.set_dataFormat(flash.net.URLLoaderDataFormat.BINARY);
 	ApplicationMain.urlLoaders.set("assets/desert.tmx",urlLoader);
 	ApplicationMain.total++;
-	var loader = new flash.display.Loader();
-	ApplicationMain.loaders.set("assets/hxlogo.png",loader);
+	var loader1 = new flash.display.Loader();
+	ApplicationMain.loaders.set("assets/hxlogo.png",loader1);
 	ApplicationMain.total++;
 	var urlLoader1 = new flash.net.URLLoader();
 	urlLoader1.set_dataFormat(flash.net.URLLoaderDataFormat.BINARY);
@@ -38,8 +41,8 @@ ApplicationMain.main = function() {
 	urlLoader2.set_dataFormat(flash.net.URLLoaderDataFormat.BINARY);
 	ApplicationMain.urlLoaders.set("assets/mapxml.tmx",urlLoader2);
 	ApplicationMain.total++;
-	var loader1 = new flash.display.Loader();
-	ApplicationMain.loaders.set("assets/player.png",loader1);
+	var loader2 = new flash.display.Loader();
+	ApplicationMain.loaders.set("assets/player.png",loader2);
 	ApplicationMain.total++;
 	var urlLoader3 = new flash.net.URLLoader();
 	urlLoader3.set_dataFormat(flash.net.URLLoaderDataFormat.BINARY);
@@ -49,27 +52,30 @@ ApplicationMain.main = function() {
 	urlLoader4.set_dataFormat(flash.net.URLLoaderDataFormat.BINARY);
 	ApplicationMain.urlLoaders.set("assets/sewers.tmx",urlLoader4);
 	ApplicationMain.total++;
-	var loader2 = new flash.display.Loader();
-	ApplicationMain.loaders.set("assets/sewer_tileset.png",loader2);
-	ApplicationMain.total++;
 	var loader3 = new flash.display.Loader();
-	ApplicationMain.loaders.set("assets/sprites.png",loader3);
+	ApplicationMain.loaders.set("assets/sewer_tileset.png",loader3);
 	ApplicationMain.total++;
 	var loader4 = new flash.display.Loader();
-	ApplicationMain.loaders.set("assets/texture.png",loader4);
+	ApplicationMain.loaders.set("assets/sprites.png",loader4);
+	ApplicationMain.total++;
+	var loader5 = new flash.display.Loader();
+	ApplicationMain.loaders.set("assets/texture.jpg",loader5);
+	ApplicationMain.total++;
+	var loader6 = new flash.display.Loader();
+	ApplicationMain.loaders.set("assets/texture.png",loader6);
 	ApplicationMain.total++;
 	var urlLoader5 = new flash.net.URLLoader();
 	urlLoader5.set_dataFormat(flash.net.URLLoaderDataFormat.BINARY);
 	ApplicationMain.urlLoaders.set("assets/TileMap.tmx",urlLoader5);
 	ApplicationMain.total++;
-	var loader5 = new flash.display.Loader();
-	ApplicationMain.loaders.set("assets/tiles.png",loader5);
-	ApplicationMain.total++;
-	var loader6 = new flash.display.Loader();
-	ApplicationMain.loaders.set("assets/tmw_desert_spacing.png",loader6);
-	ApplicationMain.total++;
 	var loader7 = new flash.display.Loader();
-	ApplicationMain.loaders.set("assets/zazaka.png",loader7);
+	ApplicationMain.loaders.set("assets/tiles.png",loader7);
+	ApplicationMain.total++;
+	var loader8 = new flash.display.Loader();
+	ApplicationMain.loaders.set("assets/tmw_desert_spacing.png",loader8);
+	ApplicationMain.total++;
+	var loader9 = new flash.display.Loader();
+	ApplicationMain.loaders.set("assets/zazaka.png",loader9);
 	ApplicationMain.total++;
 	var resourcePrefix = "__ASSET__:bitmap_";
 	var _g = 0, _g1 = haxe.Resource.listNames();
@@ -88,9 +94,9 @@ ApplicationMain.main = function() {
 		var $it0 = ApplicationMain.loaders.keys();
 		while( $it0.hasNext() ) {
 			var path = $it0.next();
-			var loader8 = ApplicationMain.loaders.get(path);
-			loader8.contentLoaderInfo.addEventListener("complete",ApplicationMain.loader_onComplete);
-			loader8.load(new flash.net.URLRequest(path));
+			var loader10 = ApplicationMain.loaders.get(path);
+			loader10.contentLoaderInfo.addEventListener("complete",ApplicationMain.loader_onComplete);
+			loader10.load(new flash.net.URLRequest(path));
 		}
 		var $it1 = ApplicationMain.urlLoaders.keys();
 		while( $it1.hasNext() ) {
@@ -926,15 +932,18 @@ com.engine.game.Game = function() {
 	this.screenWidth = 0;
 	this.screen = null;
 	openfl.display.OpenGLView.call(this);
+	com.engine.game.Game.game = this;
 	this.ready = false;
 	this.set_render($bind(this,this.renderView));
 	this.screenWidth = flash.Lib.get_current().get_stage().get_stageWidth();
 	this.screenHeight = flash.Lib.get_current().get_stage().get_stageHeight();
-	com.engine.game.Game.viewWidth = this.screenHeight;
+	this.requestedFramerate = flash.Lib.get_current().get_stage().get_frameRate() | 0;
+	com.engine.game.Game.viewWidth = this.screenWidth;
 	com.engine.game.Game.viewHeight = this.screenHeight;
 	this.gameWidth = this.screenWidth;
 	this.gameHeight = this.screenHeight;
-	com.engine.game.Game.projMatrix = com.engine.math.Matrix.OrthoOffCenterLH(0,this.gameWidth,this.gameHeight,0,-1,1);
+	com.engine.game.Game.camera = new com.engine.render.Camera(this.screenWidth,this.screenHeight);
+	this.textures = new haxe.ds.StringMap();
 	this.get_stage().addEventListener(flash.events.Event.RESIZE,$bind(this,this.onResize));
 	this.get_stage().addEventListener(flash.events.Event.ADDED,$bind(this,this.focusGained));
 	this.get_stage().addEventListener(flash.events.Event.DEACTIVATE,$bind(this,this.focusLost));
@@ -948,7 +957,33 @@ $hxClasses["com.engine.game.Game"] = com.engine.game.Game;
 com.engine.game.Game.__name__ = ["com","engine","game","Game"];
 com.engine.game.Game.__super__ = openfl.display.OpenGLView;
 com.engine.game.Game.prototype = $extend(openfl.display.OpenGLView.prototype,{
-	renderView: function(rect) {
+	getTimer: function() {
+		return flash.Lib.getTimer();
+	}
+	,updateTimer: function() {
+		com.engine.game.Game.then = com.engine.game.Game.now;
+		com.engine.game.Game.now = this.getTimer();
+		com.engine.game.Game.dt = com.engine.game.Game.then == 0?0:(com.engine.game.Game.now - com.engine.game.Game.then) / 1000;
+		if(com.engine.game.Game.fixedTimestep) com.engine.game.Game.dt = 1 / this.requestedFramerate;
+		com.engine.game.Game.frames++;
+		if(com.engine.game.Game.now - com.engine.game.Game.frameStart >= 1000) {
+			com.engine.game.Game.fps = Math.min(this.requestedFramerate,com.engine.game.Game.frames) | 0;
+			com.engine.game.Game.frames = 0;
+			com.engine.game.Game.frameStart = com.engine.game.Game.now;
+		}
+	}
+	,getTexture: function(url,flip) {
+		if(flip == null) flip = false;
+		if(this.textures.exists(url)) return this.textures.get(url); else {
+			var tex = new com.engine.render.Texture();
+			tex.load(url,flip);
+			this.textures.set(url,tex);
+			return tex;
+		}
+	}
+	,renderView: function(rect) {
+		this.updateTimer();
+		var timer = this.getTimer();
 		com.engine.game.Game.viewWidth = rect.width | 0;
 		com.engine.game.Game.viewHeight = rect.height | 0;
 		if(this.rescale == true) {
@@ -960,20 +995,28 @@ com.engine.game.Game.prototype = $extend(openfl.display.OpenGLView.prototype,{
 			var margin_x = (this.screenWidth - this.gameWidth * scale_w) / 2;
 			var margin_y = (this.screenHeight - this.gameHeight * scale_h) / 2;
 			openfl.gl.GL.viewport(margin_x | 0,margin_y | 0,this.gameWidth * scale_w | 0,this.gameHeight * scale_h | 0);
-			com.engine.game.Game.projMatrix = com.engine.math.Matrix.OrthoOffCenterLH(0,this.gameWidth / ar_origin,this.gameHeight / ar_origin,0,-1000,1000);
+			if(com.engine.game.Game.camera != null) com.engine.game.Game.camera.resize(this.gameWidth / ar_origin,this.gameHeight / ar_origin);
 		} else {
 			openfl.gl.GL.viewport(rect.x | 0,rect.y | 0,rect.width | 0,rect.height | 0);
-			com.engine.game.Game.projMatrix = com.engine.math.Matrix.OrthoOffCenterLH(0,this.gameWidth,this.gameHeight,0,-1,1);
+			if(com.engine.game.Game.camera != null) com.engine.game.Game.camera.resize(com.engine.game.Game.viewWidth,com.engine.game.Game.viewHeight);
 		}
+		if(com.engine.game.Game.camera != null) com.engine.game.Game.camera.update();
 		this.nextFrame = flash.Lib.getTimer();
 		this.deltaTime = (this.nextFrame - this.prevFrame) * 0.001;
 		openfl.gl.GL.clearColor(this.red,this.green,this.blue,1);
 		if(this.enableDepth == true) openfl.gl.GL.clear(16640); else openfl.gl.GL.clear(16384);
-		if(this.ready) this.update(this.deltaTime);
+		if(this.ready) this.onRender();
+		openfl.gl.GL.disableVertexAttribArray(com.engine.render.filter.Filter.vertexAttribute);
+		openfl.gl.GL.disableVertexAttribArray(com.engine.render.filter.Filter.texCoordAttribute);
+		openfl.gl.GL.disableVertexAttribArray(com.engine.render.filter.Filter.colorAttribute);
 		openfl.gl.GL.bindBuffer(34962,null);
 		openfl.gl.GL.useProgram(null);
 		openfl.gl.GL.blendFunc(770,772);
+		timer = this.getTimer();
 		this.prevFrame = this.nextFrame;
+	}
+	,onEnterFrame: function(event) {
+		this.onUpdate(com.engine.game.Game.dt);
 	}
 	,setScreen: function(screen) {
 		if(this.screen != null) this.screen.dispose();
@@ -996,8 +1039,11 @@ com.engine.game.Game.prototype = $extend(openfl.display.OpenGLView.prototype,{
 	}
 	,keyDown: function(key) {
 	}
-	,update: function(dt) {
-		if(this.screen != null) this.screen.render(dt);
+	,onRender: function() {
+		if(this.screen != null) this.screen.update(com.engine.game.Game.dt);
+		if(this.screen != null) this.screen.render();
+	}
+	,onUpdate: function(dt) {
 	}
 	,resize: function(width,height) {
 		if(this.screen != null) this.screen.resize(width,height);
@@ -1012,9 +1058,18 @@ com.engine.game.Game.prototype = $extend(openfl.display.OpenGLView.prototype,{
 		this.resize(this.screenWidth,this.screenHeight);
 	}
 	,focusLost: function(e) {
-		console.log("end game");
 		this.ready = false;
 		this.end();
+		var $it0 = ((function(_e) {
+			return function() {
+				return _e.iterator();
+			};
+		})(this.textures))();
+		while( $it0.hasNext() ) {
+			var tex = $it0.next();
+			tex.dispose();
+		}
+		this.textures = null;
 	}
 	,doTouchMove: function(event) {
 	}
@@ -1062,9 +1117,11 @@ com.engine.game.Game.prototype = $extend(openfl.display.OpenGLView.prototype,{
 		openfl.gl.GL.blendFunc(770,772);
 		openfl.gl.GL.pixelStorei(3333,2);
 		this.setDeph(true);
-		this.clarColor(0,1,0.4);
+		this.clarColor(0,0,0.4);
 		openfl.gl.GL.clearColor(this.red,this.green,this.blue,1);
 		openfl.gl.GL.depthMask(true);
+		openfl.gl.GL.colorMask(true,true,true,true);
+		openfl.gl.GL.activeTexture(33984);
 		this.begin();
 		this.ready = true;
 	}
@@ -1103,7 +1160,7 @@ com.djoker.glteste.Main.__name__ = ["com","djoker","glteste","Main"];
 com.djoker.glteste.Main.__super__ = com.engine.game.Game;
 com.djoker.glteste.Main.prototype = $extend(com.engine.game.Game.prototype,{
 	begin: function() {
-		this.setScreen(new com.djoker.glteste.TestTrasform());
+		this.setScreen(new com.djoker.glteste.TesteTexRender());
 	}
 	,__class__: com.djoker.glteste.Main
 });
@@ -1176,6 +1233,9 @@ openfl.AssetLibrary.prototype = {
 }
 var DefaultAssetLibrary = function() {
 	openfl.AssetLibrary.call(this);
+	DefaultAssetLibrary.path.set("assets/Background.jpg","assets/Background.jpg");
+	var value = Reflect.field(openfl.AssetType,"image".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/Background.jpg",value);
 	DefaultAssetLibrary.path.set("assets/desert.tmx","assets/desert.tmx");
 	var value = Reflect.field(openfl.AssetType,"binary".toUpperCase());
 	DefaultAssetLibrary.type.set("assets/desert.tmx",value);
@@ -1203,6 +1263,9 @@ var DefaultAssetLibrary = function() {
 	DefaultAssetLibrary.path.set("assets/sprites.png","assets/sprites.png");
 	var value = Reflect.field(openfl.AssetType,"image".toUpperCase());
 	DefaultAssetLibrary.type.set("assets/sprites.png",value);
+	DefaultAssetLibrary.path.set("assets/texture.jpg","assets/texture.jpg");
+	var value = Reflect.field(openfl.AssetType,"image".toUpperCase());
+	DefaultAssetLibrary.type.set("assets/texture.jpg",value);
 	DefaultAssetLibrary.path.set("assets/texture.png","assets/texture.png");
 	var value = Reflect.field(openfl.AssetType,"image".toUpperCase());
 	DefaultAssetLibrary.type.set("assets/texture.png",value);
@@ -2082,12 +2145,12 @@ com.engine.game.Transform.prototype = {
 	}
 	,getTransformationMatrix: function() {
 		this.mTransformationMatrix.identity();
-		var cx = com.engine.game.Game.scrollX;
-		var cy = com.engine.game.Game.scrollY;
+		var cx = com.engine.game.Game.camera.scrollX;
+		var cy = com.engine.game.Game.camera.scrollY;
 		var sx = this.x - cx * this.scrollFactorX;
 		var sy = this.y - cy * this.scrollFactorY;
 		if(this.scaleX != 1.0 || this.scaleY != 1.0) this.mTransformationMatrix.scale(this.scaleX,this.scaleY);
-		if(this.skewX != 0.0 || this.skewY != 0.0) com.engine.misc.MatrixHelp.skew(this.mTransformationMatrix,this.skewX,this.skewY);
+		if(this.skewX != 0.0 || this.skewY != 0.0) com.engine.misc.Util.skew(this.mTransformationMatrix,this.skewX,this.skewY);
 		if(this.rotation != 0.0) this.mTransformationMatrix.rotate(this.rotation);
 		if(sx != 0.0 || sy != 0.0) this.mTransformationMatrix.translate(sx,sy);
 		if(this.pivotX != 0.0 || this.pivotY != 0.0) {
@@ -2129,7 +2192,11 @@ $hxClasses["com.engine.game.Screen"] = com.engine.game.Screen;
 com.engine.game.Screen.__name__ = ["com","engine","game","Screen"];
 com.engine.game.Screen.__super__ = com.engine.game.GameObject;
 com.engine.game.Screen.prototype = $extend(com.engine.game.GameObject.prototype,{
-	keyUp: function(key) {
+	getTexture: function(url,flip) {
+		if(flip == null) flip = false;
+		return this.game.getTexture(url,flip);
+	}
+	,keyUp: function(key) {
 	}
 	,keyDown: function(key) {
 	}
@@ -2141,57 +2208,251 @@ com.engine.game.Screen.prototype = $extend(com.engine.game.GameObject.prototype,
 	}
 	,resize: function(width,height) {
 	}
-	,render: function(dt) {
+	,update: function(dt) {
+	}
+	,render: function() {
 	}
 	,show: function() {
 	}
 	,__class__: com.engine.game.Screen
 });
-com.djoker.glteste.TestTrasform = function() {
+com.djoker.glteste.TesteTexRender = function() {
 	this.skew = 0;
+	this.value = 0;
+	this.redy = false;
+	this.filterIndex = 0;
 	com.engine.game.Screen.call(this);
 };
-$hxClasses["com.djoker.glteste.TestTrasform"] = com.djoker.glteste.TestTrasform;
-com.djoker.glteste.TestTrasform.__name__ = ["com","djoker","glteste","TestTrasform"];
-com.djoker.glteste.TestTrasform.__super__ = com.engine.game.Screen;
-com.djoker.glteste.TestTrasform.prototype = $extend(com.engine.game.Screen.prototype,{
+$hxClasses["com.djoker.glteste.TesteTexRender"] = com.djoker.glteste.TesteTexRender;
+com.djoker.glteste.TesteTexRender.__name__ = ["com","djoker","glteste","TesteTexRender"];
+com.djoker.glteste.TesteTexRender.__super__ = com.engine.game.Screen;
+com.djoker.glteste.TesteTexRender.prototype = $extend(com.engine.game.Screen.prototype,{
 	mouseDown: function(mousex,mousey) {
-		this.player.x = mousex;
-		this.player.y = mousey;
 	}
-	,render: function(dt) {
-		this.player.rotation += dt * 2.1;
-		this.child.rotation -= dt * 2.5;
-		this.player.skewX += dt * 0.1;
-		this.skew += dt;
+	,render: function() {
+		this.renderToFilter(this.filterIndex);
+	}
+	,normalRender: function() {
+		this.batch.Begin();
+		this.batch.drawEntity(this.back);
+		this.batch.drawEntity(this.logo);
+		this.batch.drawEntity(this.player,true);
+		this.batch.End();
+		this.primitives.begin();
+		this.primitives.line(10,10,100,100,1,0,1);
+		this.primitives.rect(100,100,90,120,1,1,1);
+		this.primitives.circle(100,100,12,8,1,1,1,1);
+		this.primitives.ellipse(300,90,55,15,8,1,1,1,1);
+		this.primitives.fillrect(200,200,50,50,1,0,0,1);
+		this.primitives.fillrect(280,200,50,50,0,1,1,1);
+		this.primitives.fillcircle(200,100,8,18,1,0,1,1);
+		this.primitives.fillellipse(300,100,55,15,8,0,1,1,1);
+		this.primitives.end();
+	}
+	,keyUp: function(key) {
+		this.redy = false;
+		if(key == 39) this.filterIndex++; else if(key == 37) this.filterIndex--;
+		if(this.filterIndex <= 0) this.filterIndex = 0;
+		if(this.filterIndex >= 13) this.filterIndex = 13;
+		this.value = 1;
+		this.setFilter(this.filterIndex);
+	}
+	,renderToFilter: function(index) {
+		if(!this.redy) return;
+		switch(index) {
+		case 1:
+			this.value += this.game.deltaTime * 0.1;
+			if(this.value > 10) this.value = 0.5;
+			var dataFilter = js.Boot.__cast(this.filter , com.engine.render.filter.ColorStepFilter);
+			dataFilter.setStep(this.value);
+			break;
+		case 3:
+			this.value += this.game.deltaTime * 0.1;
+			if(this.value > 1) this.value = 0.0;
+			var dataFilter = js.Boot.__cast(this.filter , com.engine.render.filter.InvertFilter);
+			dataFilter.setInvert(this.value);
+			break;
+		case 6:
+			this.value += this.game.deltaTime * 1.1;
+			if(this.value > 5) this.value = -1;
+			var dataFilter = js.Boot.__cast(this.filter , com.engine.render.filter.TwistFilter);
+			dataFilter.setRadius(this.value);
+			break;
+		case 13:
+			this.value += this.game.deltaTime * 1.1;
+			if(this.value > 100) this.value = 0;
+			var dataFilter = js.Boot.__cast(this.filter , com.engine.render.filter.ColorMatrixFilter);
+			dataFilter.setTransformation(Math.sin(this.value),Math.cos(this.value),this.value,1);
+			break;
+		}
+		if(this.filter != null) {
+			this.filter.begin();
+			this.normalRender();
+			this.filter.end();
+			this.filter.render();
+		}
+	}
+	,setFilter: function(index) {
+		switch(index) {
+		case 0:
+			this.caption.set_text("Render Normal Filter");
+			if(this.filter != null) {
+				this.filter.dispose();
+				this.filter = null;
+				this.filter = new com.engine.render.filter.NormalFilter(this.game.screenWidth,this.game.screenHeight);
+			} else this.filter = new com.engine.render.filter.NormalFilter(this.game.screenWidth,this.game.screenHeight);
+			break;
+		case 1:
+			this.value = 4.5;
+			this.caption.set_text("Render Color Step  Filter");
+			if(this.filter != null) {
+				this.filter.dispose();
+				this.filter = null;
+				this.filter = new com.engine.render.filter.ColorStepFilter(this.game.screenWidth,this.game.screenHeight);
+			} else this.filter = new com.engine.render.filter.ColorStepFilter(this.game.screenWidth,this.game.screenHeight);
+			break;
+		case 2:
+			this.caption.set_text("Render Gray Filter");
+			if(this.filter != null) {
+				this.filter.dispose();
+				this.filter = null;
+				this.filter = new com.engine.render.filter.GrayFilter(this.game.screenWidth,this.game.screenHeight);
+			} else this.filter = new com.engine.render.filter.GrayFilter(this.game.screenWidth,this.game.screenHeight);
+			break;
+		case 3:
+			this.value = 0.8;
+			if(this.filter != null) {
+				this.filter.dispose();
+				this.filter = null;
+				this.filter = new com.engine.render.filter.InvertFilter(this.game.screenWidth,this.game.screenHeight);
+			} else this.filter = new com.engine.render.filter.InvertFilter(this.game.screenWidth,this.game.screenHeight);
+			break;
+		case 4:
+			this.caption.set_text("Render Blur X Filter");
+			if(this.filter != null) {
+				this.filter.dispose();
+				this.filter = null;
+				this.filter = new com.engine.render.filter.BlurXFilter(this.game.screenWidth,this.game.screenHeight);
+			} else this.filter = new com.engine.render.filter.BlurXFilter(this.game.screenWidth,this.game.screenHeight);
+			break;
+		case 5:
+			this.caption.set_text("Render Blur Y Filter");
+			if(this.filter != null) {
+				this.filter.dispose();
+				this.filter = null;
+				this.filter = new com.engine.render.filter.BlurYFilter(this.game.screenWidth,this.game.screenHeight);
+			} else this.filter = new com.engine.render.filter.BlurYFilter(this.game.screenWidth,this.game.screenHeight);
+			break;
+		case 6:
+			this.value = 0.5;
+			this.caption.set_text("Render Twist Filter");
+			if(this.filter != null) {
+				this.filter.dispose();
+				this.filter = null;
+				this.filter = new com.engine.render.filter.TwistFilter(this.game.screenWidth,this.game.screenHeight);
+			} else this.filter = new com.engine.render.filter.TwistFilter(this.game.screenWidth,this.game.screenHeight);
+			break;
+		case 7:
+			this.caption.set_text("Render Sepia Filter");
+			if(this.filter != null) {
+				this.filter.dispose();
+				this.filter = null;
+				this.filter = new com.engine.render.filter.SepiaFilter(this.game.screenWidth,this.game.screenHeight);
+			} else this.filter = new com.engine.render.filter.SepiaFilter(this.game.screenWidth,this.game.screenHeight);
+			break;
+		case 8:
+			this.caption.set_text("Render Blur Filter");
+			if(this.filter != null) {
+				this.filter.dispose();
+				this.filter = null;
+				this.filter = new com.engine.render.filter.BlurFilter(this.game.screenWidth,this.game.screenHeight);
+			} else this.filter = new com.engine.render.filter.BlurFilter(this.game.screenWidth,this.game.screenHeight);
+			break;
+		case 9:
+			this.caption.set_text("Render Pixelate Filter");
+			if(this.filter != null) {
+				this.filter.dispose();
+				this.filter = null;
+				this.filter = new com.engine.render.filter.PixelateFilter(this.game.screenWidth,this.game.screenHeight);
+			} else this.filter = new com.engine.render.filter.PixelateFilter(this.game.screenWidth,this.game.screenHeight);
+			break;
+		case 10:
+			this.value = 0;
+			this.caption.set_text("Render Dot Screen Filter");
+			if(this.filter != null) {
+				this.filter.dispose();
+				this.filter = null;
+				this.filter = new com.engine.render.filter.DotScreenFilter(this.game.screenWidth,this.game.screenHeight);
+			} else this.filter = new com.engine.render.filter.DotScreenFilter(this.game.screenWidth,this.game.screenHeight);
+			break;
+		case 11:
+			this.value = 0;
+			this.caption.set_text("Render  Split RGB Filter");
+			if(this.filter != null) {
+				this.filter.dispose();
+				this.filter = null;
+				this.filter = new com.engine.render.filter.RGBSplitFilter(this.game.screenWidth,this.game.screenHeight);
+			} else this.filter = new com.engine.render.filter.RGBSplitFilter(this.game.screenWidth,this.game.screenHeight);
+			break;
+		case 12:
+			this.value = 0;
+			this.caption.set_text("Render  Cross hatch Filter");
+			if(this.filter != null) {
+				this.filter.dispose();
+				this.filter = null;
+				this.filter = new com.engine.render.filter.CrossHatchFilter(this.game.screenWidth,this.game.screenHeight);
+			} else this.filter = new com.engine.render.filter.CrossHatchFilter(this.game.screenWidth,this.game.screenHeight);
+			break;
+		case 13:
+			this.value = 0;
+			this.caption.set_text("Render  Color Matrix Transformation Filter");
+			if(this.filter != null) {
+				this.filter.dispose();
+				this.filter = null;
+				this.filter = new com.engine.render.filter.ColorMatrixFilter(this.game.screenWidth,this.game.screenHeight);
+			} else this.filter = new com.engine.render.filter.ColorMatrixFilter(this.game.screenWidth,this.game.screenHeight);
+			break;
+		}
+		this.redy = true;
+	}
+	,update: function(dt) {
+		this.player.rotation += this.game.deltaTime * 2.1;
+		this.child.rotation -= this.game.deltaTime * 2.5;
+		this.player.skewX += this.game.deltaTime * 0.1;
+		this.skew += this.game.deltaTime;
 		this.logo.skewX = Math.sin(this.skew);
 		this.logo.skewY = Math.cos(this.skew);
-		this.batch.Begin();
-		this.batch.drawEntity(this.logo);
-		this.batch.drawEntity(this.player);
-		this.batch.drawEntity(this.child);
-		this.batch.End();
 	}
 	,show: function() {
-		this.playerTex = new com.engine.render.Texture("assets/zazaka.png",true);
-		this.batch = new com.engine.render.SpriteBatch(500);
-		var caption = new flash.text.TextField();
-		caption.set_x(this.game.gameWidth / 2 - 100);
-		caption.set_y(20);
-		caption.set_width(200);
-		caption.set_defaultTextFormat(new flash.text.TextFormat("_sans",12,16776960));
-		caption.set_text("Test trasform sprites by parent ");
-		caption.selectable = false;
-		this.game.addChild(caption);
-		this.logo = new com.engine.game.Entity(this.width / 2,this.height / 2,new com.engine.render.Texture("assets/hxlogo.png",true));
-		this.logo.blendMode = com.engine.render.BlendMode.SCREEN;
-		this.player = new com.engine.game.Entity(300,200,this.playerTex);
-		this.child = new com.engine.game.Entity(0,0,this.playerTex);
+		this.batch = new com.engine.render.SpriteBatch(1000);
+		this.caption = new flash.text.TextField();
+		this.caption.set_x(this.game.gameWidth / 2 - 100);
+		this.caption.set_y(20);
+		this.caption.set_width(200);
+		this.caption.set_defaultTextFormat(new flash.text.TextFormat("_sans",12,16776960));
+		this.caption.set_text("Render Filter");
+		this.caption.selectable = false;
+		this.game.addChild(this.caption);
+		var label = new flash.text.TextField();
+		label.set_x(5);
+		label.set_y(this.game.gameHeight - 25);
+		label.set_width(400);
+		label.set_defaultTextFormat(new flash.text.TextFormat("_sans",22,16776960));
+		label.set_text("Left/Right keys switch filters");
+		label.selectable = false;
+		this.game.addChild(label);
+		this.player = new com.engine.game.Entity(300,300,this.getTexture("assets/zazaka.png",true));
+		this.child = new com.engine.game.Entity(0,0,this.getTexture("assets/zazaka.png",true));
 		this.child.blue = 0;
 		this.player.add(this.child);
+		this.logo = new com.engine.game.Entity(100 + this.width / 2,this.height / 2,this.getTexture("assets/hxlogo.png",true));
+		this.back = new com.engine.game.Entity(256.,256.,this.getTexture("assets/texture.jpg",true));
+		this.primitives = new com.engine.render.BatchPrimitives(500);
+		this.filterIndex = 0;
+		this.setFilter(this.filterIndex);
 		this.game.clarColor(0,0,0);
 	}
-	,__class__: com.djoker.glteste.TestTrasform
+	,__class__: com.djoker.glteste.TesteTexRender
 });
 com.engine.game.Entity = function(x,y,image,name) {
 	if(name == null) name = "solid";
@@ -2218,902 +2479,11 @@ com.engine.game.Entity.__super__ = com.engine.game.GameObject;
 com.engine.game.Entity.prototype = $extend(com.engine.game.GameObject.prototype,{
 	__class__: com.engine.game.Entity
 });
+com.engine.input = {}
+com.engine.input.Keys = function() { }
+$hxClasses["com.engine.input.Keys"] = com.engine.input.Keys;
+com.engine.input.Keys.__name__ = ["com","engine","input","Keys"];
 com.engine.math = {}
-com.engine.math.Matrix = function() {
-	this.m = [];
-};
-$hxClasses["com.engine.math.Matrix"] = com.engine.math.Matrix;
-com.engine.math.Matrix.__name__ = ["com","engine","math","Matrix"];
-com.engine.math.Matrix.MatrixMultiply4x4 = function(A,B) {
-	var result = new com.engine.math.Matrix();
-	result.m[0] = A.m[0] * B.m[0] + A.m[4] * B.m[1] + A.m[8] * B.m[2] + A.m[12] * B.m[3];
-	result.m[1] = A.m[1] * B.m[0] + A.m[5] * B.m[1] + A.m[9] * B.m[2] + A.m[13] * B.m[3];
-	result.m[2] = A.m[2] * B.m[0] + A.m[6] * B.m[1] + A.m[10] * B.m[2] + A.m[14] * B.m[3];
-	result.m[3] = A.m[3] * B.m[0] + A.m[7] * B.m[1] + A.m[11] * B.m[2] + A.m[15] * B.m[3];
-	result.m[4] = A.m[0] * B.m[4] + A.m[4] * B.m[5] + A.m[8] * B.m[6] + A.m[12] * B.m[7];
-	result.m[5] = A.m[1] * B.m[4] + A.m[5] * B.m[5] + A.m[9] * B.m[6] + A.m[13] * B.m[7];
-	result.m[6] = A.m[2] * B.m[4] + A.m[6] * B.m[5] + A.m[10] * B.m[6] + A.m[14] * B.m[7];
-	result.m[7] = A.m[3] * B.m[4] + A.m[7] * B.m[5] + A.m[11] * B.m[6] + A.m[15] * B.m[7];
-	result.m[8] = A.m[0] * B.m[8] + A.m[4] * B.m[9] + A.m[8] * B.m[10] + A.m[12] * B.m[11];
-	result.m[9] = A.m[1] * B.m[8] + A.m[5] * B.m[9] + A.m[9] * B.m[10] + A.m[13] * B.m[11];
-	result.m[10] = A.m[2] * B.m[8] + A.m[6] * B.m[9] + A.m[10] * B.m[10] + A.m[14] * B.m[11];
-	result.m[11] = A.m[3] * B.m[8] + A.m[7] * B.m[9] + A.m[11] * B.m[10] + A.m[15] * B.m[11];
-	result.m[12] = A.m[0] * B.m[12] + A.m[4] * B.m[13] + A.m[8] * B.m[14] + A.m[12] * B.m[15];
-	result.m[13] = A.m[1] * B.m[12] + A.m[5] * B.m[13] + A.m[9] * B.m[14] + A.m[13] * B.m[15];
-	result.m[14] = A.m[2] * B.m[12] + A.m[6] * B.m[13] + A.m[10] * B.m[14] + A.m[14] * B.m[15];
-	result.m[15] = A.m[3] * B.m[12] + A.m[7] * B.m[13] + A.m[11] * B.m[14] + A.m[15] * B.m[15];
-	return result;
-}
-com.engine.math.Matrix.FromArray = function(array,offset) {
-	if(offset == null) offset = 0;
-	var result = new com.engine.math.Matrix();
-	com.engine.math.Matrix.FromArrayToRef(array,offset,result);
-	return result;
-}
-com.engine.math.Matrix.FromArrayToRef = function(array,offset,result) {
-	if(offset == null) offset = 0;
-	var _g = 0;
-	while(_g < 16) {
-		var index = _g++;
-		result.m[index] = array[index + offset];
-	}
-	return result;
-}
-com.engine.math.Matrix.FromValues = function(m11,m12,m13,m14,m21,m22,m23,m24,m31,m32,m33,m34,m41,m42,m43,m44) {
-	var result = new com.engine.math.Matrix();
-	result.m[0] = m11;
-	result.m[1] = m12;
-	result.m[2] = m13;
-	result.m[3] = m14;
-	result.m[4] = m21;
-	result.m[5] = m22;
-	result.m[6] = m23;
-	result.m[7] = m24;
-	result.m[8] = m31;
-	result.m[9] = m32;
-	result.m[10] = m33;
-	result.m[11] = m34;
-	result.m[12] = m41;
-	result.m[13] = m42;
-	result.m[14] = m43;
-	result.m[15] = m44;
-	return result;
-}
-com.engine.math.Matrix.FromValuesToRef = function(m11,m12,m13,m14,m21,m22,m23,m24,m31,m32,m33,m34,m41,m42,m43,m44,result) {
-	result.m[0] = m11;
-	result.m[1] = m12;
-	result.m[2] = m13;
-	result.m[3] = m14;
-	result.m[4] = m21;
-	result.m[5] = m22;
-	result.m[6] = m23;
-	result.m[7] = m24;
-	result.m[8] = m31;
-	result.m[9] = m32;
-	result.m[10] = m33;
-	result.m[11] = m34;
-	result.m[12] = m41;
-	result.m[13] = m42;
-	result.m[14] = m43;
-	result.m[15] = m44;
-	return result;
-}
-com.engine.math.Matrix.Identity = function() {
-	return com.engine.math.Matrix.FromValues(1.0,0,0,0,0,1.0,0,0,0,0,1.0,0,0,0,0,1.0);
-}
-com.engine.math.Matrix.IdentityToRef = function(result) {
-	result.m[0] = 1.0;
-	result.m[1] = 0;
-	result.m[2] = 0;
-	result.m[3] = 0;
-	result.m[4] = 0;
-	result.m[5] = 1.0;
-	result.m[6] = 0;
-	result.m[7] = 0;
-	result.m[8] = 0;
-	result.m[9] = 0;
-	result.m[10] = 1.0;
-	result.m[11] = 0;
-	result.m[12] = 0;
-	result.m[13] = 0;
-	result.m[14] = 0;
-	result.m[15] = 1.0;
-	result;
-	return result;
-}
-com.engine.math.Matrix.Zero = function() {
-	return com.engine.math.Matrix.FromValues(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-}
-com.engine.math.Matrix.RotationX = function(angle) {
-	var result = new com.engine.math.Matrix();
-	com.engine.math.Matrix.RotationXToRef(angle,result);
-	return result;
-}
-com.engine.math.Matrix.RotationXToRef = function(angle,result) {
-	var s = Math.sin(angle);
-	var c = Math.cos(angle);
-	result.m[0] = 1.0;
-	result.m[15] = 1.0;
-	result.m[5] = c;
-	result.m[10] = c;
-	result.m[9] = -s;
-	result.m[6] = s;
-	result.m[1] = 0;
-	result.m[2] = 0;
-	result.m[3] = 0;
-	result.m[4] = 0;
-	result.m[7] = 0;
-	result.m[8] = 0;
-	result.m[11] = 0;
-	result.m[12] = 0;
-	result.m[13] = 0;
-	result.m[14] = 0;
-	return result;
-}
-com.engine.math.Matrix.RotationY = function(angle) {
-	var result = new com.engine.math.Matrix();
-	com.engine.math.Matrix.RotationYToRef(angle,result);
-	return result;
-}
-com.engine.math.Matrix.RotationYToRef = function(angle,result) {
-	var s = Math.sin(angle);
-	var c = Math.cos(angle);
-	result.m[5] = 1.0;
-	result.m[15] = 1.0;
-	result.m[0] = c;
-	result.m[2] = -s;
-	result.m[8] = s;
-	result.m[10] = c;
-	result.m[1] = 0;
-	result.m[3] = 0;
-	result.m[4] = 0;
-	result.m[6] = 0;
-	result.m[7] = 0;
-	result.m[9] = 0;
-	result.m[11] = 0;
-	result.m[12] = 0;
-	result.m[13] = 0;
-	result.m[14] = 0;
-	return result;
-}
-com.engine.math.Matrix.RotationZ = function(angle) {
-	var result = new com.engine.math.Matrix();
-	com.engine.math.Matrix.RotationZToRef(angle,result);
-	return result;
-}
-com.engine.math.Matrix.RotationZToRef = function(angle,result) {
-	var s = Math.sin(angle);
-	var c = Math.cos(angle);
-	result.m[10] = 1.0;
-	result.m[15] = 1.0;
-	result.m[0] = c;
-	result.m[1] = s;
-	result.m[4] = -s;
-	result.m[5] = c;
-	result.m[2] = 0;
-	result.m[3] = 0;
-	result.m[6] = 0;
-	result.m[7] = 0;
-	result.m[8] = 0;
-	result.m[9] = 0;
-	result.m[11] = 0;
-	result.m[12] = 0;
-	result.m[13] = 0;
-	result.m[14] = 0;
-	return result;
-}
-com.engine.math.Matrix.RotationAxis = function(axis,angle) {
-	var s = Math.sin(-angle);
-	var c = Math.cos(-angle);
-	var c1 = 1 - c;
-	axis.normalize();
-	var result = com.engine.math.Matrix.FromValues(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-	result.m[0] = axis.x * axis.x * c1 + c;
-	result.m[1] = axis.x * axis.y * c1 - axis.z * s;
-	result.m[2] = axis.x * axis.z * c1 + axis.y * s;
-	result.m[3] = 0.0;
-	result.m[4] = axis.y * axis.x * c1 + axis.z * s;
-	result.m[5] = axis.y * axis.y * c1 + c;
-	result.m[6] = axis.y * axis.z * c1 - axis.x * s;
-	result.m[7] = 0.0;
-	result.m[8] = axis.z * axis.x * c1 - axis.y * s;
-	result.m[9] = axis.z * axis.y * c1 + axis.x * s;
-	result.m[10] = axis.z * axis.z * c1 + c;
-	result.m[11] = 0.0;
-	result.m[15] = 1.0;
-	return result;
-}
-com.engine.math.Matrix.RotationYawPitchRoll = function(yaw,pitch,roll) {
-	var result = new com.engine.math.Matrix();
-	com.engine.math.Matrix.RotationYawPitchRollToRef(yaw,pitch,roll,result);
-	return result;
-}
-com.engine.math.Matrix.RotationYawPitchRollToRef = function(yaw,pitch,roll,result) {
-	var tempQuaternion = new com.engine.math.Quaternion();
-	tempQuaternion = com.engine.math.Quaternion.RotationYawPitchRollToRef(yaw,pitch,roll,tempQuaternion);
-	return tempQuaternion.toRotationMatrix(result);
-}
-com.engine.math.Matrix.Scaling = function(x,y,z) {
-	var result = com.engine.math.Matrix.FromValues(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-	result.m[0] = x;
-	result.m[1] = 0;
-	result.m[2] = 0;
-	result.m[3] = 0;
-	result.m[4] = 0;
-	result.m[5] = y;
-	result.m[6] = 0;
-	result.m[7] = 0;
-	result.m[8] = 0;
-	result.m[9] = 0;
-	result.m[10] = z;
-	result.m[11] = 0;
-	result.m[12] = 0;
-	result.m[13] = 0;
-	result.m[14] = 0;
-	result.m[15] = 1.0;
-	result;
-	return result;
-}
-com.engine.math.Matrix.ScalingToRef = function(x,y,z,result) {
-	result.m[0] = x;
-	result.m[1] = 0;
-	result.m[2] = 0;
-	result.m[3] = 0;
-	result.m[4] = 0;
-	result.m[5] = y;
-	result.m[6] = 0;
-	result.m[7] = 0;
-	result.m[8] = 0;
-	result.m[9] = 0;
-	result.m[10] = z;
-	result.m[11] = 0;
-	result.m[12] = 0;
-	result.m[13] = 0;
-	result.m[14] = 0;
-	result.m[15] = 1.0;
-	return result;
-}
-com.engine.math.Matrix.Translation = function(x,y,z) {
-	var result = com.engine.math.Matrix.FromValues(1.0,0,0,0,0,1.0,0,0,0,0,1.0,0,0,0,0,1.0);
-	result.m[0] = 1.0;
-	result.m[1] = 0;
-	result.m[2] = 0;
-	result.m[3] = 0;
-	result.m[4] = 0;
-	result.m[5] = 1.0;
-	result.m[6] = 0;
-	result.m[7] = 0;
-	result.m[8] = 0;
-	result.m[9] = 0;
-	result.m[10] = 1.0;
-	result.m[11] = 0;
-	result.m[12] = x;
-	result.m[13] = y;
-	result.m[14] = z;
-	result.m[15] = 1.0;
-	result;
-	return result;
-}
-com.engine.math.Matrix.TranslationToRef = function(x,y,z,result) {
-	result.m[0] = 1.0;
-	result.m[1] = 0;
-	result.m[2] = 0;
-	result.m[3] = 0;
-	result.m[4] = 0;
-	result.m[5] = 1.0;
-	result.m[6] = 0;
-	result.m[7] = 0;
-	result.m[8] = 0;
-	result.m[9] = 0;
-	result.m[10] = 1.0;
-	result.m[11] = 0;
-	result.m[12] = x;
-	result.m[13] = y;
-	result.m[14] = z;
-	result.m[15] = 1.0;
-	result;
-}
-com.engine.math.Matrix.LookAtLH = function(eye,target,up) {
-	var result = com.engine.math.Matrix.FromValues(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-	com.engine.math.Matrix.LookAtLHToRef(eye,target,up,result);
-	return result;
-}
-com.engine.math.Matrix.LookAtLHToRef = function(eye,target,up,result) {
-	var xAxis = com.engine.math.Vector3.Zero();
-	var yAxis = com.engine.math.Vector3.Zero();
-	var zAxis = com.engine.math.Vector3.Zero();
-	zAxis.x = target.x - eye.x;
-	zAxis.y = target.y - eye.y;
-	zAxis.z = target.z - eye.z;
-	zAxis.normalize();
-	xAxis.x = up.y * zAxis.z - up.z * zAxis.y;
-	xAxis.y = up.z * zAxis.x - up.x * zAxis.z;
-	xAxis.z = up.x * zAxis.y - up.y * zAxis.x;
-	xAxis.normalize();
-	yAxis.x = zAxis.y * xAxis.z - zAxis.z * xAxis.y;
-	yAxis.y = zAxis.z * xAxis.x - zAxis.x * xAxis.z;
-	yAxis.z = zAxis.x * xAxis.y - zAxis.y * xAxis.x;
-	yAxis.normalize();
-	var ex = -(xAxis.x * eye.x + xAxis.y * eye.y + xAxis.z * eye.z);
-	var ey = -(yAxis.x * eye.x + yAxis.y * eye.y + yAxis.z * eye.z);
-	var ez = -(zAxis.x * eye.x + zAxis.y * eye.y + zAxis.z * eye.z);
-	return (function($this) {
-		var $r;
-		result.m[0] = xAxis.x;
-		result.m[1] = yAxis.x;
-		result.m[2] = zAxis.x;
-		result.m[3] = 0;
-		result.m[4] = xAxis.y;
-		result.m[5] = yAxis.y;
-		result.m[6] = zAxis.y;
-		result.m[7] = 0;
-		result.m[8] = xAxis.z;
-		result.m[9] = yAxis.z;
-		result.m[10] = zAxis.z;
-		result.m[11] = 0;
-		result.m[12] = ex;
-		result.m[13] = ey;
-		result.m[14] = ez;
-		result.m[15] = 1;
-		$r = result;
-		return $r;
-	}(this));
-}
-com.engine.math.Matrix.OrthoLH = function(width,height,znear,zfar) {
-	var hw = 2.0 / width;
-	var hh = 2.0 / height;
-	var id = 1.0 / (zfar - znear);
-	var nid = znear / (znear - zfar);
-	return com.engine.math.Matrix.FromValues(hw,0,0,0,0,hh,0,0,0,0,id,0,0,0,nid,1);
-}
-com.engine.math.Matrix.OrthoOffCenterLH = function(left,right,bottom,top,znear,zfar) {
-	var matrix = com.engine.math.Matrix.FromValues(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-	matrix.m[0] = 2.0 / (right - left);
-	matrix.m[1] = matrix.m[2] = matrix.m[3] = matrix.m[4] = 0;
-	matrix.m[5] = 2.0 / (top - bottom);
-	matrix.m[6] = matrix.m[7] = 0;
-	matrix.m[8] = matrix.m[9] = 0;
-	matrix.m[10] = -1 / (znear - zfar);
-	matrix.m[11] = 0;
-	matrix.m[12] = (left + right) / (left - right);
-	matrix.m[13] = (top + bottom) / (bottom - top);
-	matrix.m[14] = znear / (znear - zfar);
-	matrix.m[15] = 1.0;
-	matrix;
-	return matrix;
-}
-com.engine.math.Matrix.OrthoOffCenterLHToRef = function(left,right,bottom,top,znear,zfar,result) {
-	result.m[0] = 2.0 / (right - left);
-	result.m[1] = result.m[2] = result.m[3] = result.m[4] = 0;
-	result.m[5] = 2.0 / (top - bottom);
-	result.m[6] = result.m[7] = 0;
-	result.m[8] = result.m[9] = 0;
-	result.m[10] = -1 / (znear - zfar);
-	result.m[11] = 0;
-	result.m[12] = (left + right) / (left - right);
-	result.m[13] = (top + bottom) / (bottom - top);
-	result.m[14] = znear / (znear - zfar);
-	result.m[15] = 1.0;
-	return result;
-}
-com.engine.math.Matrix.PerspectiveLH = function(width,height,znear,zfar) {
-	var matrix = com.engine.math.Matrix.FromValues(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-	matrix.m[0] = 2.0 * znear / width;
-	matrix.m[1] = matrix.m[2] = matrix.m[3] = 0.0;
-	matrix.m[5] = 2.0 * znear / height;
-	matrix.m[4] = matrix.m[6] = matrix.m[7] = 0.0;
-	matrix.m[10] = -zfar / (znear - zfar);
-	matrix.m[8] = matrix.m[9] = 0.0;
-	matrix.m[11] = 1.0;
-	matrix.m[12] = matrix.m[13] = matrix.m[15] = 0.0;
-	matrix.m[14] = znear * zfar / (znear - zfar);
-	return matrix;
-}
-com.engine.math.Matrix.PerspectiveFovLH = function(fov,aspect,znear,zfar) {
-	var matrix = com.engine.math.Matrix.FromValues(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-	com.engine.math.Matrix.PerspectiveFovLHToRef(fov,aspect,znear,zfar,matrix);
-	return matrix;
-}
-com.engine.math.Matrix.PerspectiveFovLHToRef = function(fov,aspect,znear,zfar,result) {
-	var tan = 1.0 / Math.tan(fov * 0.5);
-	result.m[0] = tan / aspect;
-	result.m[1] = result.m[2] = result.m[3] = 0.0;
-	result.m[5] = tan;
-	result.m[4] = result.m[6] = result.m[7] = 0.0;
-	result.m[8] = result.m[9] = 0.0;
-	result.m[10] = -zfar / (znear - zfar);
-	result.m[11] = 1.0;
-	result.m[12] = result.m[13] = result.m[15] = 0.0;
-	result.m[14] = znear * zfar / (znear - zfar);
-	return result;
-}
-com.engine.math.Matrix.Transpose = function(matrix) {
-	var result = new com.engine.math.Matrix();
-	result.m[0] = matrix.m[0];
-	result.m[1] = matrix.m[4];
-	result.m[2] = matrix.m[8];
-	result.m[3] = matrix.m[12];
-	result.m[4] = matrix.m[1];
-	result.m[5] = matrix.m[5];
-	result.m[6] = matrix.m[9];
-	result.m[7] = matrix.m[13];
-	result.m[8] = matrix.m[2];
-	result.m[9] = matrix.m[6];
-	result.m[10] = matrix.m[10];
-	result.m[11] = matrix.m[14];
-	result.m[12] = matrix.m[3];
-	result.m[13] = matrix.m[7];
-	result.m[14] = matrix.m[11];
-	result.m[15] = matrix.m[15];
-	return result;
-}
-com.engine.math.Matrix.Reflection = function(plane) {
-	var matrix = new com.engine.math.Matrix();
-	com.engine.math.Matrix.ReflectionToRef(plane,matrix);
-	return matrix;
-}
-com.engine.math.Matrix.create2D = function(x,y,scale,rotation) {
-	if(rotation == null) rotation = 0;
-	if(scale == null) scale = 1;
-	var theta = rotation * Math.PI / 180.0;
-	var c = Math.cos(theta);
-	var s = Math.sin(theta);
-	return com.engine.math.Matrix.FromArray([c * scale,-s * scale,0,0,s * scale,c * scale,0,0,0,0,1,0,x,y,0,1],null);
-}
-com.engine.math.Matrix.ReflectionToRef = function(plane,result) {
-	plane.normalize();
-	var x = plane.normal.x;
-	var y = plane.normal.y;
-	var z = plane.normal.z;
-	var temp = -2 * x;
-	var temp2 = -2 * y;
-	var temp3 = -2 * z;
-	result.m[0] = temp * x + 1;
-	result.m[1] = temp2 * x;
-	result.m[2] = temp3 * x;
-	result.m[3] = 0.0;
-	result.m[4] = temp * y;
-	result.m[5] = temp2 * y + 1;
-	result.m[6] = temp3 * y;
-	result.m[7] = 0.0;
-	result.m[8] = temp * z;
-	result.m[9] = temp2 * z;
-	result.m[10] = temp3 * z + 1;
-	result.m[11] = 0.0;
-	result.m[12] = temp * plane.d;
-	result.m[13] = temp2 * plane.d;
-	result.m[14] = temp3 * plane.d;
-	result.m[15] = 1.0;
-	return result;
-}
-com.engine.math.Matrix.prototype = {
-	set2Dtransformation: function(x,y,scale,rotation) {
-		if(rotation == null) rotation = 0;
-		if(scale == null) scale = 1;
-		var theta = rotation * Math.PI / 180.0;
-		var c = Math.cos(theta);
-		var s = Math.sin(theta);
-		this.fillArrayTo([c * scale,-s * scale,0,0,s * scale,c * scale,0,0,0,0,1,0,x,y,0,1]);
-	}
-	,fillArrayTo: function(array) {
-		var _g = 0;
-		while(_g < 16) {
-			var index = _g++;
-			this.m[index] = array[index];
-		}
-	}
-	,clone: function() {
-		return com.engine.math.Matrix.FromValues(this.m[0],this.m[1],this.m[2],this.m[3],this.m[4],this.m[5],this.m[6],this.m[7],this.m[8],this.m[9],this.m[10],this.m[11],this.m[12],this.m[13],this.m[14],this.m[15]);
-	}
-	,equals: function(value) {
-		return this.m[0] == value.m[0] && this.m[1] == value.m[1] && this.m[2] == value.m[2] && this.m[3] == value.m[3] && this.m[4] == value.m[4] && this.m[5] == value.m[5] && this.m[6] == value.m[6] && this.m[7] == value.m[7] && this.m[8] == value.m[8] && this.m[9] == value.m[9] && this.m[10] == value.m[10] && this.m[11] == value.m[11] && this.m[12] == value.m[12] && this.m[13] == value.m[13] && this.m[14] == value.m[14] && this.m[15] == value.m[15];
-	}
-	,multiplyToArray: function(other,result,offset) {
-		var tm0 = this.m[0];
-		var tm1 = this.m[1];
-		var tm2 = this.m[2];
-		var tm3 = this.m[3];
-		var tm4 = this.m[4];
-		var tm5 = this.m[5];
-		var tm6 = this.m[6];
-		var tm7 = this.m[7];
-		var tm8 = this.m[8];
-		var tm9 = this.m[9];
-		var tm10 = this.m[10];
-		var tm11 = this.m[11];
-		var tm12 = this.m[12];
-		var tm13 = this.m[13];
-		var tm14 = this.m[14];
-		var tm15 = this.m[15];
-		var om0 = other.m[0];
-		var om1 = other.m[1];
-		var om2 = other.m[2];
-		var om3 = other.m[3];
-		var om4 = other.m[4];
-		var om5 = other.m[5];
-		var om6 = other.m[6];
-		var om7 = other.m[7];
-		var om8 = other.m[8];
-		var om9 = other.m[9];
-		var om10 = other.m[10];
-		var om11 = other.m[11];
-		var om12 = other.m[12];
-		var om13 = other.m[13];
-		var om14 = other.m[14];
-		var om15 = other.m[15];
-		result[offset] = tm0 * om0 + tm1 * om4 + tm2 * om8 + tm3 * om12;
-		result[offset + 1] = tm0 * om1 + tm1 * om5 + tm2 * om9 + tm3 * om13;
-		result[offset + 2] = tm0 * om2 + tm1 * om6 + tm2 * om10 + tm3 * om14;
-		result[offset + 3] = tm0 * om3 + tm1 * om7 + tm2 * om11 + tm3 * om15;
-		result[offset + 4] = tm4 * om0 + tm5 * om4 + tm6 * om8 + tm7 * om12;
-		result[offset + 5] = tm4 * om1 + tm5 * om5 + tm6 * om9 + tm7 * om13;
-		result[offset + 6] = tm4 * om2 + tm5 * om6 + tm6 * om10 + tm7 * om14;
-		result[offset + 7] = tm4 * om3 + tm5 * om7 + tm6 * om11 + tm7 * om15;
-		result[offset + 8] = tm8 * om0 + tm9 * om4 + tm10 * om8 + tm11 * om12;
-		result[offset + 9] = tm8 * om1 + tm9 * om5 + tm10 * om9 + tm11 * om13;
-		result[offset + 10] = tm8 * om2 + tm9 * om6 + tm10 * om10 + tm11 * om14;
-		result[offset + 11] = tm8 * om3 + tm9 * om7 + tm10 * om11 + tm11 * om15;
-		result[offset + 12] = tm12 * om0 + tm13 * om4 + tm14 * om8 + tm15 * om12;
-		result[offset + 13] = tm12 * om1 + tm13 * om5 + tm14 * om9 + tm15 * om13;
-		result[offset + 14] = tm12 * om2 + tm13 * om6 + tm14 * om10 + tm15 * om14;
-		result[offset + 15] = tm12 * om3 + tm13 * om7 + tm14 * om11 + tm15 * om15;
-		return result;
-	}
-	,Multiply4x4: function(A,B) {
-		this.m[0] = A.m[0] * B.m[0] + A.m[4] * B.m[1] + A.m[8] * B.m[2] + A.m[12] * B.m[3];
-		this.m[1] = A.m[1] * B.m[0] + A.m[5] * B.m[1] + A.m[9] * B.m[2] + A.m[13] * B.m[3];
-		this.m[2] = A.m[2] * B.m[0] + A.m[6] * B.m[1] + A.m[10] * B.m[2] + A.m[14] * B.m[3];
-		this.m[3] = A.m[3] * B.m[0] + A.m[7] * B.m[1] + A.m[11] * B.m[2] + A.m[15] * B.m[3];
-		this.m[4] = A.m[0] * B.m[4] + A.m[4] * B.m[5] + A.m[8] * B.m[6] + A.m[12] * B.m[7];
-		this.m[5] = A.m[1] * B.m[4] + A.m[5] * B.m[5] + A.m[9] * B.m[6] + A.m[13] * B.m[7];
-		this.m[6] = A.m[2] * B.m[4] + A.m[6] * B.m[5] + A.m[10] * B.m[6] + A.m[14] * B.m[7];
-		this.m[7] = A.m[3] * B.m[4] + A.m[7] * B.m[5] + A.m[11] * B.m[6] + A.m[15] * B.m[7];
-		this.m[8] = A.m[0] * B.m[8] + A.m[4] * B.m[9] + A.m[8] * B.m[10] + A.m[12] * B.m[11];
-		this.m[9] = A.m[1] * B.m[8] + A.m[5] * B.m[9] + A.m[9] * B.m[10] + A.m[13] * B.m[11];
-		this.m[10] = A.m[2] * B.m[8] + A.m[6] * B.m[9] + A.m[10] * B.m[10] + A.m[14] * B.m[11];
-		this.m[11] = A.m[3] * B.m[8] + A.m[7] * B.m[9] + A.m[11] * B.m[10] + A.m[15] * B.m[11];
-		this.m[12] = A.m[0] * B.m[12] + A.m[4] * B.m[13] + A.m[8] * B.m[14] + A.m[12] * B.m[15];
-		this.m[13] = A.m[1] * B.m[12] + A.m[5] * B.m[13] + A.m[9] * B.m[14] + A.m[13] * B.m[15];
-		this.m[14] = A.m[2] * B.m[12] + A.m[6] * B.m[13] + A.m[10] * B.m[14] + A.m[14] * B.m[15];
-		this.m[15] = A.m[3] * B.m[12] + A.m[7] * B.m[13] + A.m[11] * B.m[14] + A.m[15] * B.m[15];
-	}
-	,multiplyToRef: function(other,result) {
-		this.multiplyToArray(other,result.m,0);
-	}
-	,copyFrom: function(other) {
-		var _g = 0;
-		while(_g < 16) {
-			var index = _g++;
-			this.m[index] = other.m[index];
-		}
-	}
-	,multiply: function(other) {
-		var result = new com.engine.math.Matrix();
-		this.multiplyToArray(other,result.m,0);
-		return result;
-	}
-	,setTranslation: function(vector3) {
-		this.m[12] = vector3.x;
-		this.m[13] = vector3.y;
-		this.m[14] = vector3.z;
-	}
-	,invertToRef: function(other) {
-		var l1 = this.m[0];
-		var l2 = this.m[1];
-		var l3 = this.m[2];
-		var l4 = this.m[3];
-		var l5 = this.m[4];
-		var l6 = this.m[5];
-		var l7 = this.m[6];
-		var l8 = this.m[7];
-		var l9 = this.m[8];
-		var l10 = this.m[9];
-		var l11 = this.m[10];
-		var l12 = this.m[11];
-		var l13 = this.m[12];
-		var l14 = this.m[13];
-		var l15 = this.m[14];
-		var l16 = this.m[15];
-		var l17 = l11 * l16 - l12 * l15;
-		var l18 = l10 * l16 - l12 * l14;
-		var l19 = l10 * l15 - l11 * l14;
-		var l20 = l9 * l16 - l12 * l13;
-		var l21 = l9 * l15 - l11 * l13;
-		var l22 = l9 * l14 - l10 * l13;
-		var l23 = l6 * l17 - l7 * l18 + l8 * l19;
-		var l24 = -(l5 * l17 - l7 * l20 + l8 * l21);
-		var l25 = l5 * l18 - l6 * l20 + l8 * l22;
-		var l26 = -(l5 * l19 - l6 * l21 + l7 * l22);
-		var l27 = 1.0 / (l1 * l23 + l2 * l24 + l3 * l25 + l4 * l26);
-		var l28 = l7 * l16 - l8 * l15;
-		var l29 = l6 * l16 - l8 * l14;
-		var l30 = l6 * l15 - l7 * l14;
-		var l31 = l5 * l16 - l8 * l13;
-		var l32 = l5 * l15 - l7 * l13;
-		var l33 = l5 * l14 - l6 * l13;
-		var l34 = l7 * l12 - l8 * l11;
-		var l35 = l6 * l12 - l8 * l10;
-		var l36 = l6 * l11 - l7 * l10;
-		var l37 = l5 * l12 - l8 * l9;
-		var l38 = l5 * l11 - l7 * l9;
-		var l39 = l5 * l10 - l6 * l9;
-		other.m[0] = l23 * l27;
-		other.m[4] = l24 * l27;
-		other.m[8] = l25 * l27;
-		other.m[12] = l26 * l27;
-		other.m[1] = -(l2 * l17 - l3 * l18 + l4 * l19) * l27;
-		other.m[5] = (l1 * l17 - l3 * l20 + l4 * l21) * l27;
-		other.m[9] = -(l1 * l18 - l2 * l20 + l4 * l22) * l27;
-		other.m[13] = (l1 * l19 - l2 * l21 + l3 * l22) * l27;
-		other.m[2] = (l2 * l28 - l3 * l29 + l4 * l30) * l27;
-		other.m[6] = -(l1 * l28 - l3 * l31 + l4 * l32) * l27;
-		other.m[10] = (l1 * l29 - l2 * l31 + l4 * l33) * l27;
-		other.m[14] = -(l1 * l30 - l2 * l32 + l3 * l33) * l27;
-		other.m[3] = -(l2 * l34 - l3 * l35 + l4 * l36) * l27;
-		other.m[7] = (l1 * l34 - l3 * l37 + l4 * l38) * l27;
-		other.m[11] = -(l1 * l35 - l2 * l37 + l4 * l39) * l27;
-		other.m[15] = (l1 * l36 - l2 * l38 + l3 * l39) * l27;
-	}
-	,invert: function() {
-		this.invertToRef(this);
-	}
-	,toArray: function() {
-		return this.m;
-	}
-	,determinant: function() {
-		var temp1 = this.m[10] * this.m[15] - this.m[11] * this.m[14];
-		var temp2 = this.m[9] * this.m[15] - this.m[11] * this.m[13];
-		var temp3 = this.m[9] * this.m[14] - this.m[10] * this.m[13];
-		var temp4 = this.m[8] * this.m[15] - this.m[11] * this.m[12];
-		var temp5 = this.m[8] * this.m[14] - this.m[10] * this.m[12];
-		var temp6 = this.m[8] * this.m[13] - this.m[9] * this.m[12];
-		return this.m[0] * (this.m[5] * temp1 - this.m[6] * temp2 + this.m[7] * temp3) - this.m[1] * (this.m[4] * temp1 - this.m[6] * temp4 + this.m[7] * temp5) + this.m[2] * (this.m[4] * temp2 - this.m[5] * temp4 + this.m[7] * temp6) - this.m[3] * (this.m[4] * temp3 - this.m[5] * temp5 + this.m[6] * temp6);
-	}
-	,isIdentity: function() {
-		var ret = true;
-		if(this.m[0] != 1.0 || this.m[5] != 1.0 || this.m[10] != 1.0 || this.m[15] != 1.0) ret = false;
-		if(this.m[1] != 0.0 || this.m[2] != 0.0 || this.m[3] != 0.0 || this.m[4] != 0.0 || this.m[6] != 0.0 || this.m[7] != 0.0 || this.m[8] != 0.0 || this.m[9] != 0.0 || this.m[11] != 0.0 || this.m[12] != 0.0 || this.m[13] != 0.0 || this.m[14] != 0.0) ret = false;
-		return ret;
-	}
-	,__class__: com.engine.math.Matrix
-}
-com.engine.math.Plane = function(a,b,c,d) {
-	this.normal = new com.engine.math.Vector3(a,b,c);
-	this.d = d;
-};
-$hxClasses["com.engine.math.Plane"] = com.engine.math.Plane;
-com.engine.math.Plane.__name__ = ["com","engine","math","Plane"];
-com.engine.math.Plane.FromArray = function(array) {
-	return new com.engine.math.Plane(array[0],array[1],array[2],array[3]);
-}
-com.engine.math.Plane.FromPoints = function(point1,point2,point3) {
-	var result = new com.engine.math.Plane(0,0,0,0);
-	result.copyFromPoints(point1,point2,point3);
-	return result;
-}
-com.engine.math.Plane.FromPositionAndNormal = function(origin,normal) {
-	var result = new com.engine.math.Plane(0,0,0,0);
-	normal.normalize();
-	result.normal = normal;
-	result.d = -(normal.x * origin.x + normal.y * origin.y + normal.z * origin.z);
-	return result;
-}
-com.engine.math.Plane.SignedDistanceToPlaneFromPositionAndNormal = function(origin,normal,point) {
-	var d = -(normal.x * origin.x + normal.y * origin.y + normal.z * origin.z);
-	return point.x * normal.x + point.y * normal.y + point.z * normal.z + d;
-}
-com.engine.math.Plane.prototype = {
-	signedDistanceTo: function(point) {
-		return com.engine.math.Vector3.Dot(point,this.normal) + this.d;
-	}
-	,isFrontFacingTo: function(direction,epsilon) {
-		var dot = com.engine.math.Vector3.Dot(this.normal,direction);
-		return dot <= epsilon;
-	}
-	,copyFromPoints: function(point1,point2,point3) {
-		var x1 = point2.x - point1.x;
-		var y1 = point2.y - point1.y;
-		var z1 = point2.z - point1.z;
-		var x2 = point3.x - point1.x;
-		var y2 = point3.y - point1.y;
-		var z2 = point3.z - point1.z;
-		var yz = y1 * z2 - z1 * y2;
-		var xz = z1 * x2 - x1 * z2;
-		var xy = x1 * y2 - y1 * x2;
-		var pyth = Math.sqrt(yz * yz + xz * xz + xy * xy);
-		var invPyth;
-		if(pyth != 0) invPyth = 1.0 / pyth; else invPyth = 0;
-		this.normal.x = yz * invPyth;
-		this.normal.y = xz * invPyth;
-		this.normal.z = xy * invPyth;
-		this.d = -(this.normal.x * point1.x + this.normal.y * point1.y + this.normal.z * point1.z);
-	}
-	,dotCoordinate: function(point) {
-		return this.normal.x * point.x + this.normal.y * point.y + this.normal.z * point.z + this.d;
-	}
-	,transform: function(transformation) {
-		var transposedMatrix = com.engine.math.Matrix.Transpose(transformation);
-		var x = this.normal.x;
-		var y = this.normal.y;
-		var z = this.normal.z;
-		var d = this.d;
-		var normalX = x * transposedMatrix.m[0] + y * transposedMatrix.m[1] + z * transposedMatrix.m[2] + d * transposedMatrix.m[3];
-		var normalY = x * transposedMatrix.m[4] + y * transposedMatrix.m[5] + z * transposedMatrix.m[6] + d * transposedMatrix.m[7];
-		var normalZ = x * transposedMatrix.m[8] + y * transposedMatrix.m[9] + z * transposedMatrix.m[10] + d * transposedMatrix.m[11];
-		var finalD = x * transposedMatrix.m[12] + y * transposedMatrix.m[13] + z * transposedMatrix.m[14] + d * transposedMatrix.m[15];
-		return new com.engine.math.Plane(normalX,normalY,normalZ,finalD);
-	}
-	,normalize: function() {
-		var norm = Math.sqrt(this.normal.x * this.normal.x + this.normal.y * this.normal.y + this.normal.z * this.normal.z);
-		var magnitude = 0;
-		if(norm != 0) magnitude = 1.0 / norm;
-		this.normal.x *= magnitude;
-		this.normal.y *= magnitude;
-		this.normal.z *= magnitude;
-		this.d *= magnitude;
-	}
-	,clone: function() {
-		return new com.engine.math.Plane(this.normal.x,this.normal.y,this.normal.z,this.d);
-	}
-	,__class__: com.engine.math.Plane
-}
-com.engine.math.Quaternion = function(initialX,initialY,initialZ,initialW) {
-	if(initialW == null) initialW = 0;
-	if(initialZ == null) initialZ = 0;
-	if(initialY == null) initialY = 0;
-	if(initialX == null) initialX = 0;
-	this.x = initialX;
-	this.y = initialY;
-	this.z = initialZ;
-	this.w = initialW;
-};
-$hxClasses["com.engine.math.Quaternion"] = com.engine.math.Quaternion;
-com.engine.math.Quaternion.__name__ = ["com","engine","math","Quaternion"];
-com.engine.math.Quaternion.FromArray = function(array,offset) {
-	if(offset == null) offset = 0;
-	return new com.engine.math.Quaternion(array[offset],array[offset + 1],array[offset + 2],array[offset + 3]);
-}
-com.engine.math.Quaternion.RotationYawPitchRoll = function(yaw,pitch,roll) {
-	var result = new com.engine.math.Quaternion();
-	com.engine.math.Quaternion.RotationYawPitchRollToRef(yaw,pitch,roll,result);
-	return result;
-}
-com.engine.math.Quaternion.RotationYawPitchRollToRef = function(yaw,pitch,roll,result) {
-	var halfRoll = roll * 0.5;
-	var halfPitch = pitch * 0.5;
-	var halfYaw = yaw * 0.5;
-	var sinRoll = Math.sin(halfRoll);
-	var cosRoll = Math.cos(halfRoll);
-	var sinPitch = Math.sin(halfPitch);
-	var cosPitch = Math.cos(halfPitch);
-	var sinYaw = Math.sin(halfYaw);
-	var cosYaw = Math.cos(halfYaw);
-	result.x = cosYaw * sinPitch * cosRoll + sinYaw * cosPitch * sinRoll;
-	result.y = sinYaw * cosPitch * cosRoll - cosYaw * sinPitch * sinRoll;
-	result.z = cosYaw * cosPitch * sinRoll - sinYaw * sinPitch * cosRoll;
-	result.w = cosYaw * cosPitch * cosRoll + sinYaw * sinPitch * sinRoll;
-	return result;
-}
-com.engine.math.Quaternion.Slerp = function(left,right,amount) {
-	var num2;
-	var num3;
-	var num = amount;
-	var num4 = left.x * right.x + left.y * right.y + left.z * right.z + left.w * right.w;
-	var flag = false;
-	if(num4 < 0) {
-		flag = true;
-		num4 = -num4;
-	}
-	if(num4 > 0.999999) {
-		num3 = 1 - num;
-		num2 = flag?-num:num;
-	} else {
-		var num5 = Math.acos(num4);
-		var num6 = 1.0 / Math.sin(num5);
-		num3 = Math.sin((1.0 - num) * num5) * num6;
-		num2 = flag?-Math.sin(num * num5) * num6:Math.sin(num * num5) * num6;
-	}
-	return new com.engine.math.Quaternion(num3 * left.x + num2 * right.x,num3 * left.y + num2 * right.y,num3 * left.z + num2 * right.z,num3 * left.w + num2 * right.w);
-}
-com.engine.math.Quaternion.prototype = {
-	toRotationMatrix: function(result) {
-		var xx = this.x * this.x;
-		var yy = this.y * this.y;
-		var zz = this.z * this.z;
-		var xy = this.x * this.y;
-		var zw = this.z * this.w;
-		var zx = this.z * this.x;
-		var yw = this.y * this.w;
-		var yz = this.y * this.z;
-		var xw = this.x * this.w;
-		result.m[0] = 1.0 - 2.0 * (yy + zz);
-		result.m[1] = 2.0 * (xy + zw);
-		result.m[2] = 2.0 * (zx - yw);
-		result.m[3] = 0;
-		result.m[4] = 2.0 * (xy - zw);
-		result.m[5] = 1.0 - 2.0 * (zz + xx);
-		result.m[6] = 2.0 * (yz + xw);
-		result.m[7] = 0;
-		result.m[8] = 2.0 * (zx + yw);
-		result.m[9] = 2.0 * (yz - xw);
-		result.m[10] = 1.0 - 2.0 * (yy + xx);
-		result.m[11] = 0;
-		result.m[12] = 0;
-		result.m[13] = 0;
-		result.m[14] = 0;
-		result.m[15] = 1.0;
-		return result;
-	}
-	,toEulerAngles: function() {
-		var qx = this.x;
-		var qy = this.y;
-		var qz = this.z;
-		var qw = this.w;
-		var sqx = qx * qx;
-		var sqy = qy * qy;
-		var sqz = qz * qz;
-		var yaw = Math.atan2(2.0 * (qy * qw - qx * qz),1.0 - 2.0 * (sqy + sqz));
-		var pitch = Math.asin(2.0 * (qx * qy + qz * qw));
-		var roll = Math.atan2(2.0 * (qx * qw - qy * qz),1.0 - 2.0 * (sqx + sqz));
-		var gimbaLockTest = qx * qy + qz * qw;
-		if(gimbaLockTest > 0.499) {
-			yaw = 2.0 * Math.atan2(qx,qw);
-			roll = 0;
-		} else if(gimbaLockTest < -0.499) {
-			yaw = -2. * Math.atan2(qx,qw);
-			roll = 0;
-		}
-		return new com.engine.math.Vector3(pitch,yaw,roll);
-	}
-	,normalize: function() {
-		var length = 1.0 / Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
-		this.x *= length;
-		this.y *= length;
-		this.z *= length;
-		this.w *= length;
-	}
-	,length: function() {
-		return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
-	}
-	,multiplyToRef: function(q1,result) {
-		result.x = this.x * q1.w + this.y * q1.z - this.z * q1.y + this.w * q1.x;
-		result.y = -this.x * q1.z + this.y * q1.w + this.z * q1.x + this.w * q1.y;
-		result.z = this.x * q1.y - this.y * q1.x + this.z * q1.w + this.w * q1.z;
-		result.w = -this.x * q1.x - this.y * q1.y - this.z * q1.z + this.w * q1.w;
-		return result;
-	}
-	,multiply: function(q1) {
-		var result = new com.engine.math.Quaternion(0,0,0,1.0);
-		result.x = this.x * q1.w + this.y * q1.z - this.z * q1.y + this.w * q1.x;
-		result.y = -this.x * q1.z + this.y * q1.w + this.z * q1.x + this.w * q1.y;
-		result.z = this.x * q1.y - this.y * q1.x + this.z * q1.w + this.w * q1.z;
-		result.w = -this.x * q1.x - this.y * q1.y - this.z * q1.z + this.w * q1.w;
-		result;
-		return result;
-	}
-	,scale: function(value) {
-		return new com.engine.math.Quaternion(this.x * value,this.y * value,this.z * value,this.w * value);
-	}
-	,add: function(other) {
-		return new com.engine.math.Quaternion(this.x + other.x,this.y + other.y,this.z + other.z,this.w + other.w);
-	}
-	,copyFrom: function(other) {
-		this.x = other.x;
-		this.y = other.y;
-		this.z = other.z;
-		this.w = other.w;
-	}
-	,clone: function() {
-		return new com.engine.math.Quaternion(this.x,this.y,this.z,this.w);
-	}
-	,equals: function(otherQuaternion) {
-		return this.x == otherQuaternion.x && this.y == otherQuaternion.y && this.z == otherQuaternion.z && this.w == otherQuaternion.w;
-	}
-	,toString: function() {
-		return "{X: " + this.x + " Y:" + this.y + " Z:" + this.z + " W:" + this.w + "}";
-	}
-	,__class__: com.engine.math.Quaternion
-}
 com.engine.math.Vector2 = function(x,y) {
 	this.x = x;
 	this.y = y;
@@ -3179,11 +2549,6 @@ com.engine.math.Vector2.Maximize = function(left,right) {
 	var _y = left.y > right.y?left.y:right.y;
 	return new com.engine.math.Vector2(_x,_y);
 }
-com.engine.math.Vector2.Transform = function(vector,transformation) {
-	var _x = vector.x * transformation.m[0] + vector.y * transformation.m[4];
-	var _y = vector.x * transformation.m[1] + vector.y * transformation.m[5];
-	return new com.engine.math.Vector2(_x,_y);
-}
 com.engine.math.Vector2.Distance = function(value1,value2) {
 	return Math.sqrt(com.engine.math.Vector2.DistanceSquared(value1,value2));
 }
@@ -3245,362 +2610,13 @@ com.engine.math.Vector2.prototype = {
 	}
 	,__class__: com.engine.math.Vector2
 }
-com.engine.math.Vector3 = function(initialX,initialY,initialZ) {
-	if(initialZ == null) initialZ = 0;
-	this.x = initialX;
-	this.y = initialY;
-	this.z = initialZ;
-};
-$hxClasses["com.engine.math.Vector3"] = com.engine.math.Vector3;
-com.engine.math.Vector3.__name__ = ["com","engine","math","Vector3"];
-com.engine.math.Vector3.Sub = function(a,b) {
-	return new com.engine.math.Vector3(a.x - b.x,a.y - b.y,a.z - b.z);
-}
-com.engine.math.Vector3.Add = function(a,b) {
-	return new com.engine.math.Vector3(a.x + b.x,a.y + b.y,a.z + b.z);
-}
-com.engine.math.Vector3.FromArray = function(array,offset) {
-	if(offset == null) offset = 0;
-	return new com.engine.math.Vector3(array[offset],array[offset + 1],array[offset + 2]);
-}
-com.engine.math.Vector3.FromArrayToRef = function(array,offset,result) {
-	if(offset == null) offset = 0;
-	result.x = array[offset];
-	result.y = array[offset + 1];
-	result.z = array[offset + 2];
-}
-com.engine.math.Vector3.FromFloatsToRef = function(x,y,z,result) {
-	result.x = x;
-	result.y = y;
-	result.z = z;
-}
-com.engine.math.Vector3.Zero = function() {
-	return new com.engine.math.Vector3(0.0,0.0,0.0);
-}
-com.engine.math.Vector3.Up = function() {
-	return new com.engine.math.Vector3(0,1.0,0);
-}
-com.engine.math.Vector3.TransformCoordinates = function(vector,transformation) {
-	var result = com.engine.math.Vector3.Zero();
-	com.engine.math.Vector3.TransformCoordinatesToRef(vector,transformation,result);
-	return result;
-}
-com.engine.math.Vector3.TransformCoordinatesToRef = function(vector,transformation,result) {
-	var x = vector.x * transformation.m[0] + vector.y * transformation.m[4] + vector.z * transformation.m[8] + transformation.m[12];
-	var y = vector.x * transformation.m[1] + vector.y * transformation.m[5] + vector.z * transformation.m[9] + transformation.m[13];
-	var z = vector.x * transformation.m[2] + vector.y * transformation.m[6] + vector.z * transformation.m[10] + transformation.m[14];
-	var w = vector.x * transformation.m[3] + vector.y * transformation.m[7] + vector.z * transformation.m[11] + transformation.m[15];
-	result.x = x / w;
-	result.y = y / w;
-	result.z = z / w;
-}
-com.engine.math.Vector3.TransformCoordinatesFromFloatsToRef = function(x,y,z,transformation,result) {
-	var rx = x * transformation.m[0] + y * transformation.m[4] + z * transformation.m[8] + transformation.m[12];
-	var ry = x * transformation.m[1] + y * transformation.m[5] + z * transformation.m[9] + transformation.m[13];
-	var rz = x * transformation.m[2] + y * transformation.m[6] + z * transformation.m[10] + transformation.m[14];
-	var rw = x * transformation.m[3] + y * transformation.m[7] + z * transformation.m[11] + transformation.m[15];
-	result.x = rx / rw;
-	result.y = ry / rw;
-	result.z = rz / rw;
-	return result;
-}
-com.engine.math.Vector3.TransformNormal = function(vector,transformation) {
-	var result = com.engine.math.Vector3.Zero();
-	result.x = vector.x * transformation.m[0] + vector.y * transformation.m[4] + vector.z * transformation.m[8];
-	result.y = vector.x * transformation.m[1] + vector.y * transformation.m[5] + vector.z * transformation.m[9];
-	result.z = vector.x * transformation.m[2] + vector.y * transformation.m[6] + vector.z * transformation.m[10];
-	return result;
-}
-com.engine.math.Vector3.TransformNormalToRef = function(vector,transformation,result) {
-	result.x = vector.x * transformation.m[0] + vector.y * transformation.m[4] + vector.z * transformation.m[8];
-	result.y = vector.x * transformation.m[1] + vector.y * transformation.m[5] + vector.z * transformation.m[9];
-	result.z = vector.x * transformation.m[2] + vector.y * transformation.m[6] + vector.z * transformation.m[10];
-}
-com.engine.math.Vector3.TransformNormalFromFloatsToRef = function(x,y,z,transformation,result) {
-	result.x = x * transformation.m[0] + y * transformation.m[4] + z * transformation.m[8];
-	result.y = x * transformation.m[1] + y * transformation.m[5] + z * transformation.m[9];
-	result.z = x * transformation.m[2] + y * transformation.m[6] + z * transformation.m[10];
-}
-com.engine.math.Vector3.CatmullRom = function(value1,value2,value3,value4,amount) {
-	var squared = amount * amount;
-	var cubed = amount * squared;
-	var x = 0.5 * (2.0 * value2.x + (-value1.x + value3.x) * amount + (2.0 * value1.x - 5.0 * value2.x + 4.0 * value3.x - value4.x) * squared + (-value1.x + 3.0 * value2.x - 3.0 * value3.x + value4.x) * cubed);
-	var y = 0.5 * (2.0 * value2.y + (-value1.y + value3.y) * amount + (2.0 * value1.y - 5.0 * value2.y + 4.0 * value3.y - value4.y) * squared + (-value1.y + 3.0 * value2.y - 3.0 * value3.y + value4.y) * cubed);
-	var z = 0.5 * (2.0 * value2.z + (-value1.z + value3.z) * amount + (2.0 * value1.z - 5.0 * value2.z + 4.0 * value3.z - value4.z) * squared + (-value1.z + 3.0 * value2.z - 3.0 * value3.z + value4.z) * cubed);
-	return new com.engine.math.Vector3(x,y,z);
-}
-com.engine.math.Vector3.Clamp = function(value,min,max) {
-	var x = value.x;
-	x = x > max.x?max.x:x;
-	x = x < min.x?min.x:x;
-	var y = value.y;
-	y = y > max.y?max.y:y;
-	y = y < min.y?min.y:y;
-	var z = value.z;
-	z = z > max.z?max.z:z;
-	z = z < min.z?min.z:z;
-	return new com.engine.math.Vector3(x,y,z);
-}
-com.engine.math.Vector3.Hermite = function(value1,tangent1,value2,tangent2,amount) {
-	var squared = amount * amount;
-	var cubed = amount * squared;
-	var part1 = 2.0 * cubed - 3.0 * squared + 1.0;
-	var part2 = -2. * cubed + 3.0 * squared;
-	var part3 = cubed - 2.0 * squared + amount;
-	var part4 = cubed - squared;
-	var x = value1.x * part1 + value2.x * part2 + tangent1.x * part3 + tangent2.x * part4;
-	var y = value1.y * part1 + value2.y * part2 + tangent1.y * part3 + tangent2.y * part4;
-	var z = value1.z * part1 + value2.z * part2 + tangent1.z * part3 + tangent2.z * part4;
-	return new com.engine.math.Vector3(x,y,z);
-}
-com.engine.math.Vector3.Lerp = function(start,end,amount) {
-	var x = start.x + (end.x - start.x) * amount;
-	var y = start.y + (end.y - start.y) * amount;
-	var z = start.z + (end.z - start.z) * amount;
-	return new com.engine.math.Vector3(x,y,z);
-}
-com.engine.math.Vector3.Dot = function(left,right) {
-	return left.x * right.x + left.y * right.y + left.z * right.z;
-}
-com.engine.math.Vector3.Cross = function(left,right) {
-	var result = com.engine.math.Vector3.Zero();
-	result.x = left.y * right.z - left.z * right.y;
-	result.y = left.z * right.x - left.x * right.z;
-	result.z = left.x * right.y - left.y * right.x;
-	return result;
-}
-com.engine.math.Vector3.CrossToRef = function(left,right,result) {
-	result.x = left.y * right.z - left.z * right.y;
-	result.y = left.z * right.x - left.x * right.z;
-	result.z = left.x * right.y - left.y * right.x;
-}
-com.engine.math.Vector3.Normalize = function(vector) {
-	var result = com.engine.math.Vector3.Zero();
-	result.x = vector.x;
-	result.y = vector.y;
-	result.z = vector.z;
-	result.normalize();
-	return result;
-}
-com.engine.math.Vector3.NormalizeToRef = function(vector,result) {
-	result.x = vector.x;
-	result.y = vector.y;
-	result.z = vector.z;
-	result.normalize();
-}
-com.engine.math.Vector3.Project = function(vector,world,transform,viewport) {
-	var cw = viewport.width;
-	var ch = viewport.height;
-	var cx = viewport.x;
-	var cy = viewport.y;
-	var viewportMatrix = com.engine.math.Matrix.FromValues(cw / 2.0,0,0,0,0,-ch / 2.0,0,0,0,0,1,0,cx + cw / 2.0,ch / 2.0 + cy,0,1);
-	var finalMatrix = world.multiply(transform).multiply(viewportMatrix);
-	return com.engine.math.Vector3.TransformCoordinates(vector,finalMatrix);
-}
-com.engine.math.Vector3.Unproject = function(source,viewportWidth,viewportHeight,world,view,projection) {
-	var matrix = world.multiply(view).multiply(projection);
-	matrix.invertToRef(matrix);
-	source.x = source.x / viewportWidth * 2 - 1;
-	source.y = -(source.y / viewportHeight * 2 - 1);
-	var vector = com.engine.math.Vector3.TransformCoordinates(source,matrix);
-	var num = source.x * matrix.m[3] + source.y * matrix.m[7] + source.z * matrix.m[11] + matrix.m[15];
-	if(com.engine.misc.Util.WithinEpsilon(num,1.0)) vector = vector.scale(1.0 / num);
-	return vector;
-}
-com.engine.math.Vector3.Minimize = function(left,right) {
-	var x = left.x < right.x?left.x:right.x;
-	var y = left.y < right.y?left.y:right.y;
-	var z = left.z < right.z?left.z:right.z;
-	return new com.engine.math.Vector3(x,y,z);
-}
-com.engine.math.Vector3.Maximize = function(left,right) {
-	var x = left.x > right.x?left.x:right.x;
-	var y = left.y > right.y?left.y:right.y;
-	var z = left.z > right.z?left.z:right.z;
-	return new com.engine.math.Vector3(x,y,z);
-}
-com.engine.math.Vector3.Distance = function(value1,value2) {
-	return Math.sqrt(com.engine.math.Vector3.DistanceSquared(value1,value2));
-}
-com.engine.math.Vector3.DistanceSquared = function(value1,value2) {
-	var x = value1.x - value2.x;
-	var y = value1.y - value2.y;
-	var z = value1.z - value2.z;
-	return x * x + y * y + z * z;
-}
-com.engine.math.Vector3.prototype = {
-	copyFromFloats: function(x,y,z) {
-		this.x = x;
-		this.y = y;
-		this.z = z;
-	}
-	,copyFrom: function(source) {
-		this.x = source.x;
-		this.y = source.y;
-		this.z = source.z;
-	}
-	,clone: function() {
-		return new com.engine.math.Vector3(this.x,this.y,this.z);
-	}
-	,normalize: function() {
-		var len = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-		if(len != 0) {
-			var num = 1.0 / len;
-			this.x *= num;
-			this.y *= num;
-			this.z *= num;
-		}
-	}
-	,lengthSquared: function() {
-		return this.x * this.x + this.y * this.y + this.z * this.z;
-	}
-	,length: function() {
-		return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-	}
-	,divideToRef: function(otherVector,result) {
-		result.x = this.x / otherVector.x;
-		result.y = this.y / otherVector.y;
-		result.z = this.z / otherVector.z;
-	}
-	,divide: function(otherVector) {
-		return new com.engine.math.Vector3(this.x / otherVector.x,this.y / otherVector.y,this.z / otherVector.z);
-	}
-	,multiplyByFloats: function(x,y,z) {
-		return new com.engine.math.Vector3(this.x * x,this.y * y,this.z * z);
-	}
-	,multiplyToRef: function(otherVector,result) {
-		result.x = this.x * otherVector.x;
-		result.y = this.y * otherVector.y;
-		result.z = this.z * otherVector.z;
-	}
-	,multiply: function(otherVector) {
-		return new com.engine.math.Vector3(this.x * otherVector.x,this.y * otherVector.y,this.z * otherVector.z);
-	}
-	,multiplyInPlace: function(otherVector) {
-		this.x *= otherVector.x;
-		this.y *= otherVector.y;
-		this.z *= otherVector.z;
-	}
-	,equalsToFloats: function(x,y,z) {
-		return this.x == x && this.y == y && this.z == z;
-	}
-	,equals: function(otherVector) {
-		return this.x == otherVector.x && this.y == otherVector.y && this.z == otherVector.z;
-	}
-	,scaleToRef: function(scale,result) {
-		result.x = this.x * scale;
-		result.y = this.y * scale;
-		result.z = this.z * scale;
-	}
-	,scale: function(scale) {
-		return new com.engine.math.Vector3(this.x * scale,this.y * scale,this.z * scale);
-	}
-	,scaleInPlace: function(scale) {
-		this.x *= scale;
-		this.y *= scale;
-		this.z *= scale;
-	}
-	,negate: function() {
-		return new com.engine.math.Vector3(-this.x,-this.y,-this.z);
-	}
-	,subtractFromFloatsToRef: function(x,y,z,result) {
-		result.x = this.x - x;
-		result.y = this.y - y;
-		result.z = this.z - z;
-	}
-	,subtractFromFloats: function(x,y,z) {
-		return new com.engine.math.Vector3(this.x - x,this.y - y,this.z - z);
-	}
-	,subtractToRef: function(otherVector,result) {
-		result.x = this.x - otherVector.x;
-		result.y = this.y - otherVector.y;
-		result.z = this.z - otherVector.z;
-	}
-	,subtract: function(otherVector) {
-		return new com.engine.math.Vector3(this.x - otherVector.x,this.y - otherVector.y,this.z - otherVector.z);
-	}
-	,subtractInPlace: function(otherVector) {
-		this.x -= otherVector.x;
-		this.y -= otherVector.y;
-		this.z -= otherVector.z;
-	}
-	,addToRef: function(otherVector,result) {
-		result.x = this.x + otherVector.x;
-		result.y = this.y + otherVector.y;
-		result.z = this.z + otherVector.z;
-		return result;
-	}
-	,add: function(otherVector) {
-		return new com.engine.math.Vector3(this.x + otherVector.x,this.y + otherVector.y,this.z + otherVector.z);
-	}
-	,addInPlace: function(otherVector) {
-		this.x += otherVector.x;
-		this.y += otherVector.y;
-		this.z += otherVector.z;
-	}
-	,toArray: function(array,index) {
-		if(index == null) index = 0;
-		array[index] = this.x;
-		array[index + 1] = this.y;
-		array[index + 2] = this.z;
-		return array;
-	}
-	,asArray: function() {
-		var result = [];
-		result[0] = this.x;
-		result[1] = this.y;
-		result[2] = this.z;
-		result;
-		return result;
-	}
-	,toString: function() {
-		return "{X:" + this.x + " Y:" + this.y + " Z:" + this.z + "}";
-	}
-	,set: function(initialX,initialY,initialZ) {
-		if(initialZ == null) initialZ = 0;
-		this.x = initialX;
-		this.y = initialY;
-		this.z = initialZ;
-	}
-	,__class__: com.engine.math.Vector3
-}
 com.engine.misc = {}
-com.engine.misc.MatrixHelp = function() { }
-$hxClasses["com.engine.misc.MatrixHelp"] = com.engine.misc.MatrixHelp;
-com.engine.misc.MatrixHelp.__name__ = ["com","engine","misc","MatrixHelp"];
-com.engine.misc.MatrixHelp.getScaled = function(source,newWidth,newHeight) {
-	var m = new flash.geom.Matrix();
-	m.scale(newWidth / (source.___textureBuffer != null?source.___textureBuffer.width:0),newHeight / (source.___textureBuffer != null?source.___textureBuffer.height:0));
-	var bmp = new flash.display.BitmapData(newWidth,newHeight,true);
-	bmp.draw(source,m);
-	return bmp;
-}
-com.engine.misc.MatrixHelp.flipBitmapData = function(original,axis) {
-	if(axis == null) axis = "y";
-	var flipped = new flash.display.BitmapData(original.___textureBuffer != null?original.___textureBuffer.width:0,original.___textureBuffer != null?original.___textureBuffer.height:0,true,0);
-	var matrix;
-	if(axis == "x") matrix = new flash.geom.Matrix(-1,0,0,1,original.___textureBuffer != null?original.___textureBuffer.width:0,0); else matrix = new flash.geom.Matrix(1,0,0,-1,0,original.___textureBuffer != null?original.___textureBuffer.height:0);
-	flipped.draw(original,matrix,null,null,null,true);
-	return flipped;
-}
-com.engine.misc.MatrixHelp.skew = function(matrix,skewX,skewY) {
-	var sinX = Math.sin(skewX);
-	var cosX = Math.cos(skewX);
-	var sinY = Math.sin(skewY);
-	var cosY = Math.cos(skewY);
-	com.engine.misc.MatrixHelp.setTo(matrix,matrix.a * cosY - matrix.b * sinX,matrix.a * sinY + matrix.b * cosX,matrix.c * cosY - matrix.d * sinX,matrix.c * sinY + matrix.d * cosX,matrix.tx * cosY - matrix.ty * sinX,matrix.tx * sinY + matrix.ty * cosX);
-}
-com.engine.misc.MatrixHelp.setTo = function(matrix,a,b,c,d,tx,ty) {
-	matrix.a = a;
-	matrix.b = b;
-	matrix.c = c;
-	matrix.d = d;
-	matrix.set_tx(tx);
-	matrix.set_ty(ty);
-}
 com.engine.misc.Util = function() { }
 $hxClasses["com.engine.misc.Util"] = com.engine.misc.Util;
 com.engine.misc.Util.__name__ = ["com","engine","misc","Util"];
+com.engine.misc.Util.getTime = function() {
+	return flash.Lib.getTimer();
+}
 com.engine.misc.Util.randf = function(max,min) {
 	return Math.random() * (max - min) + min;
 }
@@ -3641,6 +2657,70 @@ com.engine.misc.Util.getNextPowerOfTwo = function(number) {
 		return result;
 	}
 }
+com.engine.misc.Util.getScaled = function(source,newWidth,newHeight) {
+	var m = new flash.geom.Matrix();
+	m.scale(newWidth / (source.___textureBuffer != null?source.___textureBuffer.width:0),newHeight / (source.___textureBuffer != null?source.___textureBuffer.height:0));
+	var bmp = new flash.display.BitmapData(newWidth,newHeight,true,0);
+	bmp.draw(source,m);
+	return bmp;
+}
+com.engine.misc.Util.flipBitmapData = function(original,axis) {
+	if(axis == null) axis = "y";
+	var flipped = new flash.display.BitmapData(original.___textureBuffer != null?original.___textureBuffer.width:0,original.___textureBuffer != null?original.___textureBuffer.height:0,true,0);
+	var matrix;
+	if(axis == "x") matrix = new flash.geom.Matrix(-1,0,0,1,original.___textureBuffer != null?original.___textureBuffer.width:0,0); else matrix = new flash.geom.Matrix(1,0,0,-1,0,original.___textureBuffer != null?original.___textureBuffer.height:0);
+	flipped.draw(original,matrix,null,null,null,true);
+	return flipped;
+}
+com.engine.misc.Util.skew = function(matrix,skewX,skewY) {
+	var sinX = Math.sin(skewX);
+	var cosX = Math.cos(skewX);
+	var sinY = Math.sin(skewY);
+	var cosY = Math.cos(skewY);
+	com.engine.misc.Util.setTo(matrix,matrix.a * cosY - matrix.b * sinX,matrix.a * sinY + matrix.b * cosX,matrix.c * cosY - matrix.d * sinX,matrix.c * sinY + matrix.d * cosX,matrix.tx * cosY - matrix.ty * sinX,matrix.tx * sinY + matrix.ty * cosX);
+}
+com.engine.misc.Util.setTo = function(matrix,a,b,c,d,tx,ty) {
+	matrix.a = a;
+	matrix.b = b;
+	matrix.c = c;
+	matrix.d = d;
+	matrix.set_tx(tx);
+	matrix.set_ty(ty);
+}
+com.engine.misc.Util.fillMatrix3DArrayTo = function(mat,array) {
+	var _g = 0;
+	while(_g < 16) {
+		var index = _g++;
+	}
+}
+com.engine.misc.Util.createOrtho = function(x0,x1,y0,y1,zNear,zFar) {
+	var sx = 1.0 / (x1 - x0);
+	var sy = 1.0 / (y1 - y0);
+	var sz = 1.0 / (zFar - zNear);
+	return new flash.geom.Matrix3D([2.0 * sx,0,0,0,0,2.0 * sy,0,0,0,0,-2. * sz,0,-(x0 + x1) * sx,-(y0 + y1) * sy,-(zNear + zFar) * sz,1]);
+}
+com.engine.misc.Util.setMatrixOrtho = function(mat,x0,x1,y0,y1,zNear,zFar) {
+	var sx = 1.0 / (x1 - x0);
+	var sy = 1.0 / (y1 - y0);
+	var sz = 1.0 / (zFar - zNear);
+	com.engine.misc.Util.fillMatrix3DArrayTo(mat,[2.0 * sx,0,0,0,0,2.0 * sy,0,0,0,0,-2. * sz,0,-(x0 + x1) * sx,-(y0 + y1) * sy,-(zNear + zFar) * sz,1]);
+}
+com.engine.misc.Util.set2Dtransformation = function(mat,x,y,scale,rotation) {
+	if(rotation == null) rotation = 0;
+	if(scale == null) scale = 1;
+	var theta = rotation * Math.PI / 180.0;
+	var c = Math.cos(theta);
+	var s = Math.sin(theta);
+}
+com.engine.misc.Util.createMtrix2D = function(x,y,scale,rotation) {
+	if(rotation == null) rotation = 0;
+	if(scale == null) scale = 1;
+	var theta = rotation * Math.PI / 180.0;
+	var c = Math.cos(theta);
+	var s = Math.sin(theta);
+	var mat = new flash.geom.Matrix3D([c * scale,-s * scale,0,0,s * scale,c * scale,0,0,0,0,1,0,x,y,0,1]);
+	return mat;
+}
 com.engine.misc.Util.prototype = {
 	getExponantOfTwo: function(value,max) {
 		var count = 1;
@@ -3654,48 +2734,316 @@ com.engine.misc.Util.prototype = {
 	,__class__: com.engine.misc.Util
 }
 com.engine.render = {}
-com.engine.render.BlendMode = function() { }
-$hxClasses["com.engine.render.BlendMode"] = com.engine.render.BlendMode;
-com.engine.render.BlendMode.__name__ = ["com","engine","render","BlendMode"];
-com.engine.render.BlendMode.setBlend = function(mode) {
-	switch(mode) {
-	case 0:
-		openfl.gl.GL.blendFunc(770,771);
-		break;
-	case 1:
-		openfl.gl.GL.blendFunc(770,772);
-		break;
-	case 2:
-		openfl.gl.GL.blendFunc(774,771);
-		break;
-	case 3:
-		openfl.gl.GL.blendFunc(770,1);
-		break;
-	default:
-		openfl.gl.GL.blendFunc(1,771);
-	}
-}
 com.engine.render.Buffer = function() {
 	this.position = new com.engine.math.Vector2(0,0);
 	this.rotation = 0;
 	this.scale = 1;
-	this.viewMatrix = com.engine.math.Matrix.FromValues(1.0,0,0,0,0,1.0,0,0,0,0,1.0,0,0,0,0,1.0);
+	this.viewMatrix = new flash.geom.Matrix3D();
+	this.scrollx = 1;
+	this.scrolly = 1;
+	this.x = 0;
+	this.y = 0;
+	this.update();
 };
 $hxClasses["com.engine.render.Buffer"] = com.engine.render.Buffer;
 com.engine.render.Buffer.__name__ = ["com","engine","render","Buffer"];
 com.engine.render.Buffer.prototype = {
 	dispose: function() {
+		this.viewMatrix = null;
+		this.position = null;
 	}
 	,update: function() {
-		this.viewMatrix.set2Dtransformation(Math.round(this.position.x),Math.round(this.position.y),this.scale,this.rotation);
+		this.viewMatrix.identity();
+		this.viewMatrix.append(new flash.geom.Matrix3D([this.scale,0.0,0.0,0.0,0.0,this.scale,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,1.0]));
+		this.viewMatrix.appendTranslation(Math.round(this.position.x - com.engine.game.Game.camera.scrollX * this.scrollx),Math.round(this.position.y - com.engine.game.Game.camera.scrollY * this.scrolly),0);
 	}
 	,combineMatrix: function(m) {
-		this.viewMatrix.Multiply4x4(this.viewMatrix,m);
+		this.viewMatrix.append(m);
 	}
 	,getMatrix: function() {
 		return this.viewMatrix;
 	}
 	,__class__: com.engine.render.Buffer
+}
+com.engine.render.BatchPrimitives = function(capacity) {
+	com.engine.render.Buffer.call(this);
+	this.vertexBuffer = openfl.gl.GL.createBuffer();
+	this.colorBuffer = openfl.gl.GL.createBuffer();
+	this.fvertexBuffer = openfl.gl.GL.createBuffer();
+	this.fcolorBuffer = openfl.gl.GL.createBuffer();
+	this.capacity = capacity;
+	this.idxPos = 0;
+	this.idxCols = 0;
+	this.scrollx = 0;
+	this.scrolly = 0;
+	this.fidxPos = 0;
+	this.fidxCols = 0;
+	this.vertices = new Float32Array(capacity * 3 * 4);
+	openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
+	openfl.gl.GL.bufferData(34962,this.vertices,35048);
+	this.colors = new Float32Array(capacity * 4 * 4);
+	openfl.gl.GL.bindBuffer(34962,this.colorBuffer);
+	openfl.gl.GL.bufferData(34962,this.colors,35048);
+	this.fvertices = new Float32Array(capacity * 3 * 4);
+	openfl.gl.GL.bindBuffer(34962,this.fvertexBuffer);
+	openfl.gl.GL.bufferData(34962,this.fvertices,35048);
+	this.fcolors = new Float32Array(capacity * 4 * 4);
+	openfl.gl.GL.bindBuffer(34962,this.fcolorBuffer);
+	openfl.gl.GL.bufferData(34962,this.fcolors,35048);
+	this.currentBlendMode = com.engine.render.BlendMode.NORMAL;
+	this.shader = new com.engine.render.PrimitiveShader();
+};
+$hxClasses["com.engine.render.BatchPrimitives"] = com.engine.render.BatchPrimitives;
+com.engine.render.BatchPrimitives.__name__ = ["com","engine","render","BatchPrimitives"];
+com.engine.render.BatchPrimitives.__super__ = com.engine.render.Buffer;
+com.engine.render.BatchPrimitives.prototype = $extend(com.engine.render.Buffer.prototype,{
+	dispose: function() {
+		this.vertices = null;
+		this.colors = null;
+		openfl.gl.GL.deleteBuffer(this.vertexBuffer);
+		openfl.gl.GL.deleteBuffer(this.colorBuffer);
+		this.fvertices = null;
+		this.fcolors = null;
+		openfl.gl.GL.deleteBuffer(this.fvertexBuffer);
+		openfl.gl.GL.deleteBuffer(this.fcolorBuffer);
+		com.engine.render.Buffer.prototype.dispose.call(this);
+	}
+	,fillrect: function(x,y,width,height,r,g,b,a) {
+		if(a == null) a = 1;
+		this.fvertex(x,y,0);
+		this.fcolor(r,g,b,a);
+		this.fvertex(x + width,y,0);
+		this.fcolor(r,g,b,a);
+		this.fvertex(x + width,y + height,0);
+		this.fcolor(r,g,b,a);
+		this.fvertex(x + width,y + height,0);
+		this.fcolor(r,g,b,a);
+		this.fvertex(x,y + height,0);
+		this.fcolor(r,g,b,a);
+		this.fvertex(x,y,0);
+		this.fcolor(r,g,b,a);
+	}
+	,rect: function(x,y,width,height,r,g,b,a) {
+		if(a == null) a = 1;
+		this.vertex(x,y,0);
+		this.color(r,g,b,a);
+		this.vertex(x + width,y,0);
+		this.color(r,g,b,a);
+		this.vertex(x + width,y,0);
+		this.color(r,g,b,a);
+		this.vertex(x + width,y + height,0);
+		this.color(r,g,b,a);
+		this.vertex(x + width,y + height,0);
+		this.color(r,g,b,a);
+		this.vertex(x,y + height,0);
+		this.color(r,g,b,a);
+		this.vertex(x,y + height,0);
+		this.color(r,g,b,a);
+		this.vertex(x,y,0);
+		this.color(r,g,b,a);
+	}
+	,line: function(x1,y1,x2,y2,r,g,b,a) {
+		if(a == null) a = 1;
+		this.vertex(x1,y1);
+		this.color(r,g,b,a);
+		this.vertex(x2,y2);
+		this.color(r,g,b,a);
+	}
+	,fillellipse: function(x,y,width,height,segments,r,g,b,a) {
+		if(a == null) a = 1;
+		var angle = 6.2831852 / segments;
+		var cx = x + width / 2;
+		var cy = y + height / 2;
+		var _g = 0;
+		while(_g < segments) {
+			var i = _g++;
+			this.fvertex(cx + width * 0.5 * Math.cos(i * angle),cy + height * 0.5 * Math.sin(i * angle),0);
+			this.fcolor(r,g,b,a);
+			this.fvertex(cx,cy,0);
+			this.fcolor(r,g,b,a);
+			this.fvertex(cx + width * 0.5 * Math.cos((i + 1) * angle),cy + height * 0.5 * Math.sin((i + 1) * angle),0);
+			this.fcolor(r,g,b,a);
+		}
+	}
+	,ellipse: function(x,y,width,height,segments,r,g,b,a) {
+		if(a == null) a = 1;
+		var angle = 6.2831852 / segments;
+		var cx = x + width / 2;
+		var cy = y + height / 2;
+		var _g = 0;
+		while(_g < segments) {
+			var i = _g++;
+			this.vertex(cx + width * 0.5 * Math.cos(i * angle),cy + height * 0.5 * Math.sin(i * angle),0);
+			this.color(r,g,b,a);
+			this.vertex(cx + width * 0.5 * Math.cos((i + 1) * angle),cy + height * 0.5 * Math.sin((i + 1) * angle),0);
+			this.color(r,g,b,a);
+		}
+	}
+	,fillcircle: function(x,y,radius,segments,r,g,b,a) {
+		if(a == null) a = 1;
+		var angle = 6.2831852 / segments;
+		var cos = Math.cos(angle);
+		var sin = Math.sin(angle);
+		var cx = radius;
+		var cy = 0;
+		segments--;
+		var _g = 0;
+		while(_g < segments) {
+			var i = _g++;
+			this.fvertex(x,y,0);
+			this.fcolor(r,g,b,a);
+			this.fvertex(x + cx,y + cy,0);
+			this.fcolor(r,g,b,a);
+			var temp = cx;
+			cx = cos * cx - sin * cy;
+			cy = sin * temp + cos * cy;
+			this.fvertex(x + cx,y + cy,0);
+			this.fcolor(r,g,b,a);
+		}
+		this.fvertex(x,y,0);
+		this.fcolor(r,g,b,a);
+		this.fvertex(x + cx,y + cy,0);
+		this.fcolor(r,g,b,a);
+		var temp = cx;
+		cx = radius;
+		cy = 0;
+		this.fvertex(x + cx,y + cy,0);
+		this.fcolor(r,g,b,a);
+	}
+	,circle: function(x,y,radius,segments,r,g,b,a) {
+		if(a == null) a = 1;
+		var angle = 6.2831852 / segments;
+		var cos = Math.cos(angle);
+		var sin = Math.sin(angle);
+		var cx = radius;
+		var cy = 0;
+		var _g = 0;
+		while(_g < segments) {
+			var i = _g++;
+			this.vertex(x + cx,y + cy,0);
+			this.color(r,g,b,a);
+			var temp = cx;
+			cx = cos * cx - sin * cy;
+			cy = sin * temp + cos * cy;
+			this.vertex(x + cx,y + cy,0);
+			this.color(r,g,b,a);
+		}
+		this.vertex(x + cx,y + cy,0);
+		this.color(r,g,b,a);
+		this.vertex(x,y,0);
+		this.color(r,g,b,a);
+		this.vertex(x + cx,y + cy,0);
+		this.color(r,g,b,a);
+		var temp = cx;
+		cx = radius;
+		cy = 0;
+		this.vertex(x + cx,y + cy,0);
+		this.color(r,g,b,a);
+	}
+	,end: function() {
+		this.shader.Enable();
+		com.engine.render.BlendMode.setBlend(this.currentBlendMode);
+		openfl.gl.GL.uniformMatrix3D(this.shader.projectionMatrixUniform,false,com.engine.game.Game.camera.projMatrix);
+		openfl.gl.GL.uniformMatrix3D(this.shader.modelViewMatrixUniform,false,this.viewMatrix);
+		openfl.gl.GL.bindBuffer(34962,this.fvertexBuffer);
+		openfl.gl.GL.bufferSubData(34962,0,this.fvertices);
+		openfl.gl.GL.vertexAttribPointer(this.shader.vertexAttribute,3,5126,false,0,0);
+		openfl.gl.GL.bindBuffer(34962,this.fcolorBuffer);
+		openfl.gl.GL.bufferSubData(34962,0,this.fcolors);
+		openfl.gl.GL.vertexAttribPointer(this.shader.colorAttribute,4,5126,false,0,0);
+		openfl.gl.GL.drawArrays(4,0,this.fidxPos / 3 | 0);
+		openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
+		openfl.gl.GL.bufferSubData(34962,0,this.vertices);
+		openfl.gl.GL.vertexAttribPointer(this.shader.vertexAttribute,3,5126,false,0,0);
+		openfl.gl.GL.bindBuffer(34962,this.colorBuffer);
+		openfl.gl.GL.bufferSubData(34962,0,this.colors);
+		openfl.gl.GL.vertexAttribPointer(this.shader.colorAttribute,4,5126,false,0,0);
+		openfl.gl.GL.drawArrays(1,0,this.idxPos / 3 | 0);
+		this.shader.Disable();
+	}
+	,begin: function() {
+		this.idxPos = 0;
+		this.idxCols = 0;
+		this.fidxPos = 0;
+		this.fidxCols = 0;
+		this.update();
+	}
+	,fcolor: function(r,g,b,a) {
+		if(a == null) a = 0.0;
+		this.fcolors[this.fidxCols++] = r;
+		this.fcolors[this.fidxCols++] = g;
+		this.fcolors[this.fidxCols++] = b;
+		this.fcolors[this.fidxCols++] = a;
+	}
+	,fvertex: function(x,y,z) {
+		if(z == null) z = 0.0;
+		this.fvertices[this.fidxPos++] = x;
+		this.fvertices[this.fidxPos++] = y;
+		this.fvertices[this.fidxPos++] = z;
+	}
+	,color: function(r,g,b,a) {
+		if(a == null) a = 0.0;
+		this.colors[this.idxCols++] = r;
+		this.colors[this.idxCols++] = g;
+		this.colors[this.idxCols++] = b;
+		this.colors[this.idxCols++] = a;
+	}
+	,vertex: function(x,y,z) {
+		if(z == null) z = 0.0;
+		this.vertices[this.idxPos++] = x;
+		this.vertices[this.idxPos++] = y;
+		this.vertices[this.idxPos++] = z;
+	}
+	,__class__: com.engine.render.BatchPrimitives
+});
+com.engine.render.BlendMode = function() { }
+$hxClasses["com.engine.render.BlendMode"] = com.engine.render.BlendMode;
+com.engine.render.BlendMode.__name__ = ["com","engine","render","BlendMode"];
+com.engine.render.BlendMode.setBlend = function(mode) {
+	switch(mode) {
+	case com.engine.render.BlendMode.NORMAL:
+		openfl.gl.GL.blendFunc(770,771);
+		break;
+	case com.engine.render.BlendMode.ADD:
+		openfl.gl.GL.blendFunc(770,772);
+		break;
+	case com.engine.render.BlendMode.MULTIPLY:
+		openfl.gl.GL.blendFunc(774,771);
+		break;
+	case com.engine.render.BlendMode.SCREEN:
+		openfl.gl.GL.blendFunc(770,1);
+		break;
+	case com.engine.render.BlendMode.TRANSPARENT:
+		openfl.gl.GL.blendFunc(1,771);
+		break;
+	default:
+		openfl.gl.GL.blendFunc(1,771);
+	}
+}
+com.engine.render.Camera = function(width,height) {
+	this.projMatrix = com.engine.misc.Util.createOrtho(0,width,height,0,-1,1);
+	this.width = width;
+	this.height = height;
+	this.viewMatrix = new flash.geom.Matrix3D();
+	this.scale = 1;
+	this.position = new com.engine.math.Vector2(0,0);
+	this.scrollX = 0;
+	this.scrollY = 0;
+};
+$hxClasses["com.engine.render.Camera"] = com.engine.render.Camera;
+com.engine.render.Camera.__name__ = ["com","engine","render","Camera"];
+com.engine.render.Camera.prototype = {
+	resize: function(width,height) {
+		this.width = width;
+		this.height = height;
+		this.projMatrix = com.engine.misc.Util.createOrtho(0,width,height,0,-1,1);
+	}
+	,update: function() {
+		this.viewMatrix.identity();
+		this.viewMatrix.append(new flash.geom.Matrix3D([this.scale,0.0,0.0,0.0,0.0,this.scale,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,1.0]));
+		this.viewMatrix.appendTranslation(Math.round(this.position.x),Math.round(this.position.y),0);
+	}
+	,__class__: com.engine.render.Camera
 }
 com.engine.render.Clip = function(x,y,width,height) {
 	if(height == null) height = 0;
@@ -3747,6 +3095,43 @@ com.engine.render.Image.__name__ = ["com","engine","render","Image"];
 com.engine.render.Image.prototype = {
 	__class__: com.engine.render.Image
 }
+com.engine.render.PrimitiveShader = function() {
+	var vertexShader = openfl.gl.GL.createShader(35633);
+	openfl.gl.GL.shaderSource(vertexShader,com.engine.render.filter.Filter.colorVertexShader);
+	openfl.gl.GL.compileShader(vertexShader);
+	if(openfl.gl.GL.getShaderParameter(vertexShader,35713) == 0) throw openfl.gl.GL.getShaderInfoLog(vertexShader);
+	var fragmentShader = openfl.gl.GL.createShader(35632);
+	openfl.gl.GL.shaderSource(fragmentShader,com.engine.render.filter.Filter.colorFragmentShader);
+	openfl.gl.GL.compileShader(fragmentShader);
+	if(openfl.gl.GL.getShaderParameter(fragmentShader,35713) == 0) throw openfl.gl.GL.getShaderInfoLog(fragmentShader);
+	this.shaderProgram = openfl.gl.GL.createProgram();
+	openfl.gl.GL.attachShader(this.shaderProgram,vertexShader);
+	openfl.gl.GL.attachShader(this.shaderProgram,fragmentShader);
+	openfl.gl.GL.linkProgram(this.shaderProgram);
+	if(openfl.gl.GL.getProgramParameter(this.shaderProgram,35714) == 0) throw "Unable to initialize the shader program.";
+	this.vertexAttribute = openfl.gl.GL.getAttribLocation(this.shaderProgram,"aVertexPosition");
+	this.colorAttribute = openfl.gl.GL.getAttribLocation(this.shaderProgram,"aColor");
+	this.projectionMatrixUniform = openfl.gl.GL.getUniformLocation(this.shaderProgram,"uProjectionMatrix");
+	this.modelViewMatrixUniform = openfl.gl.GL.getUniformLocation(this.shaderProgram,"uModelViewMatrix");
+};
+$hxClasses["com.engine.render.PrimitiveShader"] = com.engine.render.PrimitiveShader;
+com.engine.render.PrimitiveShader.__name__ = ["com","engine","render","PrimitiveShader"];
+com.engine.render.PrimitiveShader.prototype = {
+	dispose: function() {
+		openfl.gl.GL.deleteProgram(this.shaderProgram);
+	}
+	,Disable: function() {
+		openfl.gl.GL.disableVertexAttribArray(this.vertexAttribute);
+		openfl.gl.GL.disableVertexAttribArray(this.colorAttribute);
+		openfl.gl.GL.useProgram(null);
+	}
+	,Enable: function() {
+		openfl.gl.GL.useProgram(this.shaderProgram);
+		openfl.gl.GL.enableVertexAttribArray(this.vertexAttribute);
+		openfl.gl.GL.enableVertexAttribArray(this.colorAttribute);
+	}
+	,__class__: com.engine.render.PrimitiveShader
+}
 com.engine.render.SpriteBatch = function(capacity) {
 	this.invTexHeight = 0;
 	this.invTexWidth = 0;
@@ -3755,7 +3140,7 @@ com.engine.render.SpriteBatch = function(capacity) {
 	com.engine.render.Buffer.call(this);
 	this.capacity = capacity;
 	this.vertexStrideSize = 36;
-	this.numVerts = capacity * this.vertexStrideSize * 4;
+	this.numVerts = capacity * this.vertexStrideSize;
 	this.numIndices = capacity * 6;
 	this.vertices = new Float32Array(this.numVerts);
 	var indices = [];
@@ -3779,6 +3164,7 @@ com.engine.render.SpriteBatch = function(capacity) {
 	this.indexBuffer = openfl.gl.GL.createBuffer();
 	openfl.gl.GL.bindBuffer(34963,this.indexBuffer);
 	openfl.gl.GL.bufferData(34963,new Int16Array(indices),35044);
+	indices = null;
 	openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
 	openfl.gl.GL.bufferData(34962,this.vertices,35048);
 	this.shader = new com.engine.render.SpriteShader();
@@ -3809,11 +3195,10 @@ com.engine.render.SpriteBatch.prototype = $extend(com.engine.render.Buffer.proto
 	,flush: function() {
 		if(this.currentBatchSize == 0) return;
 		this.update();
-		this.currentBaseTexture.Bind();
+		this.shader.setTexture(this.currentBaseTexture);
 		this.numTex++;
-		openfl.gl.GL.uniformMatrix4fv(this.shader.projectionMatrixUniform,false,new Float32Array(com.engine.game.Game.projMatrix.m));
-		openfl.gl.GL.uniformMatrix4fv(this.shader.modelViewMatrixUniform,false,new Float32Array(this.viewMatrix.m));
-		openfl.gl.GL.uniform1i(this.shader.imageUniform,0);
+		openfl.gl.GL.uniformMatrix3D(this.shader.projectionMatrixUniform,false,com.engine.game.Game.camera.projMatrix);
+		openfl.gl.GL.uniformMatrix3D(this.shader.modelViewMatrixUniform,false,this.viewMatrix);
 		openfl.gl.GL.bufferSubData(34962,0,this.vertices);
 		openfl.gl.GL.bindBuffer(34963,this.indexBuffer);
 		openfl.gl.GL.drawElements(4,this.currentBatchSize * 6,5123,0);
@@ -3821,11 +3206,10 @@ com.engine.render.SpriteBatch.prototype = $extend(com.engine.render.Buffer.proto
 	}
 	,start: function() {
 		this.shader.Enable();
-		openfl.gl.GL.activeTexture(33984);
 		openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
-		openfl.gl.GL.vertexAttribPointer(this.shader.vertexAttribute,3,5126,false,this.vertexStrideSize,0);
-		openfl.gl.GL.vertexAttribPointer(this.shader.texCoordAttribute,2,5126,false,this.vertexStrideSize,12);
-		openfl.gl.GL.vertexAttribPointer(this.shader.colorAttribute,4,5126,false,this.vertexStrideSize,20);
+		openfl.gl.GL.vertexAttribPointer(com.engine.render.filter.Filter.vertexAttribute,3,5126,false,this.vertexStrideSize,0);
+		openfl.gl.GL.vertexAttribPointer(com.engine.render.filter.Filter.texCoordAttribute,2,5126,false,this.vertexStrideSize,12);
+		openfl.gl.GL.vertexAttribPointer(com.engine.render.filter.Filter.colorAttribute,4,5126,false,this.vertexStrideSize,20);
 		if(this.currentBlendMode != com.engine.render.BlendMode.NORMAL) this.setBlendMode(this.currentBlendMode);
 	}
 	,End: function() {
@@ -3836,6 +3220,8 @@ com.engine.render.SpriteBatch.prototype = $extend(com.engine.render.Buffer.proto
 		this.numTex = 0;
 		this.numBlend = 0;
 		this.currentBatchSize = 0;
+		this.currentBaseTexture = null;
+		this.currentBlendMode = -1;
 		this.start();
 	}
 	,RenderNormal: function(texture,x,y,blendMode) {
@@ -4121,78 +3507,89 @@ com.engine.render.SpriteBatch.prototype = $extend(com.engine.render.Buffer.proto
 		this.vertices[index++] = 1;
 		this.currentBatchSize++;
 	}
-	,drawEntity: function(obj) {
-		if(obj.image != this.currentBaseTexture || this.currentBatchSize >= this.capacity) this.switchTexture(obj.image);
-		if(obj.blendMode != this.currentBlendMode) this.setBlendMode(obj.blendMode);
-		var u = obj.clip.x * this.invTexWidth;
-		var u2 = (obj.clip.x + obj.clip.width) * this.invTexWidth;
-		var v = (obj.clip.y + obj.clip.height) * this.invTexHeight;
-		var v2 = obj.clip.y * this.invTexHeight;
-		if(obj.flipx) {
-			var tmp = u;
-			u = u2;
-			u2 = tmp;
-		}
-		if(obj.flipy) {
-			var tmp = v;
-			v = v2;
-			v2 = tmp;
-		}
-		var index = this.currentBatchSize * this.vertexStrideSize;
-		var TempX1 = 0;
-		var TempY1 = 0;
-		var TempX2 = obj.clip.width;
-		var TempY2 = obj.clip.height;
-		var r = obj.red;
-		var g = obj.green;
-		var b = obj.blue;
-		var a = obj.alpha;
-		this.vertices[index + 2] = obj.depth;
-		this.vertices[index + 9 + 2] = obj.depth;
-		this.vertices[index + 18 + 2] = obj.depth;
-		this.vertices[index + 27 + 2] = obj.depth;
-		this.vertices[index] = TempX1;
-		this.vertices[index + 1] = TempY1;
-		this.vertices[index + 9] = TempX1;
-		this.vertices[index + 9 + 1] = TempY2;
-		this.vertices[index + 18] = TempX2;
-		this.vertices[index + 18 + 1] = TempX2;
-		this.vertices[index + 27] = TempX2;
-		this.vertices[index + 27 + 1] = TempY1;
-		this.vertices[index + 3] = u;
-		this.vertices[index + 4] = v2;
-		this.vertices[index + 9 + 3] = u;
-		this.vertices[index + 9 + 4] = v;
-		this.vertices[index + 18 + 3] = u2;
-		this.vertices[index + 18 + 4] = v;
-		this.vertices[index + 27 + 3] = u2;
-		this.vertices[index + 27 + 4] = v2;
-		this.vertices[index + 5] = r;
-		this.vertices[index + 6] = g;
-		this.vertices[index + 7] = b;
-		this.vertices[index + 8] = a;
-		this.vertices[index + 9 + 5] = r;
-		this.vertices[index + 9 + 6] = g;
-		this.vertices[index + 9 + 7] = b;
-		this.vertices[index + 9 + 8] = a;
-		this.vertices[index + 18 + 5] = r;
-		this.vertices[index + 18 + 6] = g;
-		this.vertices[index + 18 + 7] = b;
-		this.vertices[index + 18 + 8] = a;
-		this.vertices[index + 27 + 5] = r;
-		this.vertices[index + 27 + 6] = g;
-		this.vertices[index + 27 + 7] = b;
-		this.vertices[index + 27 + 8] = a;
+	,drawEntity: function(obj,childs) {
+		if(childs == null) childs = false;
 		var matrix = obj.getLocalToWorldMatrix();
-		var _g = 0;
-		while(_g < 4) {
-			var i = _g++;
-			var x = this.vertices[index + i * 9];
-			var y = this.vertices[index + i * 9 + 1];
-			this.vertices[index + i * 9] = matrix.a * x + matrix.c * y + matrix.tx;
-			this.vertices[index + i * 9 + 1] = matrix.d * y + matrix.b * x + matrix.ty;
+		if(obj.image != null) {
+			if(obj.image != this.currentBaseTexture) this.switchTexture(obj.image);
+			if(obj.blendMode != this.currentBlendMode) this.setBlendMode(obj.blendMode);
+			var u = obj.clip.x * this.invTexWidth;
+			var u2 = (obj.clip.x + obj.clip.width) * this.invTexWidth;
+			var v = (obj.clip.y + obj.clip.height) * this.invTexHeight;
+			var v2 = obj.clip.y * this.invTexHeight;
+			if(obj.flipx) {
+				var tmp = u;
+				u = u2;
+				u2 = tmp;
+			}
+			if(obj.flipy) {
+				var tmp = v;
+				v = v2;
+				v2 = tmp;
+			}
+			var index = this.currentBatchSize * this.vertexStrideSize;
+			var TempX1 = 0;
+			var TempY1 = 0;
+			var TempX2 = obj.clip.width;
+			var TempY2 = obj.clip.height;
+			var r = obj.red;
+			var g = obj.green;
+			var b = obj.blue;
+			var a = obj.alpha;
+			this.vertices[index + 2] = obj.depth;
+			this.vertices[index + 9 + 2] = obj.depth;
+			this.vertices[index + 18 + 2] = obj.depth;
+			this.vertices[index + 27 + 2] = obj.depth;
+			this.vertices[index] = TempX1;
+			this.vertices[index + 1] = TempY1;
+			this.vertices[index + 9] = TempX1;
+			this.vertices[index + 9 + 1] = TempY2;
+			this.vertices[index + 18] = TempX2;
+			this.vertices[index + 18 + 1] = TempX2;
+			this.vertices[index + 27] = TempX2;
+			this.vertices[index + 27 + 1] = TempY1;
+			this.vertices[index + 3] = u;
+			this.vertices[index + 4] = v2;
+			this.vertices[index + 9 + 3] = u;
+			this.vertices[index + 9 + 4] = v;
+			this.vertices[index + 18 + 3] = u2;
+			this.vertices[index + 18 + 4] = v;
+			this.vertices[index + 27 + 3] = u2;
+			this.vertices[index + 27 + 4] = v2;
+			this.vertices[index + 5] = r;
+			this.vertices[index + 6] = g;
+			this.vertices[index + 7] = b;
+			this.vertices[index + 8] = a;
+			this.vertices[index + 9 + 5] = r;
+			this.vertices[index + 9 + 6] = g;
+			this.vertices[index + 9 + 7] = b;
+			this.vertices[index + 9 + 8] = a;
+			this.vertices[index + 18 + 5] = r;
+			this.vertices[index + 18 + 6] = g;
+			this.vertices[index + 18 + 7] = b;
+			this.vertices[index + 18 + 8] = a;
+			this.vertices[index + 27 + 5] = r;
+			this.vertices[index + 27 + 6] = g;
+			this.vertices[index + 27 + 7] = b;
+			this.vertices[index + 27 + 8] = a;
+			var _g = 0;
+			while(_g < 4) {
+				var i = _g++;
+				var x = this.vertices[index + i * 9];
+				var y = this.vertices[index + i * 9 + 1];
+				this.vertices[index + i * 9] = matrix.a * x + matrix.c * y + matrix.tx;
+				this.vertices[index + i * 9 + 1] = matrix.d * y + matrix.b * x + matrix.ty;
+			}
+			this.currentBatchSize++;
 		}
-		this.currentBatchSize++;
+		if(childs == true) {
+			var _g1 = 0, _g = obj.children.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				var o = obj.children[i];
+				this.drawEntity(o);
+			}
+		}
 	}
 	,drawEntitys: function(obj) {
 		var _g1 = 0, _g = obj.children.length;
@@ -4382,14 +3779,12 @@ com.engine.render.SpriteBatch.prototype = $extend(com.engine.render.Buffer.proto
 	,__class__: com.engine.render.SpriteBatch
 });
 com.engine.render.SpriteShader = function() {
-	var vertexShaderSource = "\r\nattribute vec3 aVertexPosition;\r\nattribute vec2 aTexCoord;\r\nattribute vec4 aColor;\r\n\r\nvarying vec2 vTexCoord;\r\nvarying vec4 vColor;\r\n\r\nuniform mat4 uModelViewMatrix;\r\nuniform mat4 uProjectionMatrix;\r\nvoid main(void) \r\n{\r\nvTexCoord = aTexCoord;\r\nvColor = aColor;\r\ngl_Position = uProjectionMatrix * uModelViewMatrix *  vec4 (aVertexPosition, 1.0);\r\n\r\n}";
 	var vertexShader = openfl.gl.GL.createShader(35633);
-	openfl.gl.GL.shaderSource(vertexShader,vertexShaderSource);
+	openfl.gl.GL.shaderSource(vertexShader,com.engine.render.filter.Filter.textureVertexShader);
 	openfl.gl.GL.compileShader(vertexShader);
 	if(openfl.gl.GL.getShaderParameter(vertexShader,35713) == 0) throw openfl.gl.GL.getShaderInfoLog(vertexShader);
-	var fragmentShaderSource = "precision mediump float;" + "\r\nvarying vec2 vTexCoord;\r\nvarying vec4 vColor;\r\nuniform sampler2D uImage0;\r\n\r\nvoid main(void)\r\n{\r\n\tgl_FragColor = texture2D (uImage0, vTexCoord) * vColor;\r\n\r\n}";
 	var fragmentShader = openfl.gl.GL.createShader(35632);
-	openfl.gl.GL.shaderSource(fragmentShader,fragmentShaderSource);
+	openfl.gl.GL.shaderSource(fragmentShader,com.engine.render.filter.Filter.textureFragmentShader);
 	openfl.gl.GL.compileShader(fragmentShader);
 	if(openfl.gl.GL.getShaderParameter(fragmentShader,35713) == 0) throw openfl.gl.GL.getShaderInfoLog(fragmentShader);
 	this.shaderProgram = openfl.gl.GL.createProgram();
@@ -4397,9 +3792,9 @@ com.engine.render.SpriteShader = function() {
 	openfl.gl.GL.attachShader(this.shaderProgram,fragmentShader);
 	openfl.gl.GL.linkProgram(this.shaderProgram);
 	if(openfl.gl.GL.getProgramParameter(this.shaderProgram,35714) == 0) throw "Unable to initialize the shader program.";
-	this.vertexAttribute = openfl.gl.GL.getAttribLocation(this.shaderProgram,"aVertexPosition");
-	this.texCoordAttribute = openfl.gl.GL.getAttribLocation(this.shaderProgram,"aTexCoord");
-	this.colorAttribute = openfl.gl.GL.getAttribLocation(this.shaderProgram,"aColor");
+	com.engine.render.filter.Filter.vertexAttribute = openfl.gl.GL.getAttribLocation(this.shaderProgram,"aVertexPosition");
+	com.engine.render.filter.Filter.texCoordAttribute = openfl.gl.GL.getAttribLocation(this.shaderProgram,"aTexCoord");
+	com.engine.render.filter.Filter.colorAttribute = openfl.gl.GL.getAttribLocation(this.shaderProgram,"aColor");
 	this.projectionMatrixUniform = openfl.gl.GL.getUniformLocation(this.shaderProgram,"uProjectionMatrix");
 	this.modelViewMatrixUniform = openfl.gl.GL.getUniformLocation(this.shaderProgram,"uModelViewMatrix");
 	this.imageUniform = openfl.gl.GL.getUniformLocation(this.shaderProgram,"uImage0");
@@ -4407,53 +3802,1061 @@ com.engine.render.SpriteShader = function() {
 $hxClasses["com.engine.render.SpriteShader"] = com.engine.render.SpriteShader;
 com.engine.render.SpriteShader.__name__ = ["com","engine","render","SpriteShader"];
 com.engine.render.SpriteShader.prototype = {
-	Disable: function() {
-		openfl.gl.GL.disableVertexAttribArray(this.vertexAttribute);
-		openfl.gl.GL.disableVertexAttribArray(this.texCoordAttribute);
-		openfl.gl.GL.disableVertexAttribArray(this.colorAttribute);
+	setMatrix: function() {
+		openfl.gl.GL.uniformMatrix3D(this.projectionMatrixUniform,false,com.engine.game.Game.camera.projMatrix);
+		openfl.gl.GL.uniformMatrix3D(this.modelViewMatrixUniform,false,com.engine.game.Game.camera.viewMatrix);
+	}
+	,setTexture: function(tex) {
+		tex.Bind();
+		openfl.gl.GL.uniform1i(this.imageUniform,0);
+	}
+	,dispose: function() {
+		openfl.gl.GL.deleteProgram(this.shaderProgram);
+	}
+	,Disable: function() {
+		openfl.gl.GL.disableVertexAttribArray(com.engine.render.filter.Filter.vertexAttribute);
+		openfl.gl.GL.disableVertexAttribArray(com.engine.render.filter.Filter.texCoordAttribute);
+		openfl.gl.GL.disableVertexAttribArray(com.engine.render.filter.Filter.colorAttribute);
+		openfl.gl.GL.useProgram(null);
 	}
 	,Enable: function() {
 		openfl.gl.GL.useProgram(this.shaderProgram);
-		openfl.gl.GL.enableVertexAttribArray(this.vertexAttribute);
-		openfl.gl.GL.enableVertexAttribArray(this.texCoordAttribute);
-		openfl.gl.GL.enableVertexAttribArray(this.colorAttribute);
+		openfl.gl.GL.enableVertexAttribArray(com.engine.render.filter.Filter.vertexAttribute);
+		openfl.gl.GL.enableVertexAttribArray(com.engine.render.filter.Filter.texCoordAttribute);
+		openfl.gl.GL.enableVertexAttribArray(com.engine.render.filter.Filter.colorAttribute);
 	}
 	,__class__: com.engine.render.SpriteShader
 }
-com.engine.render.Texture = function(url,flip) {
-	if(flip == null) flip = false;
-	this.bitmapData = openfl.Assets.getBitmapData(url);
-	if(flip) this.bitmapData = com.engine.misc.MatrixHelp.flipBitmapData(this.bitmapData,null);
-	this.data = openfl.gl.GL.createTexture();
-	openfl.gl.GL.bindTexture(3553,this.data);
-	this.width = this.bitmapData.get_width();
-	this.height = this.bitmapData.get_height();
-	this.texWidth = com.engine.misc.Util.getNextPowerOfTwo(this.width);
-	this.texHeight = com.engine.misc.Util.getNextPowerOfTwo(this.height);
-	var isPot = this.bitmapData.get_width() == this.texWidth && this.bitmapData.get_height() == this.texHeight;
-	openfl.gl.GL.texParameteri(3553,10242,33071);
-	openfl.gl.GL.texParameteri(3553,10243,33071);
-	openfl.gl.GL.texParameteri(3553,10240,9728);
-	openfl.gl.GL.texParameteri(3553,10241,9728);
-	if(!isPot) {
-		var workingCanvas = com.engine.misc.MatrixHelp.getScaled(this.bitmapData,this.texWidth,this.texHeight);
-		this.bitmapData = null;
-		var pixelData = workingCanvas.getPixels(workingCanvas.rect).byteView;
-		openfl.gl.GL.texImage2D(3553,0,6408,workingCanvas.___textureBuffer != null?workingCanvas.___textureBuffer.width:0,workingCanvas.___textureBuffer != null?workingCanvas.___textureBuffer.height:0,0,6408,5121,pixelData);
-		console.log((workingCanvas.___textureBuffer != null?workingCanvas.___textureBuffer.width:0) + "<>" + (workingCanvas.___textureBuffer != null?workingCanvas.___textureBuffer.height:0));
-	} else {
-		var pixelData = this.bitmapData.getPixels(this.bitmapData.rect).byteView;
-		openfl.gl.GL.texImage2D(3553,0,6408,this.texWidth,this.texHeight,0,6408,5121,pixelData);
-	}
+com.engine.render.Texture = function() {
+	this.width = 0;
+	this.height = 0;
+	this.texWidth = 0;
+	this.texHeight = 0;
+	this.exists = false;
 };
 $hxClasses["com.engine.render.Texture"] = com.engine.render.Texture;
 com.engine.render.Texture.__name__ = ["com","engine","render","Texture"];
 com.engine.render.Texture.prototype = {
-	Bind: function() {
+	dispose: function() {
+		openfl.gl.GL.deleteTexture(this.data);
+	}
+	,load: function(url,flip) {
+		if(flip == null) flip = false;
+		this.name = url;
+		var bitmapData;
+		bitmapData = openfl.Assets.getBitmapData(url);
+		if(bitmapData == null) return;
+		if(flip) bitmapData = com.engine.misc.Util.flipBitmapData(bitmapData,null);
+		this.data = openfl.gl.GL.createTexture();
+		openfl.gl.GL.bindTexture(3553,this.data);
+		this.width = bitmapData.___textureBuffer != null?bitmapData.___textureBuffer.width:0;
+		this.height = bitmapData.___textureBuffer != null?bitmapData.___textureBuffer.height:0;
+		this.texWidth = com.engine.misc.Util.getNextPowerOfTwo(this.width);
+		this.texHeight = com.engine.misc.Util.getNextPowerOfTwo(this.height);
+		var isPot = (bitmapData.___textureBuffer != null?bitmapData.___textureBuffer.width:0) == this.texWidth && (bitmapData.___textureBuffer != null?bitmapData.___textureBuffer.height:0) == this.texHeight;
+		openfl.gl.GL.texParameteri(3553,10242,33071);
+		openfl.gl.GL.texParameteri(3553,10243,33071);
+		openfl.gl.GL.texParameteri(3553,10240,9728);
+		openfl.gl.GL.texParameteri(3553,10241,9728);
+		if(!isPot) {
+			var workingCanvas = com.engine.misc.Util.getScaled(bitmapData,this.texWidth,this.texHeight);
+			var pixelData = workingCanvas.getPixels(workingCanvas.rect).byteView;
+			openfl.gl.GL.texImage2D(3553,0,6408,workingCanvas.___textureBuffer != null?workingCanvas.___textureBuffer.width:0,workingCanvas.___textureBuffer != null?workingCanvas.___textureBuffer.height:0,0,6408,5121,pixelData);
+		} else {
+			var pixelData = bitmapData.getPixels(bitmapData.rect).byteView;
+			openfl.gl.GL.texImage2D(3553,0,6408,this.texWidth,this.texHeight,0,6408,5121,pixelData);
+		}
+		this.invTexWidth = 1.0 / this.texWidth;
+		this.invTexHeight = 1.0 / this.texHeight;
+		this.exists = true;
+	}
+	,setData: function(bitmapData,flip,newname) {
+		if(newname == null) newname = "bitmap";
+		if(flip == null) flip = false;
+		this.exists = false;
+		if(bitmapData == null) return;
+		this.name = newname;
+		if(flip) bitmapData = com.engine.misc.Util.flipBitmapData(bitmapData,null);
+		this.data = openfl.gl.GL.createTexture();
+		openfl.gl.GL.bindTexture(3553,this.data);
+		this.width = bitmapData.___textureBuffer != null?bitmapData.___textureBuffer.width:0;
+		this.height = bitmapData.___textureBuffer != null?bitmapData.___textureBuffer.height:0;
+		this.texWidth = com.engine.misc.Util.getNextPowerOfTwo(this.width);
+		this.texHeight = com.engine.misc.Util.getNextPowerOfTwo(this.height);
+		var isPot = (bitmapData.___textureBuffer != null?bitmapData.___textureBuffer.width:0) == this.texWidth && (bitmapData.___textureBuffer != null?bitmapData.___textureBuffer.height:0) == this.texHeight;
+		openfl.gl.GL.texParameteri(3553,10242,33071);
+		openfl.gl.GL.texParameteri(3553,10243,33071);
+		openfl.gl.GL.texParameteri(3553,10240,9728);
+		openfl.gl.GL.texParameteri(3553,10241,9728);
+		if(!isPot) {
+			var workingCanvas = com.engine.misc.Util.getScaled(bitmapData,this.texWidth,this.texHeight);
+			var pixelData = workingCanvas.getPixels(workingCanvas.rect).byteView;
+			openfl.gl.GL.texImage2D(3553,0,6408,workingCanvas.___textureBuffer != null?workingCanvas.___textureBuffer.width:0,workingCanvas.___textureBuffer != null?workingCanvas.___textureBuffer.height:0,0,6408,5121,pixelData);
+		} else {
+			var pixelData = bitmapData.getPixels(bitmapData.rect).byteView;
+			openfl.gl.GL.texImage2D(3553,0,6408,this.texWidth,this.texHeight,0,6408,5121,pixelData);
+		}
+		this.invTexWidth = 1.0 / this.texWidth;
+		this.invTexHeight = 1.0 / this.texHeight;
+		this.exists = true;
+	}
+	,Bind: function() {
+		if(!this.exists) return;
 		openfl.gl.GL.bindTexture(3553,this.data);
 	}
 	,__class__: com.engine.render.Texture
 }
+com.engine.render.filter = {}
+com.engine.render.filter.RenderFilter = function(width,height) {
+	this.width = width;
+	this.height = height;
+	this.framebuffer = openfl.gl.GL.createFramebuffer();
+	openfl.gl.GL.bindFramebuffer(36160,this.framebuffer);
+	this.texture = openfl.gl.GL.createTexture();
+	openfl.gl.GL.bindTexture(3553,this.texture);
+	openfl.gl.GL.texParameteri(3553,10240,9729);
+	openfl.gl.GL.texParameteri(3553,10241,9729);
+	openfl.gl.GL.texParameteri(3553,10242,33071);
+	openfl.gl.GL.texParameteri(3553,10243,33071);
+	openfl.gl.GL.texImage2D(3553,0,6408,width,height,0,6408,5121,null);
+	openfl.gl.GL.bindFramebuffer(36160,this.framebuffer);
+	openfl.gl.GL.framebufferTexture2D(36160,36064,3553,this.texture,0);
+	openfl.gl.GL.bindFramebuffer(36160,null);
+	var vertices = [width,height,0,0,height,0,width,0,0,0,0,0];
+	this.vertexBuffer = openfl.gl.GL.createBuffer();
+	openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
+	openfl.gl.GL.bufferData(34962,new Float32Array(vertices),35044);
+	var texCoords = [1,0,0,0,1,1,0,1];
+	this.texCoordBuffer = openfl.gl.GL.createBuffer();
+	openfl.gl.GL.bindBuffer(34962,this.texCoordBuffer);
+	openfl.gl.GL.bufferData(34962,new Float32Array(texCoords),35044);
+	var vertexShaderSource = "attribute vec3 aVertexPosition;\r\n\t\t\tattribute vec2 aTexCoord;\r\n\t\t\tvarying vec2 vTexCoord;\r\n\t\t\t\r\n\t\t\tuniform mat4 uModelViewMatrix;\r\n\t\t\tuniform mat4 uProjectionMatrix;\r\n\t\t\t\r\n\t\t\tvoid main(void) {\r\n\t\t\t\tvTexCoord = aTexCoord;\r\n\t\t\t\tgl_Position = uProjectionMatrix * uModelViewMatrix * vec4 (aVertexPosition, 1.0);\r\n\t\t\t}";
+	var vertexShader = openfl.gl.GL.createShader(35633);
+	openfl.gl.GL.shaderSource(vertexShader,vertexShaderSource);
+	openfl.gl.GL.compileShader(vertexShader);
+	if(openfl.gl.GL.getShaderParameter(vertexShader,35713) == 0) throw "Error compiling vertex shader";
+	var fragmentShader = openfl.gl.GL.createShader(35632);
+	openfl.gl.GL.shaderSource(fragmentShader,this.getFragment());
+	openfl.gl.GL.compileShader(fragmentShader);
+	if(openfl.gl.GL.getShaderParameter(fragmentShader,35713) == 0) throw "Error compiling fragment shader";
+	this.shader = openfl.gl.GL.createProgram();
+	openfl.gl.GL.attachShader(this.shader,vertexShader);
+	openfl.gl.GL.attachShader(this.shader,fragmentShader);
+	openfl.gl.GL.linkProgram(this.shader);
+	if(openfl.gl.GL.getProgramParameter(this.shader,35714) == 0) throw "Unable to initialize the shader program.";
+	this.vertexAttribute = openfl.gl.GL.getAttribLocation(this.shader,"aVertexPosition");
+	this.texCoordAttribute = openfl.gl.GL.getAttribLocation(this.shader,"aTexCoord");
+	this.projectionMatrixUniform = openfl.gl.GL.getUniformLocation(this.shader,"uProjectionMatrix");
+	this.modelViewMatrixUniform = openfl.gl.GL.getUniformLocation(this.shader,"uModelViewMatrix");
+	this.imageUniform = openfl.gl.GL.getUniformLocation(this.shader,"uImage0");
+	this.getUnifom();
+};
+$hxClasses["com.engine.render.filter.RenderFilter"] = com.engine.render.filter.RenderFilter;
+com.engine.render.filter.RenderFilter.__name__ = ["com","engine","render","filter","RenderFilter"];
+com.engine.render.filter.RenderFilter.prototype = {
+	dispose: function() {
+		openfl.gl.GL.deleteProgram(this.shader);
+		openfl.gl.GL.deleteBuffer(this.vertexBuffer);
+		openfl.gl.GL.deleteBuffer(this.texCoordBuffer);
+		openfl.gl.GL.deleteTexture(this.texture);
+	}
+	,render: function() {
+		openfl.gl.GL.useProgram(this.shader);
+		openfl.gl.GL.enableVertexAttribArray(this.vertexAttribute);
+		openfl.gl.GL.enableVertexAttribArray(this.texCoordAttribute);
+		openfl.gl.GL.bindTexture(3553,this.texture);
+		openfl.gl.GL.bindBuffer(34962,this.vertexBuffer);
+		openfl.gl.GL.vertexAttribPointer(this.vertexAttribute,3,5126,false,0,0);
+		openfl.gl.GL.bindBuffer(34962,this.texCoordBuffer);
+		openfl.gl.GL.vertexAttribPointer(this.texCoordAttribute,2,5126,false,0,0);
+		openfl.gl.GL.uniformMatrix3D(this.projectionMatrixUniform,false,com.engine.game.Game.camera.projMatrix);
+		openfl.gl.GL.uniformMatrix3D(this.modelViewMatrixUniform,false,com.engine.game.Game.camera.viewMatrix);
+		openfl.gl.GL.uniform1i(this.imageUniform,0);
+		this.setUnifom();
+		openfl.gl.GL.drawArrays(5,0,4);
+	}
+	,end: function() {
+		openfl.gl.GL.bindFramebuffer(36160,null);
+	}
+	,begin: function() {
+		openfl.gl.GL.colorMask(true,true,true,true);
+		openfl.gl.GL.viewport(0,0,this.width,this.height);
+		openfl.gl.GL.bindFramebuffer(36160,this.framebuffer);
+		openfl.gl.GL.clear(16384);
+	}
+	,setUnifom: function() {
+	}
+	,getUnifom: function() {
+	}
+	,getFragment: function() {
+		return "";
+	}
+	,__class__: com.engine.render.filter.RenderFilter
+}
+com.engine.render.filter.BlurFilter = function(width,height) {
+	this.blur = 0.001953125;
+	com.engine.render.filter.RenderFilter.call(this,width,height);
+};
+$hxClasses["com.engine.render.filter.BlurFilter"] = com.engine.render.filter.BlurFilter;
+com.engine.render.filter.BlurFilter.__name__ = ["com","engine","render","filter","BlurFilter"];
+com.engine.render.filter.BlurFilter.__super__ = com.engine.render.filter.RenderFilter;
+com.engine.render.filter.BlurFilter.prototype = $extend(com.engine.render.filter.RenderFilter.prototype,{
+	setBlur: function(v) {
+		this.blur = v / (1 / 7000);
+	}
+	,setUnifom: function() {
+		openfl.gl.GL.uniform1f(this.blurUniform,this.blur);
+	}
+	,getUnifom: function() {
+		this.blurUniform = openfl.gl.GL.getUniformLocation(this.shader,"blur");
+	}
+	,getFragment: function() {
+		return com.engine.render.filter.Filter.blurXFilter;
+	}
+	,__class__: com.engine.render.filter.BlurFilter
+});
+com.engine.render.filter.BlurXFilter = function(width,height) {
+	this.blur = 0.001953125;
+	com.engine.render.filter.RenderFilter.call(this,width,height);
+};
+$hxClasses["com.engine.render.filter.BlurXFilter"] = com.engine.render.filter.BlurXFilter;
+com.engine.render.filter.BlurXFilter.__name__ = ["com","engine","render","filter","BlurXFilter"];
+com.engine.render.filter.BlurXFilter.__super__ = com.engine.render.filter.RenderFilter;
+com.engine.render.filter.BlurXFilter.prototype = $extend(com.engine.render.filter.RenderFilter.prototype,{
+	setBlur: function(v) {
+		this.blur = v / (1 / 7000);
+	}
+	,setUnifom: function() {
+		openfl.gl.GL.uniform1f(this.blurUniform,this.blur);
+	}
+	,getUnifom: function() {
+		this.blurUniform = openfl.gl.GL.getUniformLocation(this.shader,"blur");
+	}
+	,getFragment: function() {
+		return com.engine.render.filter.Filter.blurXFilter;
+	}
+	,__class__: com.engine.render.filter.BlurXFilter
+});
+com.engine.render.filter.BlurYFilter = function(width,height) {
+	this.blur = 0.001953125;
+	com.engine.render.filter.RenderFilter.call(this,width,height);
+};
+$hxClasses["com.engine.render.filter.BlurYFilter"] = com.engine.render.filter.BlurYFilter;
+com.engine.render.filter.BlurYFilter.__name__ = ["com","engine","render","filter","BlurYFilter"];
+com.engine.render.filter.BlurYFilter.__super__ = com.engine.render.filter.RenderFilter;
+com.engine.render.filter.BlurYFilter.prototype = $extend(com.engine.render.filter.RenderFilter.prototype,{
+	setBlur: function(v) {
+		this.blur = v / (1 / 7000);
+	}
+	,setUnifom: function() {
+		openfl.gl.GL.uniform1f(this.blurUniform,this.blur);
+	}
+	,getUnifom: function() {
+		this.blurUniform = openfl.gl.GL.getUniformLocation(this.shader,"blur");
+	}
+	,getFragment: function() {
+		return com.engine.render.filter.Filter.blurYFilter;
+	}
+	,__class__: com.engine.render.filter.BlurYFilter
+});
+com.engine.render.filter.ColorMatrixFilter = function(width,height) {
+	com.engine.render.filter.RenderFilter.call(this,width,height);
+};
+$hxClasses["com.engine.render.filter.ColorMatrixFilter"] = com.engine.render.filter.ColorMatrixFilter;
+com.engine.render.filter.ColorMatrixFilter.__name__ = ["com","engine","render","filter","ColorMatrixFilter"];
+com.engine.render.filter.ColorMatrixFilter.__super__ = com.engine.render.filter.RenderFilter;
+com.engine.render.filter.ColorMatrixFilter.prototype = $extend(com.engine.render.filter.RenderFilter.prototype,{
+	setMatrix2D: function(mat) {
+	}
+	,setTransformation: function(x,y,rotation,Scale) {
+		this.matrix.identity();
+		this.matrix.appendTranslation(x,y,0);
+		this.matrix.appendRotation(rotation,new flash.geom.Vector3D(0,0,1),null);
+		this.matrix.append(new flash.geom.Matrix3D([Scale,0.0,0.0,0.0,0.0,Scale,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,1.0]));
+	}
+	,setUnifom: function() {
+		openfl.gl.GL.uniformMatrix3D(this.matrixUniform,false,this.matrix);
+	}
+	,getUnifom: function() {
+		this.matrix = new flash.geom.Matrix3D([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
+		this.matrixUniform = openfl.gl.GL.getUniformLocation(this.shader,"matrix");
+	}
+	,getFragment: function() {
+		return com.engine.render.filter.Filter.colormatrixFilter;
+	}
+	,__class__: com.engine.render.filter.ColorMatrixFilter
+});
+com.engine.render.filter.ColorStepFilter = function(width,height) {
+	this.step = 5;
+	com.engine.render.filter.RenderFilter.call(this,width,height);
+};
+$hxClasses["com.engine.render.filter.ColorStepFilter"] = com.engine.render.filter.ColorStepFilter;
+com.engine.render.filter.ColorStepFilter.__name__ = ["com","engine","render","filter","ColorStepFilter"];
+com.engine.render.filter.ColorStepFilter.__super__ = com.engine.render.filter.RenderFilter;
+com.engine.render.filter.ColorStepFilter.prototype = $extend(com.engine.render.filter.RenderFilter.prototype,{
+	setStep: function(f) {
+		this.step = f;
+	}
+	,setUnifom: function() {
+		openfl.gl.GL.uniform1f(this.stepUniform,this.step);
+	}
+	,getUnifom: function() {
+		this.stepUniform = openfl.gl.GL.getUniformLocation(this.shader,"step");
+	}
+	,getFragment: function() {
+		return com.engine.render.filter.Filter.colorStepFilter;
+	}
+	,__class__: com.engine.render.filter.ColorStepFilter
+});
+com.engine.render.filter.CrossHatchFilter = function(width,height) {
+	this.blur = 0.001953125;
+	com.engine.render.filter.RenderFilter.call(this,width,height);
+};
+$hxClasses["com.engine.render.filter.CrossHatchFilter"] = com.engine.render.filter.CrossHatchFilter;
+com.engine.render.filter.CrossHatchFilter.__name__ = ["com","engine","render","filter","CrossHatchFilter"];
+com.engine.render.filter.CrossHatchFilter.__super__ = com.engine.render.filter.RenderFilter;
+com.engine.render.filter.CrossHatchFilter.prototype = $extend(com.engine.render.filter.RenderFilter.prototype,{
+	setBlur: function(v) {
+		this.blur = v;
+		console.log(this.blur);
+	}
+	,setUnifom: function() {
+		openfl.gl.GL.uniform1f(this.blurUniform,this.blur);
+	}
+	,getUnifom: function() {
+		this.blurUniform = openfl.gl.GL.getUniformLocation(this.shader,"blur");
+	}
+	,getFragment: function() {
+		return com.engine.render.filter.Filter.croshatchFilter;
+	}
+	,__class__: com.engine.render.filter.CrossHatchFilter
+});
+com.engine.render.filter.DotScreenFilter = function(width,height) {
+	this.angle = 5;
+	this.scale = 1;
+	com.engine.render.filter.RenderFilter.call(this,width,height);
+};
+$hxClasses["com.engine.render.filter.DotScreenFilter"] = com.engine.render.filter.DotScreenFilter;
+com.engine.render.filter.DotScreenFilter.__name__ = ["com","engine","render","filter","DotScreenFilter"];
+com.engine.render.filter.DotScreenFilter.__super__ = com.engine.render.filter.RenderFilter;
+com.engine.render.filter.DotScreenFilter.prototype = $extend(com.engine.render.filter.RenderFilter.prototype,{
+	setAngle: function(v) {
+		this.angle = v;
+	}
+	,setScale: function(v) {
+		this.scale = v;
+	}
+	,setUnifom: function() {
+		openfl.gl.GL.uniform1f(this.scaleUniform,this.scale);
+		openfl.gl.GL.uniform1f(this.angleUniform,this.angle);
+	}
+	,getUnifom: function() {
+		this.angleUniform = openfl.gl.GL.getUniformLocation(this.shader,"angle");
+		this.scaleUniform = openfl.gl.GL.getUniformLocation(this.shader,"scale");
+	}
+	,getFragment: function() {
+		return com.engine.render.filter.Filter.dotscreenFilter;
+	}
+	,__class__: com.engine.render.filter.DotScreenFilter
+});
+com.engine.render.filter.Filter = function() { }
+$hxClasses["com.engine.render.filter.Filter"] = com.engine.render.filter.Filter;
+com.engine.render.filter.Filter.__name__ = ["com","engine","render","filter","Filter"];
+com.engine.render.filter.GrayFilter = function(width,height) {
+	this.gray = 1;
+	com.engine.render.filter.RenderFilter.call(this,width,height);
+};
+$hxClasses["com.engine.render.filter.GrayFilter"] = com.engine.render.filter.GrayFilter;
+com.engine.render.filter.GrayFilter.__name__ = ["com","engine","render","filter","GrayFilter"];
+com.engine.render.filter.GrayFilter.__super__ = com.engine.render.filter.RenderFilter;
+com.engine.render.filter.GrayFilter.prototype = $extend(com.engine.render.filter.RenderFilter.prototype,{
+	setGray: function(f) {
+		this.gray = f;
+	}
+	,setUnifom: function() {
+		openfl.gl.GL.uniform1f(this.grayUniform,this.gray);
+	}
+	,getUnifom: function() {
+		this.grayUniform = openfl.gl.GL.getUniformLocation(this.shader,"gray");
+	}
+	,getFragment: function() {
+		return com.engine.render.filter.Filter.grayFilter;
+	}
+	,__class__: com.engine.render.filter.GrayFilter
+});
+com.engine.render.filter.InvertFilter = function(width,height) {
+	this.invert = 1;
+	com.engine.render.filter.RenderFilter.call(this,width,height);
+};
+$hxClasses["com.engine.render.filter.InvertFilter"] = com.engine.render.filter.InvertFilter;
+com.engine.render.filter.InvertFilter.__name__ = ["com","engine","render","filter","InvertFilter"];
+com.engine.render.filter.InvertFilter.__super__ = com.engine.render.filter.RenderFilter;
+com.engine.render.filter.InvertFilter.prototype = $extend(com.engine.render.filter.RenderFilter.prototype,{
+	setInvert: function(f) {
+		this.invert = f;
+	}
+	,setUnifom: function() {
+		openfl.gl.GL.uniform1f(this.invertUniform,this.invert);
+	}
+	,getUnifom: function() {
+		this.invertUniform = openfl.gl.GL.getUniformLocation(this.shader,"invert");
+	}
+	,getFragment: function() {
+		return com.engine.render.filter.Filter.invertFilter;
+	}
+	,__class__: com.engine.render.filter.InvertFilter
+});
+com.engine.render.filter.NormalFilter = function(width,height) {
+	com.engine.render.filter.RenderFilter.call(this,width,height);
+};
+$hxClasses["com.engine.render.filter.NormalFilter"] = com.engine.render.filter.NormalFilter;
+com.engine.render.filter.NormalFilter.__name__ = ["com","engine","render","filter","NormalFilter"];
+com.engine.render.filter.NormalFilter.__super__ = com.engine.render.filter.RenderFilter;
+com.engine.render.filter.NormalFilter.prototype = $extend(com.engine.render.filter.RenderFilter.prototype,{
+	setUnifom: function() {
+	}
+	,getUnifom: function() {
+	}
+	,getFragment: function() {
+		return com.engine.render.filter.Filter.normalFilter;
+	}
+	,__class__: com.engine.render.filter.NormalFilter
+});
+com.engine.render.filter.PixelateFilter = function(width,height) {
+	this.pixelSizeY = 0.9;
+	this.pixelSizeX = 0.9;
+	com.engine.render.filter.RenderFilter.call(this,width,height);
+};
+$hxClasses["com.engine.render.filter.PixelateFilter"] = com.engine.render.filter.PixelateFilter;
+com.engine.render.filter.PixelateFilter.__name__ = ["com","engine","render","filter","PixelateFilter"];
+com.engine.render.filter.PixelateFilter.__super__ = com.engine.render.filter.RenderFilter;
+com.engine.render.filter.PixelateFilter.prototype = $extend(com.engine.render.filter.RenderFilter.prototype,{
+	setPixelSize: function(x,y) {
+		this.pixelSizeX = x;
+		this.pixelSizeY = y;
+	}
+	,setUnifom: function() {
+		openfl.gl.GL.uniform2f(this.pixelSizeUniform,this.pixelSizeX,this.pixelSizeY);
+	}
+	,getUnifom: function() {
+		this.pixelSizeUniform = openfl.gl.GL.getUniformLocation(this.shader,"pixelSize");
+	}
+	,getFragment: function() {
+		return com.engine.render.filter.Filter.pixelateFilter;
+	}
+	,__class__: com.engine.render.filter.PixelateFilter
+});
+com.engine.render.filter.RGBSplitFilter = function(width,height) {
+	this.colordistance = 10000;
+	com.engine.render.filter.RenderFilter.call(this,width,height);
+};
+$hxClasses["com.engine.render.filter.RGBSplitFilter"] = com.engine.render.filter.RGBSplitFilter;
+com.engine.render.filter.RGBSplitFilter.__name__ = ["com","engine","render","filter","RGBSplitFilter"];
+com.engine.render.filter.RGBSplitFilter.__super__ = com.engine.render.filter.RenderFilter;
+com.engine.render.filter.RGBSplitFilter.prototype = $extend(com.engine.render.filter.RenderFilter.prototype,{
+	setUnifom: function() {
+		openfl.gl.GL.uniform1f(this.subtractUniform,this.colordistance);
+		openfl.gl.GL.uniform2f(this.redUniform,20,20);
+		openfl.gl.GL.uniform2f(this.greenUniform,-20,20);
+		openfl.gl.GL.uniform2f(this.blueUniform,20,-20);
+	}
+	,getUnifom: function() {
+		this.redUniform = openfl.gl.GL.getUniformLocation(this.shader,"red");
+		this.greenUniform = openfl.gl.GL.getUniformLocation(this.shader,"green");
+		this.blueUniform = openfl.gl.GL.getUniformLocation(this.shader,"blue");
+		this.subtractUniform = openfl.gl.GL.getUniformLocation(this.shader,"distance");
+	}
+	,getFragment: function() {
+		return com.engine.render.filter.Filter.rgbsplitFilter;
+	}
+	,__class__: com.engine.render.filter.RGBSplitFilter
+});
+com.engine.render.filter.SepiaFilter = function(width,height) {
+	this.sepia = 1;
+	com.engine.render.filter.RenderFilter.call(this,width,height);
+};
+$hxClasses["com.engine.render.filter.SepiaFilter"] = com.engine.render.filter.SepiaFilter;
+com.engine.render.filter.SepiaFilter.__name__ = ["com","engine","render","filter","SepiaFilter"];
+com.engine.render.filter.SepiaFilter.__super__ = com.engine.render.filter.RenderFilter;
+com.engine.render.filter.SepiaFilter.prototype = $extend(com.engine.render.filter.RenderFilter.prototype,{
+	setSepia: function(f) {
+		this.sepia = f;
+	}
+	,setUnifom: function() {
+		openfl.gl.GL.uniform1f(this.sepiaUniform,this.sepia);
+	}
+	,getUnifom: function() {
+		this.sepiaUniform = openfl.gl.GL.getUniformLocation(this.shader,"sepia");
+	}
+	,getFragment: function() {
+		return com.engine.render.filter.Filter.sepiaFilter;
+	}
+	,__class__: com.engine.render.filter.SepiaFilter
+});
+com.engine.render.filter.TwistFilter = function(width,height) {
+	this.offsety = 0.5;
+	this.offsetx = 0.5;
+	this.angle = 5;
+	this.radius = 0.5;
+	com.engine.render.filter.RenderFilter.call(this,width,height);
+};
+$hxClasses["com.engine.render.filter.TwistFilter"] = com.engine.render.filter.TwistFilter;
+com.engine.render.filter.TwistFilter.__name__ = ["com","engine","render","filter","TwistFilter"];
+com.engine.render.filter.TwistFilter.__super__ = com.engine.render.filter.RenderFilter;
+com.engine.render.filter.TwistFilter.prototype = $extend(com.engine.render.filter.RenderFilter.prototype,{
+	setOffset: function(x,y) {
+		this.offsetx = x;
+		this.offsety = y;
+	}
+	,setAngle: function(v) {
+		this.angle = v;
+	}
+	,setRadius: function(v) {
+		this.radius = v;
+	}
+	,setUnifom: function() {
+		openfl.gl.GL.uniform1f(this.radiusUniform,this.radius);
+		openfl.gl.GL.uniform1f(this.angleUniform,this.angle);
+		openfl.gl.GL.uniform2f(this.offsetUniform,this.offsetx,this.offsety);
+	}
+	,getUnifom: function() {
+		this.radiusUniform = openfl.gl.GL.getUniformLocation(this.shader,"radius");
+		this.angleUniform = openfl.gl.GL.getUniformLocation(this.shader,"angle");
+		this.offsetUniform = openfl.gl.GL.getUniformLocation(this.shader,"offset");
+	}
+	,getFragment: function() {
+		return com.engine.render.filter.Filter.twistFilter;
+	}
+	,__class__: com.engine.render.filter.TwistFilter
+});
+flash.text = {}
+flash.text.TextField = function() {
+	flash.display.InteractiveObject.call(this);
+	this.mWidth = 100;
+	this.mHeight = 20;
+	this.mHTMLMode = false;
+	this.multiline = false;
+	this.__graphics = new flash.display.Graphics();
+	this.mFace = flash.text.TextField.mDefaultFont;
+	this.mAlign = flash.text.TextFormatAlign.LEFT;
+	this.mParagraphs = new Array();
+	this.mSelStart = -1;
+	this.mSelEnd = -1;
+	this.scrollH = 0;
+	this.scrollV = 1;
+	this.mType = flash.text.TextFieldType.DYNAMIC;
+	this.set_autoSize("NONE");
+	this.mTextHeight = 12;
+	this.mMaxHeight = this.mTextHeight;
+	this.mHTMLText = " ";
+	this.mText = " ";
+	this.mTextColour = 0;
+	this.tabEnabled = false;
+	this.mTryFreeType = true;
+	this.selectable = true;
+	this.mInsertPos = 0;
+	this.__inputEnabled = false;
+	this.mDownChar = 0;
+	this.mSelectDrag = -1;
+	this.mLineInfo = [];
+	this.set_defaultTextFormat(new flash.text.TextFormat());
+	this.set_borderColor(0);
+	this.set_border(false);
+	this.set_backgroundColor(16777215);
+	this.set_background(false);
+	this.gridFitType = flash.text.GridFitType.PIXEL;
+	this.sharpness = 0;
+};
+$hxClasses["flash.text.TextField"] = flash.text.TextField;
+flash.text.TextField.__name__ = ["flash","text","TextField"];
+flash.text.TextField.__super__ = flash.display.InteractiveObject;
+flash.text.TextField.prototype = $extend(flash.display.InteractiveObject.prototype,{
+	set_wordWrap: function(inWordWrap) {
+		this.wordWrap = inWordWrap;
+		this.Rebuild();
+		return this.get_wordWrap();
+	}
+	,get_wordWrap: function() {
+		return this.wordWrap;
+	}
+	,set_width: function(inValue) {
+		if(this.parent != null) this.parent.__invalidateBounds();
+		if(this.get__boundsInvalid()) this.validateBounds();
+		if(inValue != this.mWidth) {
+			this.mWidth = inValue;
+			this.Rebuild();
+		}
+		return this.mWidth;
+	}
+	,get_width: function() {
+		return Math.max(this.mWidth,this.getBounds(this.get_stage()).width);
+	}
+	,set_type: function(inType) {
+		this.mType = inType;
+		this.__inputEnabled = this.mType == flash.text.TextFieldType.INPUT;
+		if(this.mHTMLMode) {
+			if(this.__inputEnabled) flash.Lib.__setContentEditable(this.__graphics.__surface,true); else flash.Lib.__setContentEditable(this.__graphics.__surface,false);
+		} else if(this.__inputEnabled) {
+			this.set_htmlText(StringTools.replace(this.mText,"\n","<BR />"));
+			flash.Lib.__setContentEditable(this.__graphics.__surface,true);
+		}
+		this.tabEnabled = this.get_type() == flash.text.TextFieldType.INPUT;
+		this.Rebuild();
+		return inType;
+	}
+	,get_type: function() {
+		return this.mType;
+	}
+	,get_textHeight: function() {
+		return this.mMaxHeight;
+	}
+	,get_textWidth: function() {
+		return this.mMaxWidth;
+	}
+	,set_textColor: function(inCol) {
+		this.mTextColour = inCol;
+		this.RebuildText();
+		return inCol;
+	}
+	,get_textColor: function() {
+		return this.mTextColour;
+	}
+	,set_text: function(inText) {
+		this.mText = Std.string(inText);
+		this.mHTMLMode = false;
+		this.RebuildText();
+		this.___renderFlags |= 64;
+		if(this.parent != null) this.parent.___renderFlags |= 64;
+		return this.mText;
+	}
+	,get_text: function() {
+		if(this.mHTMLMode) this.ConvertHTMLToText(false);
+		return this.mText;
+	}
+	,set_scrollV: function(value) {
+		return this.scrollV = value;
+	}
+	,get_scrollV: function() {
+		return this.scrollV;
+	}
+	,set_scrollH: function(value) {
+		return this.scrollH = value;
+	}
+	,get_scrollH: function() {
+		return this.scrollH;
+	}
+	,get_numLines: function() {
+		return 0;
+	}
+	,set_multiline: function(value) {
+		return this.multiline = value;
+	}
+	,get_multiline: function() {
+		return this.multiline;
+	}
+	,get_maxScrollV: function() {
+		return 0;
+	}
+	,get_maxScrollH: function() {
+		return 0;
+	}
+	,set_htmlText: function(inHTMLText) {
+		this.mParagraphs = new Array();
+		this.mHTMLText = inHTMLText;
+		if(!this.mHTMLMode) {
+			var domElement = js.Browser.document.createElement("div");
+			if(this.background || this.border) {
+				domElement.style.width = this.mWidth + "px";
+				domElement.style.height = this.mHeight + "px";
+			}
+			if(this.background) domElement.style.backgroundColor = "#" + StringTools.hex(this.backgroundColor,6);
+			if(this.border) domElement.style.border = "1px solid #" + StringTools.hex(this.borderColor,6);
+			domElement.style.color = "#" + StringTools.hex(this.mTextColour,6);
+			domElement.style.fontFamily = this.mFace;
+			domElement.style.fontSize = this.mTextHeight + "px";
+			domElement.style.textAlign = Std.string(this.mAlign);
+			var wrapper = domElement;
+			wrapper.innerHTML = inHTMLText;
+			var destination = new flash.display.Graphics(wrapper);
+			var __surface = this.__graphics.__surface;
+			if(flash.Lib.__isOnStage(__surface)) {
+				flash.Lib.__appendSurface(wrapper);
+				flash.Lib.__copyStyle(__surface,wrapper);
+				flash.Lib.__swapSurface(__surface,wrapper);
+				flash.Lib.__removeSurface(__surface);
+			}
+			this.__graphics = destination;
+			this.__graphics.__extent.width = wrapper.width;
+			this.__graphics.__extent.height = wrapper.height;
+		} else this.__graphics.__surface.innerHTML = inHTMLText;
+		this.mHTMLMode = true;
+		this.RebuildText();
+		this.___renderFlags |= 64;
+		if(this.parent != null) this.parent.___renderFlags |= 64;
+		return this.mHTMLText;
+	}
+	,get_htmlText: function() {
+		return this.mHTMLText;
+	}
+	,set_height: function(inValue) {
+		if(this.parent != null) this.parent.__invalidateBounds();
+		if(this.get__boundsInvalid()) this.validateBounds();
+		if(inValue != this.mHeight) {
+			this.mHeight = inValue;
+			this.Rebuild();
+		}
+		return this.mHeight;
+	}
+	,get_height: function() {
+		return Math.max(this.mHeight,this.getBounds(this.get_stage()).height);
+	}
+	,set_defaultTextFormat: function(inFmt) {
+		this.setTextFormat(inFmt);
+		this._defaultTextFormat = inFmt;
+		return inFmt;
+	}
+	,get_defaultTextFormat: function() {
+		return this._defaultTextFormat;
+	}
+	,get_caretPos: function() {
+		return this.mInsertPos;
+	}
+	,get_bottomScrollV: function() {
+		return 0;
+	}
+	,set_borderColor: function(inBorderCol) {
+		this.borderColor = inBorderCol;
+		this.Rebuild();
+		return inBorderCol;
+	}
+	,set_border: function(inBorder) {
+		this.border = inBorder;
+		this.Rebuild();
+		return inBorder;
+	}
+	,set_backgroundColor: function(inCol) {
+		this.backgroundColor = inCol;
+		this.Rebuild();
+		return inCol;
+	}
+	,set_background: function(inBack) {
+		this.background = inBack;
+		this.Rebuild();
+		return inBack;
+	}
+	,set_autoSize: function(inAutoSize) {
+		this.autoSize = inAutoSize;
+		this.Rebuild();
+		return inAutoSize;
+	}
+	,get_autoSize: function() {
+		return this.autoSize;
+	}
+	,__render: function(inMask,clipRect) {
+		if(!this.__combinedVisible) return;
+		if((this.___renderFlags & 4) != 0 || (this.___renderFlags & 8) != 0) this.__validateMatrix();
+		if(this.__graphics.__render(inMask,this.__filters,1,1)) {
+			this.___renderFlags |= 64;
+			if(this.parent != null) this.parent.___renderFlags |= 64;
+			this.__applyFilters(this.__graphics.__surface);
+			this.___renderFlags |= 32;
+		}
+		if(!this.mHTMLMode && inMask != null) {
+			var m = this.getSurfaceTransform(this.__graphics);
+			flash.Lib.__drawToSurface(this.__graphics.__surface,inMask,m,(this.parent != null?this.parent.__combinedAlpha:1) * this.alpha,clipRect,this.gridFitType != flash.text.GridFitType.PIXEL);
+		} else {
+			if((this.___renderFlags & 32) != 0) {
+				var m = this.getSurfaceTransform(this.__graphics);
+				flash.Lib.__setSurfaceTransform(this.__graphics.__surface,m);
+				this.___renderFlags &= -33;
+			}
+			flash.Lib.__setSurfaceOpacity(this.__graphics.__surface,(this.parent != null?this.parent.__combinedAlpha:1) * this.alpha);
+		}
+	}
+	,__getObjectUnderPoint: function(point) {
+		if(!this.get_visible()) return null; else if(this.mText.length > 1) {
+			var local = this.globalToLocal(point);
+			if(local.x < 0 || local.y < 0 || local.x > this.mMaxWidth || local.y > this.mMaxHeight) return null; else return this;
+		} else return flash.display.InteractiveObject.prototype.__getObjectUnderPoint.call(this,point);
+	}
+	,__getGraphics: function() {
+		return this.__graphics;
+	}
+	,toString: function() {
+		return "[TextField name=" + this.name + " id=" + this.___id + "]";
+	}
+	,setTextFormat: function(inFmt,beginIndex,endIndex) {
+		if(endIndex == null) endIndex = 0;
+		if(beginIndex == null) beginIndex = 0;
+		if(inFmt.font != null) this.mFace = inFmt.font;
+		if(inFmt.size != null) this.mTextHeight = inFmt.size | 0;
+		if(inFmt.align != null) this.mAlign = inFmt.align;
+		if(inFmt.color != null) this.mTextColour = inFmt.color;
+		this.RebuildText();
+		this.___renderFlags |= 64;
+		if(this.parent != null) this.parent.___renderFlags |= 64;
+		return this.getTextFormat();
+	}
+	,setSelection: function(beginIndex,endIndex) {
+	}
+	,RenderRow: function(inRow,inY,inCharIdx,inAlign,inInsert) {
+		if(inInsert == null) inInsert = 0;
+		var h = 0;
+		var w = 0;
+		var _g = 0;
+		while(_g < inRow.length) {
+			var chr = inRow[_g];
+			++_g;
+			if(chr.fh > h) h = chr.fh;
+			w += chr.adv;
+		}
+		if(w > this.mMaxWidth) this.mMaxWidth = w;
+		var full_height = h * 1.2 | 0;
+		var align_x = 0;
+		var insert_x = 0;
+		if(inInsert != null) {
+			if(this.autoSize != "NONE") {
+				this.scrollH = 0;
+				insert_x = inInsert;
+			} else {
+				insert_x = inInsert - this.scrollH;
+				if(insert_x < 0) this.scrollH -= (this.mLimitRenderX * 3 >> 2) - insert_x; else if(insert_x > this.mLimitRenderX) this.scrollH += insert_x - (this.mLimitRenderX * 3 >> 2);
+				if(this.scrollH < 0) this.scrollH = 0;
+			}
+		}
+		if(this.autoSize == "NONE" && w <= this.mLimitRenderX) {
+			if(inAlign == flash.text.TextFormatAlign.CENTER) align_x = Math.round(this.mWidth) - w >> 1; else if(inAlign == flash.text.TextFormatAlign.RIGHT) align_x = Math.round(this.mWidth) - w;
+		}
+		var x_list = new Array();
+		this.mLineInfo.push({ mY0 : inY, mIndex : inCharIdx - 1, mX : x_list});
+		var cache_sel_font = null;
+		var cache_normal_font = null;
+		var x = align_x - this.scrollH;
+		var x0 = x;
+		var _g = 0;
+		while(_g < inRow.length) {
+			var chr = inRow[_g];
+			++_g;
+			var adv = chr.adv;
+			if(x + adv > this.mLimitRenderX) break;
+			x_list.push(x);
+			if(x >= 0) {
+				var font = chr.font;
+				if(chr.sel) {
+					this.__graphics.lineStyle();
+					this.__graphics.beginFill(2105440);
+					this.__graphics.drawRect(x,inY,adv,full_height);
+					this.__graphics.endFill();
+					if(cache_normal_font == chr.font) font = cache_sel_font; else {
+						font = flash.text.FontInstance.CreateSolid(chr.font.GetFace(),chr.fh,16777215,1.0);
+						cache_sel_font = font;
+						cache_normal_font = chr.font;
+					}
+				}
+				font.RenderChar(this.__graphics,chr.chr,x,inY + (h - chr.fh) | 0);
+			}
+			x += adv;
+		}
+		x += this.scrollH;
+		return full_height;
+	}
+	,RebuildText: function() {
+		this.mParagraphs = [];
+		if(!this.mHTMLMode) {
+			var font = flash.text.FontInstance.CreateSolid(this.mFace,this.mTextHeight,this.mTextColour,1.0);
+			var paras = this.mText.split("\n");
+			var _g = 0;
+			while(_g < paras.length) {
+				var paragraph = paras[_g];
+				++_g;
+				this.mParagraphs.push({ align : this.mAlign, spans : [{ font : font, text : paragraph + "\n"}]});
+			}
+		}
+		this.Rebuild();
+	}
+	,Rebuild: function() {
+		if(this.mHTMLMode) return;
+		this.mLineInfo = [];
+		this.__graphics.clear();
+		if(this.background) {
+			this.__graphics.beginFill(this.backgroundColor);
+			this.__graphics.drawRect(0,0,this.get_width(),this.get_height());
+			this.__graphics.endFill();
+		}
+		this.__graphics.lineStyle(this.mTextColour);
+		var insert_x = null;
+		this.mMaxWidth = 0;
+		var wrap = this.mLimitRenderX = this.get_wordWrap() && !this.__inputEnabled?this.mWidth | 0:999999;
+		var char_idx = 0;
+		var h = 0;
+		var s0 = this.mSelStart;
+		var s1 = this.mSelEnd;
+		var _g = 0, _g1 = this.mParagraphs;
+		while(_g < _g1.length) {
+			var paragraph = _g1[_g];
+			++_g;
+			var row = [];
+			var row_width = 0;
+			var last_word_break = 0;
+			var last_word_break_width = 0;
+			var last_word_char_idx = 0;
+			var start_idx = char_idx;
+			var tx = 0;
+			var _g2 = 0, _g3 = paragraph.spans;
+			while(_g2 < _g3.length) {
+				var span = _g3[_g2];
+				++_g2;
+				var text = span.text;
+				var font = span.font;
+				var fh = font.get_height();
+				last_word_break = row.length;
+				last_word_break_width = row_width;
+				last_word_char_idx = char_idx;
+				var _g5 = 0, _g4 = text.length;
+				while(_g5 < _g4) {
+					var ch = _g5++;
+					var g = HxOverrides.cca(text,ch);
+					var adv = font.__getAdvance(g);
+					if(g == 32) {
+						last_word_break = row.length;
+						last_word_break_width = tx;
+						last_word_char_idx = char_idx;
+					}
+					if(tx + adv > wrap) {
+						if(last_word_break > 0) {
+							var row_end = row.splice(last_word_break,row.length - last_word_break);
+							h += this.RenderRow(row,h,start_idx,paragraph.align);
+							row = row_end;
+							tx -= last_word_break_width;
+							start_idx = last_word_char_idx;
+							last_word_break = 0;
+							last_word_break_width = 0;
+							last_word_char_idx = 0;
+							if(row_end.length > 0 && row_end[0].chr == 32) {
+								row_end.shift();
+								start_idx++;
+							}
+						} else {
+							h += this.RenderRow(row,h,char_idx,paragraph.align);
+							row = [];
+							tx = 0;
+							start_idx = char_idx;
+						}
+					}
+					row.push({ font : font, chr : g, x : tx, fh : fh, sel : char_idx >= s0 && char_idx < s1, adv : adv});
+					tx += adv;
+					char_idx++;
+				}
+			}
+			if(row.length > 0) {
+				h += this.RenderRow(row,h,start_idx,paragraph.align,insert_x);
+				insert_x = null;
+			}
+		}
+		var w = this.mMaxWidth;
+		if(h < this.mTextHeight) h = this.mTextHeight;
+		this.mMaxHeight = h;
+		var _g = this;
+		switch(_g.autoSize) {
+		case "LEFT":
+			break;
+		case "RIGHT":
+			var x0 = this.get_x() + this.get_width();
+			this.set_x(this.mWidth - x0);
+			break;
+		case "CENTER":
+			var x0 = this.get_x() + this.get_width() / 2;
+			this.set_x(this.mWidth / 2 - x0);
+			break;
+		default:
+			if(this.get_wordWrap()) this.set_height(h);
+		}
+		if(this.border) {
+			this.__graphics.endFill();
+			this.__graphics.lineStyle(1,this.borderColor,1,true);
+			this.__graphics.drawRect(.5,.5,this.get_width() - .5,this.get_height() - .5);
+		}
+	}
+	,getTextFormat: function(beginIndex,endIndex) {
+		if(endIndex == null) endIndex = 0;
+		if(beginIndex == null) beginIndex = 0;
+		return new flash.text.TextFormat(this.mFace,this.mTextHeight,this.mTextColour);
+	}
+	,getLineIndexAtPoint: function(inX,inY) {
+		if(this.mLineInfo.length < 1) return -1;
+		if(inY <= 0) return 0;
+		var _g1 = 0, _g = this.mLineInfo.length;
+		while(_g1 < _g) {
+			var l = _g1++;
+			if(this.mLineInfo[l].mY0 > inY) return l == 0?0:l - 1;
+		}
+		return this.mLineInfo.length - 1;
+	}
+	,getCharIndexAtPoint: function(inX,inY) {
+		var li = this.getLineIndexAtPoint(inX,inY);
+		if(li < 0) return -1;
+		var line = this.mLineInfo[li];
+		var idx = line.mIndex;
+		var _g = 0, _g1 = line.mX;
+		while(_g < _g1.length) {
+			var x = _g1[_g];
+			++_g;
+			if(x > inX) return idx;
+			idx++;
+		}
+		return idx;
+	}
+	,getCharBoundaries: function(a) {
+		return null;
+	}
+	,DecodeColour: function(col) {
+		return Std.parseInt("0x" + HxOverrides.substr(col,1,null));
+	}
+	,ConvertHTMLToText: function(inUnSetHTML) {
+		this.mText = "";
+		var _g = 0, _g1 = this.mParagraphs;
+		while(_g < _g1.length) {
+			var paragraph = _g1[_g];
+			++_g;
+			var _g2 = 0, _g3 = paragraph.spans;
+			while(_g2 < _g3.length) {
+				var span = _g3[_g2];
+				++_g2;
+				this.mText += span.text;
+			}
+		}
+		if(inUnSetHTML) {
+			this.mHTMLMode = false;
+			this.RebuildText();
+		}
+	}
+	,appendText: function(newText) {
+		var _g = this;
+		_g.set_text(_g.get_text() + newText);
+	}
+	,__class__: flash.text.TextField
+	,__properties__: $extend(flash.display.InteractiveObject.prototype.__properties__,{set_autoSize:"set_autoSize",set_background:"set_background",set_backgroundColor:"set_backgroundColor",set_border:"set_border",set_borderColor:"set_borderColor",get_bottomScrollV:"get_bottomScrollV",get_caretPos:"get_caretPos",set_defaultTextFormat:"set_defaultTextFormat",get_defaultTextFormat:"get_defaultTextFormat",set_htmlText:"set_htmlText",get_htmlText:"get_htmlText",get_maxScrollH:"get_maxScrollH",get_maxScrollV:"get_maxScrollV",get_numLines:"get_numLines",set_text:"set_text",get_text:"get_text",set_textColor:"set_textColor",get_textColor:"get_textColor",get_textHeight:"get_textHeight",get_textWidth:"get_textWidth",set_type:"set_type",get_type:"get_type",set_wordWrap:"set_wordWrap",get_wordWrap:"get_wordWrap"})
+});
+com.engine.ui = {}
+com.engine.ui.Text = function(x,y,caption,size,color) {
+	if(color == null) color = -1;
+	if(size == null) size = 12;
+	if(y == null) y = 10;
+	if(x == null) x = 10;
+	flash.text.TextField.call(this);
+	this.set_x(x);
+	this.set_y(y);
+	this.set_width(caption.length * size);
+	this.selectable = false;
+	this.set_defaultTextFormat(new flash.text.TextFormat("arial",size,color));
+	this.set_text(caption);
+};
+$hxClasses["com.engine.ui.Text"] = com.engine.ui.Text;
+com.engine.ui.Text.__name__ = ["com","engine","ui","Text"];
+com.engine.ui.Text.__super__ = flash.text.TextField;
+com.engine.ui.Text.prototype = $extend(flash.text.TextField.prototype,{
+	__class__: com.engine.ui.Text
+});
 var haxe = {}
 haxe.Timer = function() { }
 $hxClasses["haxe.Timer"] = haxe.Timer;
@@ -9505,7 +9908,6 @@ flash.system.SecurityDomain.__name__ = ["flash","system","SecurityDomain"];
 flash.system.SecurityDomain.prototype = {
 	__class__: flash.system.SecurityDomain
 }
-flash.text = {}
 flash.text.Font = function() {
 	this.__metrics = [];
 	this.__fontScale = 9.0;
@@ -9630,513 +10032,6 @@ flash.text.GridFitType.PIXEL.__enum__ = flash.text.GridFitType;
 flash.text.GridFitType.SUBPIXEL = ["SUBPIXEL",2];
 flash.text.GridFitType.SUBPIXEL.toString = $estr;
 flash.text.GridFitType.SUBPIXEL.__enum__ = flash.text.GridFitType;
-flash.text.TextField = function() {
-	flash.display.InteractiveObject.call(this);
-	this.mWidth = 100;
-	this.mHeight = 20;
-	this.mHTMLMode = false;
-	this.multiline = false;
-	this.__graphics = new flash.display.Graphics();
-	this.mFace = flash.text.TextField.mDefaultFont;
-	this.mAlign = flash.text.TextFormatAlign.LEFT;
-	this.mParagraphs = new Array();
-	this.mSelStart = -1;
-	this.mSelEnd = -1;
-	this.scrollH = 0;
-	this.scrollV = 1;
-	this.mType = flash.text.TextFieldType.DYNAMIC;
-	this.set_autoSize("NONE");
-	this.mTextHeight = 12;
-	this.mMaxHeight = this.mTextHeight;
-	this.mHTMLText = " ";
-	this.mText = " ";
-	this.mTextColour = 0;
-	this.tabEnabled = false;
-	this.mTryFreeType = true;
-	this.selectable = true;
-	this.mInsertPos = 0;
-	this.__inputEnabled = false;
-	this.mDownChar = 0;
-	this.mSelectDrag = -1;
-	this.mLineInfo = [];
-	this.set_defaultTextFormat(new flash.text.TextFormat());
-	this.set_borderColor(0);
-	this.set_border(false);
-	this.set_backgroundColor(16777215);
-	this.set_background(false);
-	this.gridFitType = flash.text.GridFitType.PIXEL;
-	this.sharpness = 0;
-};
-$hxClasses["flash.text.TextField"] = flash.text.TextField;
-flash.text.TextField.__name__ = ["flash","text","TextField"];
-flash.text.TextField.__super__ = flash.display.InteractiveObject;
-flash.text.TextField.prototype = $extend(flash.display.InteractiveObject.prototype,{
-	set_wordWrap: function(inWordWrap) {
-		this.wordWrap = inWordWrap;
-		this.Rebuild();
-		return this.get_wordWrap();
-	}
-	,get_wordWrap: function() {
-		return this.wordWrap;
-	}
-	,set_width: function(inValue) {
-		if(this.parent != null) this.parent.__invalidateBounds();
-		if(this.get__boundsInvalid()) this.validateBounds();
-		if(inValue != this.mWidth) {
-			this.mWidth = inValue;
-			this.Rebuild();
-		}
-		return this.mWidth;
-	}
-	,get_width: function() {
-		return Math.max(this.mWidth,this.getBounds(this.get_stage()).width);
-	}
-	,set_type: function(inType) {
-		this.mType = inType;
-		this.__inputEnabled = this.mType == flash.text.TextFieldType.INPUT;
-		if(this.mHTMLMode) {
-			if(this.__inputEnabled) flash.Lib.__setContentEditable(this.__graphics.__surface,true); else flash.Lib.__setContentEditable(this.__graphics.__surface,false);
-		} else if(this.__inputEnabled) {
-			this.set_htmlText(StringTools.replace(this.mText,"\n","<BR />"));
-			flash.Lib.__setContentEditable(this.__graphics.__surface,true);
-		}
-		this.tabEnabled = this.get_type() == flash.text.TextFieldType.INPUT;
-		this.Rebuild();
-		return inType;
-	}
-	,get_type: function() {
-		return this.mType;
-	}
-	,get_textHeight: function() {
-		return this.mMaxHeight;
-	}
-	,get_textWidth: function() {
-		return this.mMaxWidth;
-	}
-	,set_textColor: function(inCol) {
-		this.mTextColour = inCol;
-		this.RebuildText();
-		return inCol;
-	}
-	,get_textColor: function() {
-		return this.mTextColour;
-	}
-	,set_text: function(inText) {
-		this.mText = Std.string(inText);
-		this.mHTMLMode = false;
-		this.RebuildText();
-		this.___renderFlags |= 64;
-		if(this.parent != null) this.parent.___renderFlags |= 64;
-		return this.mText;
-	}
-	,get_text: function() {
-		if(this.mHTMLMode) this.ConvertHTMLToText(false);
-		return this.mText;
-	}
-	,set_scrollV: function(value) {
-		return this.scrollV = value;
-	}
-	,get_scrollV: function() {
-		return this.scrollV;
-	}
-	,set_scrollH: function(value) {
-		return this.scrollH = value;
-	}
-	,get_scrollH: function() {
-		return this.scrollH;
-	}
-	,get_numLines: function() {
-		return 0;
-	}
-	,set_multiline: function(value) {
-		return this.multiline = value;
-	}
-	,get_multiline: function() {
-		return this.multiline;
-	}
-	,get_maxScrollV: function() {
-		return 0;
-	}
-	,get_maxScrollH: function() {
-		return 0;
-	}
-	,set_htmlText: function(inHTMLText) {
-		this.mParagraphs = new Array();
-		this.mHTMLText = inHTMLText;
-		if(!this.mHTMLMode) {
-			var domElement = js.Browser.document.createElement("div");
-			if(this.background || this.border) {
-				domElement.style.width = this.mWidth + "px";
-				domElement.style.height = this.mHeight + "px";
-			}
-			if(this.background) domElement.style.backgroundColor = "#" + StringTools.hex(this.backgroundColor,6);
-			if(this.border) domElement.style.border = "1px solid #" + StringTools.hex(this.borderColor,6);
-			domElement.style.color = "#" + StringTools.hex(this.mTextColour,6);
-			domElement.style.fontFamily = this.mFace;
-			domElement.style.fontSize = this.mTextHeight + "px";
-			domElement.style.textAlign = Std.string(this.mAlign);
-			var wrapper = domElement;
-			wrapper.innerHTML = inHTMLText;
-			var destination = new flash.display.Graphics(wrapper);
-			var __surface = this.__graphics.__surface;
-			if(flash.Lib.__isOnStage(__surface)) {
-				flash.Lib.__appendSurface(wrapper);
-				flash.Lib.__copyStyle(__surface,wrapper);
-				flash.Lib.__swapSurface(__surface,wrapper);
-				flash.Lib.__removeSurface(__surface);
-			}
-			this.__graphics = destination;
-			this.__graphics.__extent.width = wrapper.width;
-			this.__graphics.__extent.height = wrapper.height;
-		} else this.__graphics.__surface.innerHTML = inHTMLText;
-		this.mHTMLMode = true;
-		this.RebuildText();
-		this.___renderFlags |= 64;
-		if(this.parent != null) this.parent.___renderFlags |= 64;
-		return this.mHTMLText;
-	}
-	,get_htmlText: function() {
-		return this.mHTMLText;
-	}
-	,set_height: function(inValue) {
-		if(this.parent != null) this.parent.__invalidateBounds();
-		if(this.get__boundsInvalid()) this.validateBounds();
-		if(inValue != this.mHeight) {
-			this.mHeight = inValue;
-			this.Rebuild();
-		}
-		return this.mHeight;
-	}
-	,get_height: function() {
-		return Math.max(this.mHeight,this.getBounds(this.get_stage()).height);
-	}
-	,set_defaultTextFormat: function(inFmt) {
-		this.setTextFormat(inFmt);
-		this._defaultTextFormat = inFmt;
-		return inFmt;
-	}
-	,get_defaultTextFormat: function() {
-		return this._defaultTextFormat;
-	}
-	,get_caretPos: function() {
-		return this.mInsertPos;
-	}
-	,get_bottomScrollV: function() {
-		return 0;
-	}
-	,set_borderColor: function(inBorderCol) {
-		this.borderColor = inBorderCol;
-		this.Rebuild();
-		return inBorderCol;
-	}
-	,set_border: function(inBorder) {
-		this.border = inBorder;
-		this.Rebuild();
-		return inBorder;
-	}
-	,set_backgroundColor: function(inCol) {
-		this.backgroundColor = inCol;
-		this.Rebuild();
-		return inCol;
-	}
-	,set_background: function(inBack) {
-		this.background = inBack;
-		this.Rebuild();
-		return inBack;
-	}
-	,set_autoSize: function(inAutoSize) {
-		this.autoSize = inAutoSize;
-		this.Rebuild();
-		return inAutoSize;
-	}
-	,get_autoSize: function() {
-		return this.autoSize;
-	}
-	,__render: function(inMask,clipRect) {
-		if(!this.__combinedVisible) return;
-		if((this.___renderFlags & 4) != 0 || (this.___renderFlags & 8) != 0) this.__validateMatrix();
-		if(this.__graphics.__render(inMask,this.__filters,1,1)) {
-			this.___renderFlags |= 64;
-			if(this.parent != null) this.parent.___renderFlags |= 64;
-			this.__applyFilters(this.__graphics.__surface);
-			this.___renderFlags |= 32;
-		}
-		if(!this.mHTMLMode && inMask != null) {
-			var m = this.getSurfaceTransform(this.__graphics);
-			flash.Lib.__drawToSurface(this.__graphics.__surface,inMask,m,(this.parent != null?this.parent.__combinedAlpha:1) * this.alpha,clipRect,this.gridFitType != flash.text.GridFitType.PIXEL);
-		} else {
-			if((this.___renderFlags & 32) != 0) {
-				var m = this.getSurfaceTransform(this.__graphics);
-				flash.Lib.__setSurfaceTransform(this.__graphics.__surface,m);
-				this.___renderFlags &= -33;
-			}
-			flash.Lib.__setSurfaceOpacity(this.__graphics.__surface,(this.parent != null?this.parent.__combinedAlpha:1) * this.alpha);
-		}
-	}
-	,__getObjectUnderPoint: function(point) {
-		if(!this.get_visible()) return null; else if(this.mText.length > 1) {
-			var local = this.globalToLocal(point);
-			if(local.x < 0 || local.y < 0 || local.x > this.mMaxWidth || local.y > this.mMaxHeight) return null; else return this;
-		} else return flash.display.InteractiveObject.prototype.__getObjectUnderPoint.call(this,point);
-	}
-	,__getGraphics: function() {
-		return this.__graphics;
-	}
-	,toString: function() {
-		return "[TextField name=" + this.name + " id=" + this.___id + "]";
-	}
-	,setTextFormat: function(inFmt,beginIndex,endIndex) {
-		if(endIndex == null) endIndex = 0;
-		if(beginIndex == null) beginIndex = 0;
-		if(inFmt.font != null) this.mFace = inFmt.font;
-		if(inFmt.size != null) this.mTextHeight = inFmt.size | 0;
-		if(inFmt.align != null) this.mAlign = inFmt.align;
-		if(inFmt.color != null) this.mTextColour = inFmt.color;
-		this.RebuildText();
-		this.___renderFlags |= 64;
-		if(this.parent != null) this.parent.___renderFlags |= 64;
-		return this.getTextFormat();
-	}
-	,setSelection: function(beginIndex,endIndex) {
-	}
-	,RenderRow: function(inRow,inY,inCharIdx,inAlign,inInsert) {
-		if(inInsert == null) inInsert = 0;
-		var h = 0;
-		var w = 0;
-		var _g = 0;
-		while(_g < inRow.length) {
-			var chr = inRow[_g];
-			++_g;
-			if(chr.fh > h) h = chr.fh;
-			w += chr.adv;
-		}
-		if(w > this.mMaxWidth) this.mMaxWidth = w;
-		var full_height = h * 1.2 | 0;
-		var align_x = 0;
-		var insert_x = 0;
-		if(inInsert != null) {
-			if(this.autoSize != "NONE") {
-				this.scrollH = 0;
-				insert_x = inInsert;
-			} else {
-				insert_x = inInsert - this.scrollH;
-				if(insert_x < 0) this.scrollH -= (this.mLimitRenderX * 3 >> 2) - insert_x; else if(insert_x > this.mLimitRenderX) this.scrollH += insert_x - (this.mLimitRenderX * 3 >> 2);
-				if(this.scrollH < 0) this.scrollH = 0;
-			}
-		}
-		if(this.autoSize == "NONE" && w <= this.mLimitRenderX) {
-			if(inAlign == flash.text.TextFormatAlign.CENTER) align_x = Math.round(this.mWidth) - w >> 1; else if(inAlign == flash.text.TextFormatAlign.RIGHT) align_x = Math.round(this.mWidth) - w;
-		}
-		var x_list = new Array();
-		this.mLineInfo.push({ mY0 : inY, mIndex : inCharIdx - 1, mX : x_list});
-		var cache_sel_font = null;
-		var cache_normal_font = null;
-		var x = align_x - this.scrollH;
-		var x0 = x;
-		var _g = 0;
-		while(_g < inRow.length) {
-			var chr = inRow[_g];
-			++_g;
-			var adv = chr.adv;
-			if(x + adv > this.mLimitRenderX) break;
-			x_list.push(x);
-			if(x >= 0) {
-				var font = chr.font;
-				if(chr.sel) {
-					this.__graphics.lineStyle();
-					this.__graphics.beginFill(2105440);
-					this.__graphics.drawRect(x,inY,adv,full_height);
-					this.__graphics.endFill();
-					if(cache_normal_font == chr.font) font = cache_sel_font; else {
-						font = flash.text.FontInstance.CreateSolid(chr.font.GetFace(),chr.fh,16777215,1.0);
-						cache_sel_font = font;
-						cache_normal_font = chr.font;
-					}
-				}
-				font.RenderChar(this.__graphics,chr.chr,x,inY + (h - chr.fh) | 0);
-			}
-			x += adv;
-		}
-		x += this.scrollH;
-		return full_height;
-	}
-	,RebuildText: function() {
-		this.mParagraphs = [];
-		if(!this.mHTMLMode) {
-			var font = flash.text.FontInstance.CreateSolid(this.mFace,this.mTextHeight,this.mTextColour,1.0);
-			var paras = this.mText.split("\n");
-			var _g = 0;
-			while(_g < paras.length) {
-				var paragraph = paras[_g];
-				++_g;
-				this.mParagraphs.push({ align : this.mAlign, spans : [{ font : font, text : paragraph + "\n"}]});
-			}
-		}
-		this.Rebuild();
-	}
-	,Rebuild: function() {
-		if(this.mHTMLMode) return;
-		this.mLineInfo = [];
-		this.__graphics.clear();
-		if(this.background) {
-			this.__graphics.beginFill(this.backgroundColor);
-			this.__graphics.drawRect(0,0,this.get_width(),this.get_height());
-			this.__graphics.endFill();
-		}
-		this.__graphics.lineStyle(this.mTextColour);
-		var insert_x = null;
-		this.mMaxWidth = 0;
-		var wrap = this.mLimitRenderX = this.get_wordWrap() && !this.__inputEnabled?this.mWidth | 0:999999;
-		var char_idx = 0;
-		var h = 0;
-		var s0 = this.mSelStart;
-		var s1 = this.mSelEnd;
-		var _g = 0, _g1 = this.mParagraphs;
-		while(_g < _g1.length) {
-			var paragraph = _g1[_g];
-			++_g;
-			var row = [];
-			var row_width = 0;
-			var last_word_break = 0;
-			var last_word_break_width = 0;
-			var last_word_char_idx = 0;
-			var start_idx = char_idx;
-			var tx = 0;
-			var _g2 = 0, _g3 = paragraph.spans;
-			while(_g2 < _g3.length) {
-				var span = _g3[_g2];
-				++_g2;
-				var text = span.text;
-				var font = span.font;
-				var fh = font.get_height();
-				last_word_break = row.length;
-				last_word_break_width = row_width;
-				last_word_char_idx = char_idx;
-				var _g5 = 0, _g4 = text.length;
-				while(_g5 < _g4) {
-					var ch = _g5++;
-					var g = HxOverrides.cca(text,ch);
-					var adv = font.__getAdvance(g);
-					if(g == 32) {
-						last_word_break = row.length;
-						last_word_break_width = tx;
-						last_word_char_idx = char_idx;
-					}
-					if(tx + adv > wrap) {
-						if(last_word_break > 0) {
-							var row_end = row.splice(last_word_break,row.length - last_word_break);
-							h += this.RenderRow(row,h,start_idx,paragraph.align);
-							row = row_end;
-							tx -= last_word_break_width;
-							start_idx = last_word_char_idx;
-							last_word_break = 0;
-							last_word_break_width = 0;
-							last_word_char_idx = 0;
-							if(row_end.length > 0 && row_end[0].chr == 32) {
-								row_end.shift();
-								start_idx++;
-							}
-						} else {
-							h += this.RenderRow(row,h,char_idx,paragraph.align);
-							row = [];
-							tx = 0;
-							start_idx = char_idx;
-						}
-					}
-					row.push({ font : font, chr : g, x : tx, fh : fh, sel : char_idx >= s0 && char_idx < s1, adv : adv});
-					tx += adv;
-					char_idx++;
-				}
-			}
-			if(row.length > 0) {
-				h += this.RenderRow(row,h,start_idx,paragraph.align,insert_x);
-				insert_x = null;
-			}
-		}
-		var w = this.mMaxWidth;
-		if(h < this.mTextHeight) h = this.mTextHeight;
-		this.mMaxHeight = h;
-		var _g = this;
-		switch(_g.autoSize) {
-		case "LEFT":
-			break;
-		case "RIGHT":
-			var x0 = this.get_x() + this.get_width();
-			this.set_x(this.mWidth - x0);
-			break;
-		case "CENTER":
-			var x0 = this.get_x() + this.get_width() / 2;
-			this.set_x(this.mWidth / 2 - x0);
-			break;
-		default:
-			if(this.get_wordWrap()) this.set_height(h);
-		}
-		if(this.border) {
-			this.__graphics.endFill();
-			this.__graphics.lineStyle(1,this.borderColor,1,true);
-			this.__graphics.drawRect(.5,.5,this.get_width() - .5,this.get_height() - .5);
-		}
-	}
-	,getTextFormat: function(beginIndex,endIndex) {
-		if(endIndex == null) endIndex = 0;
-		if(beginIndex == null) beginIndex = 0;
-		return new flash.text.TextFormat(this.mFace,this.mTextHeight,this.mTextColour);
-	}
-	,getLineIndexAtPoint: function(inX,inY) {
-		if(this.mLineInfo.length < 1) return -1;
-		if(inY <= 0) return 0;
-		var _g1 = 0, _g = this.mLineInfo.length;
-		while(_g1 < _g) {
-			var l = _g1++;
-			if(this.mLineInfo[l].mY0 > inY) return l == 0?0:l - 1;
-		}
-		return this.mLineInfo.length - 1;
-	}
-	,getCharIndexAtPoint: function(inX,inY) {
-		var li = this.getLineIndexAtPoint(inX,inY);
-		if(li < 0) return -1;
-		var line = this.mLineInfo[li];
-		var idx = line.mIndex;
-		var _g = 0, _g1 = line.mX;
-		while(_g < _g1.length) {
-			var x = _g1[_g];
-			++_g;
-			if(x > inX) return idx;
-			idx++;
-		}
-		return idx;
-	}
-	,getCharBoundaries: function(a) {
-		return null;
-	}
-	,DecodeColour: function(col) {
-		return Std.parseInt("0x" + HxOverrides.substr(col,1,null));
-	}
-	,ConvertHTMLToText: function(inUnSetHTML) {
-		this.mText = "";
-		var _g = 0, _g1 = this.mParagraphs;
-		while(_g < _g1.length) {
-			var paragraph = _g1[_g];
-			++_g;
-			var _g2 = 0, _g3 = paragraph.spans;
-			while(_g2 < _g3.length) {
-				var span = _g3[_g2];
-				++_g2;
-				this.mText += span.text;
-			}
-		}
-		if(inUnSetHTML) {
-			this.mHTMLMode = false;
-			this.RebuildText();
-		}
-	}
-	,appendText: function(newText) {
-		var _g = this;
-		_g.set_text(_g.get_text() + newText);
-	}
-	,__class__: flash.text.TextField
-	,__properties__: $extend(flash.display.InteractiveObject.prototype.__properties__,{set_autoSize:"set_autoSize",set_background:"set_background",set_backgroundColor:"set_backgroundColor",set_border:"set_border",set_borderColor:"set_borderColor",get_bottomScrollV:"get_bottomScrollV",get_caretPos:"get_caretPos",set_defaultTextFormat:"set_defaultTextFormat",get_defaultTextFormat:"get_defaultTextFormat",set_htmlText:"set_htmlText",get_htmlText:"get_htmlText",get_maxScrollH:"get_maxScrollH",get_maxScrollV:"get_maxScrollV",get_numLines:"get_numLines",set_text:"set_text",get_text:"get_text",set_textColor:"set_textColor",get_textColor:"get_textColor",get_textHeight:"get_textHeight",get_textWidth:"get_textWidth",set_type:"set_type",get_type:"get_type",set_wordWrap:"set_wordWrap",get_wordWrap:"get_wordWrap"})
-});
 flash.text.FontInstanceMode = $hxClasses["flash.text.FontInstanceMode"] = { __ename__ : true, __constructs__ : ["fimSolid"] }
 flash.text.FontInstanceMode.fimSolid = ["fimSolid",0];
 flash.text.FontInstanceMode.fimSolid.toString = $estr;
@@ -11457,7 +11352,15 @@ $hxClasses["haxe.ds.StringMap"] = haxe.ds.StringMap;
 haxe.ds.StringMap.__name__ = ["haxe","ds","StringMap"];
 haxe.ds.StringMap.__interfaces__ = [IMap];
 haxe.ds.StringMap.prototype = {
-	keys: function() {
+	iterator: function() {
+		return { ref : this.h, it : this.keys(), hasNext : function() {
+			return this.it.hasNext();
+		}, next : function() {
+			var i = this.it.next();
+			return this.ref["$" + i];
+		}};
+	}
+	,keys: function() {
 		var a = [];
 		for( var key in this.h ) {
 		if(this.h.hasOwnProperty(key)) a.push(key.substr(1));
@@ -12581,13 +12484,108 @@ flash.display.DisplayObject.RENDER_VALIDATE_IN_PROGRESS = 1024;
 flash.display.DisplayObject.ALL_RENDER_FLAGS = 98;
 openfl.display.OpenGLView.CONTEXT_LOST = "glcontextlost";
 openfl.display.OpenGLView.CONTEXT_RESTORED = "glcontextrestored";
-com.engine.game.Game.scrollX = 0;
-com.engine.game.Game.scrollY = 0;
 com.engine.game.Game.viewWidth = 0;
 com.engine.game.Game.viewHeight = 0;
+com.engine.game.Game.now = 0;
+com.engine.game.Game.then = 0;
+com.engine.game.Game.frameStart = 0;
+com.engine.game.Game.fps = 0;
+com.engine.game.Game.dt = 0;
+com.engine.game.Game.frames = 0;
+com.engine.game.Game.fixedTimestep = true;
 DefaultAssetLibrary.className = new haxe.ds.StringMap();
 DefaultAssetLibrary.path = new haxe.ds.StringMap();
 DefaultAssetLibrary.type = new haxe.ds.StringMap();
+com.engine.input.Keys.ANY = -1;
+com.engine.input.Keys.LEFT = 37;
+com.engine.input.Keys.UP = 38;
+com.engine.input.Keys.RIGHT = 39;
+com.engine.input.Keys.DOWN = 40;
+com.engine.input.Keys.ENTER = 13;
+com.engine.input.Keys.COMMAND = 15;
+com.engine.input.Keys.CONTROL = 17;
+com.engine.input.Keys.SPACE = 32;
+com.engine.input.Keys.SHIFT = 16;
+com.engine.input.Keys.BACKSPACE = 8;
+com.engine.input.Keys.CAPS_LOCK = 20;
+com.engine.input.Keys.DELETE = 46;
+com.engine.input.Keys.END = 35;
+com.engine.input.Keys.ESCAPE = 27;
+com.engine.input.Keys.HOME = 36;
+com.engine.input.Keys.INSERT = 45;
+com.engine.input.Keys.TAB = 9;
+com.engine.input.Keys.PAGE_DOWN = 34;
+com.engine.input.Keys.PAGE_UP = 33;
+com.engine.input.Keys.LEFT_SQUARE_BRACKET = 219;
+com.engine.input.Keys.RIGHT_SQUARE_BRACKET = 221;
+com.engine.input.Keys.TILDE = 192;
+com.engine.input.Keys.A = 65;
+com.engine.input.Keys.B = 66;
+com.engine.input.Keys.C = 67;
+com.engine.input.Keys.D = 68;
+com.engine.input.Keys.E = 69;
+com.engine.input.Keys.F = 70;
+com.engine.input.Keys.G = 71;
+com.engine.input.Keys.H = 72;
+com.engine.input.Keys.I = 73;
+com.engine.input.Keys.J = 74;
+com.engine.input.Keys.K = 75;
+com.engine.input.Keys.L = 76;
+com.engine.input.Keys.M = 77;
+com.engine.input.Keys.N = 78;
+com.engine.input.Keys.O = 79;
+com.engine.input.Keys.P = 80;
+com.engine.input.Keys.Q = 81;
+com.engine.input.Keys.R = 82;
+com.engine.input.Keys.S = 83;
+com.engine.input.Keys.T = 84;
+com.engine.input.Keys.U = 85;
+com.engine.input.Keys.V = 86;
+com.engine.input.Keys.W = 87;
+com.engine.input.Keys.X = 88;
+com.engine.input.Keys.Y = 89;
+com.engine.input.Keys.Z = 90;
+com.engine.input.Keys.F1 = 112;
+com.engine.input.Keys.F2 = 113;
+com.engine.input.Keys.F3 = 114;
+com.engine.input.Keys.F4 = 115;
+com.engine.input.Keys.F5 = 116;
+com.engine.input.Keys.F6 = 117;
+com.engine.input.Keys.F7 = 118;
+com.engine.input.Keys.F8 = 119;
+com.engine.input.Keys.F9 = 120;
+com.engine.input.Keys.F10 = 121;
+com.engine.input.Keys.F11 = 122;
+com.engine.input.Keys.F12 = 123;
+com.engine.input.Keys.F13 = 124;
+com.engine.input.Keys.F14 = 125;
+com.engine.input.Keys.F15 = 126;
+com.engine.input.Keys.DIGIT_0 = 48;
+com.engine.input.Keys.DIGIT_1 = 49;
+com.engine.input.Keys.DIGIT_2 = 50;
+com.engine.input.Keys.DIGIT_3 = 51;
+com.engine.input.Keys.DIGIT_4 = 52;
+com.engine.input.Keys.DIGIT_5 = 53;
+com.engine.input.Keys.DIGIT_6 = 54;
+com.engine.input.Keys.DIGIT_7 = 55;
+com.engine.input.Keys.DIGIT_8 = 56;
+com.engine.input.Keys.DIGIT_9 = 57;
+com.engine.input.Keys.NUMPAD_0 = 96;
+com.engine.input.Keys.NUMPAD_1 = 97;
+com.engine.input.Keys.NUMPAD_2 = 98;
+com.engine.input.Keys.NUMPAD_3 = 99;
+com.engine.input.Keys.NUMPAD_4 = 100;
+com.engine.input.Keys.NUMPAD_5 = 101;
+com.engine.input.Keys.NUMPAD_6 = 102;
+com.engine.input.Keys.NUMPAD_7 = 103;
+com.engine.input.Keys.NUMPAD_8 = 104;
+com.engine.input.Keys.NUMPAD_9 = 105;
+com.engine.input.Keys.NUMPAD_ADD = 107;
+com.engine.input.Keys.NUMPAD_DECIMAL = 110;
+com.engine.input.Keys.NUMPAD_DIVIDE = 111;
+com.engine.input.Keys.NUMPAD_ENTER = 108;
+com.engine.input.Keys.NUMPAD_MULTIPLY = 106;
+com.engine.input.Keys.NUMPAD_SUBTRACT = 109;
 com.engine.misc.Util.DEG = -180 / Math.PI;
 com.engine.misc.Util.RAD = Math.PI / -180;
 com.engine.misc.Util.EPSILON = 0.00000001;
@@ -12595,6 +12593,29 @@ com.engine.render.BlendMode.NORMAL = 0;
 com.engine.render.BlendMode.ADD = 1;
 com.engine.render.BlendMode.MULTIPLY = 2;
 com.engine.render.BlendMode.SCREEN = 3;
+com.engine.render.BlendMode.TRANSPARENT = 4;
+com.engine.render.filter.Filter.vertexAttribute = 0;
+com.engine.render.filter.Filter.texCoordAttribute = 1;
+com.engine.render.filter.Filter.colorAttribute = 2;
+com.engine.render.filter.Filter.colorVertexShader = "\r\nattribute vec3 aVertexPosition;\r\nattribute vec4 aColor;\r\n\r\nvarying vec4 vColor;\r\n\r\nuniform mat4 uModelViewMatrix;\r\nuniform mat4 uProjectionMatrix;\r\nvoid main(void) \r\n{\r\nvColor = aColor;\r\ngl_Position = uProjectionMatrix * uModelViewMatrix * vec4 (aVertexPosition, 1.0);\r\n}";
+com.engine.render.filter.Filter.colorFragmentShader = "precision mediump float;" + "\r\n\r\nvarying vec4 vColor;\r\nvoid main(void)\r\n{\r\n\tgl_FragColor =  vColor;\r\n}";
+com.engine.render.filter.Filter.textureVertexShader = "\r\nattribute vec3 aVertexPosition;\r\nattribute vec2 aTexCoord;\r\nattribute vec4 aColor;\r\n\r\nvarying vec2 vTexCoord;\r\nvarying vec4 vColor;\r\n\r\nuniform mat4 uModelViewMatrix;\r\nuniform mat4 uProjectionMatrix;\r\nvoid main(void) \r\n{\r\nvTexCoord = aTexCoord;\r\nvColor = aColor;\r\ngl_Position = uProjectionMatrix * uModelViewMatrix *  vec4 (aVertexPosition, 1.0);\r\n\r\n}";
+com.engine.render.filter.Filter.textureFragmentShader = "precision mediump float;" + "\r\nvarying vec2 vTexCoord;\r\nvarying vec4 vColor;\r\nuniform sampler2D uImage0;\r\n\r\nvoid main(void)\r\n{\r\n\tgl_FragColor = texture2D (uImage0, vTexCoord) * vColor;\r\n\r\n}";
+com.engine.render.filter.Filter.normalFilter = "precision mediump float;" + "varying vec2 vTexCoord;\r\n\t\t\tuniform sampler2D uImage0;\r\n\t\t\tvoid main(void)\r\n\t\t\t{\r\n\t\t\tgl_FragColor = texture2D (uImage0, vTexCoord);\r\n\t\t\t}";
+com.engine.render.filter.Filter.grayFilter = "precision mediump float;" + " \r\n        varying vec2 vTexCoord;\r\n        varying vec4 vColor;\r\n        uniform sampler2D uImage0;\r\n        uniform float gray;\r\n\r\n        void main(void)\r\n\t\t{\r\n           gl_FragColor = texture2D(uImage0, vTexCoord);\r\n           gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.2126*gl_FragColor.r + 0.7152*gl_FragColor.g + 0.0722*gl_FragColor.b), gray);\r\n        }";
+com.engine.render.filter.Filter.colorStepFilter = "precision mediump float;" + "       varying vec2 vTexCoord;\r\n        varying vec4 vColor;\r\n        uniform sampler2D uImage0;\r\n        uniform float step;\r\n\r\n        void main(void) \r\n\t\t{\r\n           vec4 color = texture2D(uImage0, vTexCoord);\r\n           color = floor(color * step) / step;\r\n           gl_FragColor = color;\r\n        };";
+com.engine.render.filter.Filter.invertFilter = "precision mediump float;" + "       varying vec2 vTexCoord;\r\n        varying vec4 vColor;\r\n        uniform float invert;\r\n        uniform sampler2D uImage0;\r\n\r\n        void main(void) {\r\n           gl_FragColor = texture2D(uImage0, vTexCoord);\r\n           gl_FragColor.rgb = mix( (vec3(1)-gl_FragColor.rgb) * gl_FragColor.a, gl_FragColor.rgb, 1.0 - invert);\r\n         }";
+com.engine.render.filter.Filter.blurYFilter = "precision mediump float;" + "     varying vec2 vTexCoord;\r\n        varying vec4 vColor;\r\n        uniform float blur;\r\n        uniform sampler2D uImage0;\r\n\r\n        void main(void) {\r\n           vec4 sum = vec4(0.0);\r\n\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x, vTexCoord.y - 4.0*blur)) * 0.05;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x, vTexCoord.y - 3.0*blur)) * 0.09;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x, vTexCoord.y - 2.0*blur)) * 0.12;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x, vTexCoord.y - blur)) * 0.15;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x, vTexCoord.y)) * 0.16;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x, vTexCoord.y + blur)) * 0.15;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x, vTexCoord.y + 2.0*blur)) * 0.12;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x, vTexCoord.y + 3.0*blur)) * 0.09;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x, vTexCoord.y + 4.0*blur)) * 0.05;\r\n\r\n           gl_FragColor = sum;\r\n        }";
+com.engine.render.filter.Filter.blurXFilter = "precision mediump float;" + "     varying vec2 vTexCoord;\r\n        varying vec4 vColor;\r\n        uniform float blur;\r\n        uniform sampler2D uImage0;\r\n\r\n        void main(void) {\r\n           vec4 sum = vec4(0.0);\r\n\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x - 4.0*blur, vTexCoord.y)) * 0.05;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x - 3.0*blur, vTexCoord.y)) * 0.09;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x - 2.0*blur, vTexCoord.y)) * 0.12;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x - blur, vTexCoord.y)) * 0.15;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x, vTexCoord.y)) * 0.16;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x + blur, vTexCoord.y)) * 0.15;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x + 2.0*blur, vTexCoord.y)) * 0.12;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x + 3.0*blur, vTexCoord.y)) * 0.09;\r\n           sum += texture2D(uImage0, vec2(vTexCoord.x + 4.0*blur, vTexCoord.y)) * 0.05;\r\n\r\n           gl_FragColor = sum;\r\n        }";
+com.engine.render.filter.Filter.twistFilter = "precision mediump float;" + " \r\n        varying vec2 vTexCoord;\r\n        varying vec4 vColor;\r\n        uniform vec4 dimensions;\r\n        uniform sampler2D uImage0;\r\n\r\n        uniform float radius;\r\n        uniform float angle;\r\n        uniform vec2 offset;\r\n\r\n        void main(void) {\r\n           vec2 coord = vTexCoord - offset;\r\n           float distance = length(coord);\r\n\r\n           if (distance < radius) {\r\n               float ratio = (radius - distance) / radius;\r\n               float angleMod = ratio * ratio * angle;\r\n               float s = sin(angleMod);\r\n               float c = cos(angleMod);\r\n               coord = vec2(coord.x * c - coord.y * s, coord.x * s + coord.y * c);\r\n           }\r\n\r\n           gl_FragColor = texture2D(uImage0, coord+offset);\r\n        }";
+com.engine.render.filter.Filter.sepiaFilter = "precision mediump float;" + " \r\n        varying vec2 vTexCoord;\r\n        varying vec4 vColor;\r\n        uniform float sepia;\r\n        uniform sampler2D uImage0;\r\n\r\n        const mat3 sepiaMatrix = mat3(0.3588, 0.7044, 0.1368, 0.2990, 0.5870, 0.1140, 0.2392, 0.4696, 0.0912);\r\n\r\n        void main(void) {\r\n           gl_FragColor = texture2D(uImage0, vTexCoord);\r\n           gl_FragColor.rgb = mix( gl_FragColor.rgb, gl_FragColor.rgb * sepiaMatrix, sepia);\r\n        }";
+com.engine.render.filter.Filter.blurFilter = "precision mediump float;" + " \r\n        precision mediump float;\r\n        varying vec2 vTexCoord;\r\n        uniform sampler2D uImage0;\r\n        //'uniform vec2 delta;',\r\n        const vec2 delta = vec2(1.0/10.0, 0.0);\r\n        //'uniform float darkness;',\r\n\r\n        float random(vec3 scale, float seed) {\r\n           return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758.5453 + seed);\r\n        }\r\n\r\n\r\n        void main(void) {\r\n           vec4 color = vec4(0.0);\r\n           float total = 0.0;\r\n\r\n           float offset = random(vec3(12.9898, 78.233, 151.7182), 0.0);\r\n\r\n           for (float t = -30.0; t <= 30.0; t++) \r\n\t\t   {\r\n               float percent = (t + offset - 0.5) / 30.0;\r\n               float weight = 1.0 - abs(percent);\r\n               vec4 sample = texture2D(uImage0, vTexCoord + delta * percent);\r\n               sample.rgb *= sample.a;\r\n               color += sample * weight;\r\n               total += weight;\r\n           }\r\n\r\n           gl_FragColor = color / total;\r\n           gl_FragColor.rgb /= gl_FragColor.a + 0.00001;\r\n        //'   gl_FragColor.rgb *= darkness;',\r\n        }";
+com.engine.render.filter.Filter.pixelateFilter = "precision mediump float;" + " \r\n        varying vec2 vTexCoord;\r\n        varying vec4 vColor;\r\n        uniform vec2 pixelSize;\r\n        uniform sampler2D uImage0;\r\n\r\n        void main(void) \r\n\t\t{\r\n           vec4 dimensions = vec4(10000, 100, 10, 10);\r\n\t\t   vec2 size = dimensions.xy/pixelSize;\r\n           vec2 color = floor( ( vTexCoord * size ) ) / size + pixelSize/dimensions.xy * 0.5;\r\n           gl_FragColor = texture2D(uImage0, color);\r\n       }";
+com.engine.render.filter.Filter.dotscreenFilter = "precision mediump float;" + " \r\n        varying vec2 vTexCoord;\r\n        varying vec4 vColor;\r\n        uniform sampler2D uImage0;\r\n        uniform float angle;\r\n        uniform float scale;\r\n\t\t\r\n\r\n        float pattern() \r\n\t\t{\r\n\t\t   vec4 dimensions = vec4(0,0,0,0);\r\n           float s = sin(angle), c = cos(angle);\r\n           vec2 tex = vTexCoord * dimensions.xy;\r\n           vec2 point = vec2(\r\n               c * tex.x - s * tex.y,\r\n               s * tex.x + c * tex.y\r\n           ) * scale;\r\n           return (sin(point.x) * sin(point.y)) * 4.0;\r\n        }\r\n\r\n        void main() {\r\n           vec4 color = texture2D(uImage0, vTexCoord);\r\n           float average = (color.r + color.g + color.b) / 3.0;\r\n           gl_FragColor = vec4(vec3(average * 10.0 - 5.0 + pattern()), color.a);\r\n        }";
+com.engine.render.filter.Filter.rgbsplitFilter = "precision mediump float;" + " \r\n        varying vec2 vTexCoord;\r\n        varying vec4 vColor;\r\n\t\tuniform float distance;\r\n        uniform vec2 red;\r\n        uniform vec2 green;\r\n        uniform vec2 blue;\r\n        uniform vec4 dimensions;\r\n        uniform sampler2D uImage0;\r\n\r\n        void main(void) \r\n\t\t{\r\n           gl_FragColor.r = texture2D(uImage0, vTexCoord + red/distance).r;\r\n           gl_FragColor.g = texture2D(uImage0, vTexCoord + green/distance).g;\r\n           gl_FragColor.b = texture2D(uImage0, vTexCoord + blue/distance).b;\r\n           gl_FragColor.a = texture2D(uImage0, vTexCoord).a;\r\n        }";
+com.engine.render.filter.Filter.croshatchFilter = "precision mediump float;" + " \t\t\r\n        varying vec2 vTexCoord;\r\n        varying vec4 vColor;\r\n        uniform float blur;\r\n        uniform sampler2D uImage0;\r\n\r\n        void main(void) {\r\n            float lum = length(texture2D(uImage0, vTexCoord.xy).rgb);\r\n\r\n            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\r\n\r\n            if (lum < 1.00) {\r\n                if (mod(gl_FragCoord.x + gl_FragCoord.y, 10.0) == 0.0) {\r\n                    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\r\n                }\r\n            }\r\n\r\n            if (lum < 0.75) {\r\n                if (mod(gl_FragCoord.x - gl_FragCoord.y, 10.0) == 0.0) {\r\n                    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\r\n                }\r\n            }\r\n            if (lum < 0.50) {\r\n                if (mod(gl_FragCoord.x + gl_FragCoord.y - 5.0, 10.0) == 0.0) {\r\n                    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\r\n                }\r\n           }\r\n\r\n            if (lum < 0.3) {\r\n                if (mod(gl_FragCoord.x - gl_FragCoord.y - 5.0, 10.0) == 0.0) {\r\n                    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\r\n                }\r\n            }\r\n        }";
+com.engine.render.filter.Filter.colormatrixFilter = "precision mediump float;" + " \r\n        varying vec2 vTexCoord;\r\n        varying vec4 vColor;\r\n        uniform mat4 matrix;\r\n        uniform sampler2D uImage0;\r\n\r\n        void main(void) {\r\n           gl_FragColor = texture2D(uImage0, vTexCoord) * matrix;\r\n        }";
+flash.text.TextField.mDefaultFont = "Bitstream_Vera_Sans";
 flash.Lib.HTML_ACCELEROMETER_EVENT_TYPE = "devicemotion";
 flash.Lib.HTML_ORIENTATION_EVENT_TYPE = "orientationchange";
 flash.Lib.DEFAULT_HEIGHT = 500;
@@ -12750,7 +12771,6 @@ flash.text.Font.DEFAULT_FONT_SCALE = 9.0;
 flash.text.Font.DEFAULT_FONT_NAME = "Bitstream_Vera_Sans";
 flash.text.Font.DEFAULT_CLASS_NAME = "flash.text.Font";
 flash.text.Font.__registeredFonts = new Array();
-flash.text.TextField.mDefaultFont = "Bitstream_Vera_Sans";
 flash.text.FontInstance.mSolidFonts = new haxe.ds.StringMap();
 flash.text.TextFieldAutoSize.CENTER = "CENTER";
 flash.text.TextFieldAutoSize.LEFT = "LEFT";

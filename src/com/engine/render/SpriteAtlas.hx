@@ -1,7 +1,8 @@
 package com.engine.render;
 
 
-import flash.geom.Matrix3D;
+import flash.geom.Matrix;
+import flash.geom.Point;
 
 import openfl.display.OpenGLView;
 import openfl.gl.GL;
@@ -13,6 +14,8 @@ import openfl.display.FPS;
 
 
 import com.engine.render.BlendMode;
+import com.engine.game.Game;
+import com.engine.render.filter.Filter;
 
 /**
  * ...
@@ -31,44 +34,24 @@ class SpriteAtlas extends Buffer
 	private var currentBatchSize:Int;
 	private var currentBlendMode:Int;
 	private var currentBaseTexture:Texture;
-
-
-
-private var vertexBuffer:GLBuffer;
-private var indexBuffer:GLBuffer;
-
-private var invTexWidth:Float = 0;
-private var invTexHeight:Float = 0;
-
-public var camera:OrthoCamera;
-
-	public var vertexDeclaration:Array<Int>;
+    private var vertexBuffer:GLBuffer;
+    private var indexBuffer:GLBuffer;
+    private var invTexWidth:Float = 0;
+    private var invTexHeight:Float = 0;
 	public var vertexStrideSize:Int;
-
-
-   
-public var shader:SpriteShader;
+    public var shader:SpriteShader;
 
 	public function new(texture:Texture,capacity:Int ) 
 	{
-		  
-		 super();
+		   super();
             this.capacity = capacity;
      
-	   vertexDeclaration = [3, 2,4];
-       vertexStrideSize =  9 * 4; // 9 floats (x, y, z,u,v, r, g, b, a)
+	   vertexStrideSize =  (3+2+4) *4; // 9 floats (x, y, z,u,v, r, g, b, a)
  
-	   numVerts = capacity * vertexStrideSize *   4;
+	   numVerts = capacity * vertexStrideSize;
        numIndices = capacity * 6;
+      vertices = new Float32Array(numVerts);
 
-  
-
-    vertices = new Float32Array(numVerts);
-
-    
-
-	
-	
         this.indices = new Int16Array(numIndices); 
 		var length = Std.int(this.indices.length/6);
 		
@@ -87,7 +70,7 @@ public var shader:SpriteShader;
 
     drawing = false;
     currentBatchSize = 0;
-	currentBlendMode = BlendMode.SCREEN;
+	currentBlendMode = BlendMode.NORMAL;
     this.currentBaseTexture = texture;
     invTexWidth  = 1.0 / texture.texWidth;
     invTexHeight = 1.0 / texture.texHeight;
@@ -103,20 +86,14 @@ public var shader:SpriteShader;
     GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STATIC_DRAW);
 
     GL.bindBuffer(GL.ARRAY_BUFFER, vertexBuffer);
-    GL.bufferData(GL.ARRAY_BUFFER, vertices, GL.DYNAMIC_DRAW);
+    GL.bufferData(GL.ARRAY_BUFFER, vertices, GL.STATIC_DRAW);
 	
-
-	
+	indices = null;
 	shader = new SpriteShader();
 
 	}
 	
-  public function dispose():Void 
-    {
-        GL.deleteBuffer(indexBuffer);
-		GL.deleteBuffer(vertexBuffer);
-    }
-	
+  
 
 	
 	public function drawImage(img:Image)
@@ -311,33 +288,34 @@ vertices[index++] = 1; vertices[index++] = 1; vertices[index++] = 1; vertices[in
 	{
 	 currentBatchSize = 0;
 	 shader.Enable();
- 	 GL.activeTexture(GL.TEXTURE0);
-     GL.bindBuffer(GL.ARRAY_BUFFER, this.vertexBuffer);
-     GL.vertexAttribPointer(shader.vertexAttribute, 3, GL.FLOAT, false, vertexStrideSize, 0);
-     GL.vertexAttribPointer(shader.texCoordAttribute  , 2, GL.FLOAT, false, vertexStrideSize, 3 * 4);
-     GL.vertexAttribPointer(shader.colorAttribute, 4, GL.FLOAT, false, vertexStrideSize, (3+2) * 4);
+	 GL.bindBuffer(GL.ARRAY_BUFFER, this.vertexBuffer);
+     GL.vertexAttribPointer(Filter.vertexAttribute, 3, GL.FLOAT, false, vertexStrideSize, 0);
+     GL.vertexAttribPointer(Filter.texCoordAttribute  , 2, GL.FLOAT, false, vertexStrideSize, 3 * 4);
+     GL.vertexAttribPointer(Filter.colorAttribute, 4, GL.FLOAT, false, vertexStrideSize, (3+2) * 4);
      
     }
 	public function End()
 	{
-	 if (currentBatchSize==0) return;
-	currentBaseTexture.Bind();
+	if (currentBatchSize==0) return;
+	shader.setTexture(currentBaseTexture);
 	BlendMode.setBlend(currentBlendMode);
-	
-	 GL.uniformMatrix4fv(shader.projectionMatrixUniform, false,new Float32Array(camera.projMatrix.toArray()));
-     GL.uniformMatrix4fv(shader.modelViewMatrixUniform, false, new Float32Array(viewMatrix.toArray()));
-          GL.uniform1i (shader.imageUniform, 0);
-    GL.bufferSubData(GL.ARRAY_BUFFER, 0, vertices);
-	GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+ 	GL.uniformMatrix3D(shader.projectionMatrixUniform, false,Game.camera.projMatrix);
+    GL.uniformMatrix3D(shader.modelViewMatrixUniform, false, viewMatrix);
+    GL.bufferData(GL.ARRAY_BUFFER, vertices, GL.STATIC_DRAW);
+    GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
     GL.drawElements(GL.TRIANGLES, currentBatchSize * 6, GL.UNSIGNED_SHORT, 0);
     currentBatchSize = 0;
     shader.Disable();
 	}
 override public function dispose():Void 
 {
+	    GL.deleteBuffer(indexBuffer);
+		GL.deleteBuffer(vertexBuffer);
+  
 	super.dispose();
 	
 }
+
 
 
 }

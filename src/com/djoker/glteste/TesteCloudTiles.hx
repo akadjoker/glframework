@@ -68,13 +68,16 @@ class TesteCloudTiles extends Screen
 			for (x in 0...tilemap.widthInTiles)
 			{
 
+				for (i in 0...tilemap.layers.length)
+				{
 					
-				var id =  tilemap.getCell(x, y);
+				var id =  tilemap.layers[i].getCell(x, y);
 				if (id >= 1)
 				{
 					var t:Clip = tilemap.getClip(id - 1);
 		       		batch.addTile(x*tw,y*th,tw,th,t, false, true);
 					}
+				}
 			}
 		}
 
@@ -88,7 +91,7 @@ class TesteCloudTiles extends Screen
 
 	}
 
-	override public function render(dt:Float) 
+	override public function render() 
 	{ 
 	//	lastToutch = Toutch;
 		
@@ -109,9 +112,8 @@ class TesteCloudTiles extends Screen
 	override public function mouseDown(mousex:Float, mousey:Float) 
 	{
 		toutch = true;
-		lastToutch.x = mousex;
-		lastToutch.y = mousey;
-		//lastToutch=camera.unproject(lastToutch);
+		Toutch.x = mousex;
+		Toutch.y = mousey;
 		
 		
 	}		
@@ -120,19 +122,12 @@ class TesteCloudTiles extends Screen
 		
 		if (toutch==true)
 		{
-			
-			Toutch.x = mousex;
-			Toutch.y = mousey;
-		//	Toutch=camera.unproject(Toutch);
-	
-			
-		var dir:Vector3 = Vector3.Sub(Toutch, lastToutch);
-		dir.normalize();
-		
-		//camera.position = Vector3.Add(camera.position, dir);
-		batch.position.x += (dir.x * game.deltaTime*1000);
-		batch.position.y += (dir.y * game.deltaTime*1000);
-			
+     	 var dx = mousex - Toutch.x;
+	     var dy = mousey - Toutch.y;
+	     batch.position.x += dx;
+	     batch.position.y += dy;
+         Toutch.x = mousex;
+		 Toutch.y = mousey;
 		}
 	}
 	override public function mouseUp(mousex:Float, mousey:Float) 

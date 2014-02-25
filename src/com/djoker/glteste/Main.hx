@@ -53,21 +53,21 @@ override function begin()
 //	fixRatio(480, 320);
 
 
-
 //this.setScreen(new TesteBatch());
 //this.setScreen(new TesteAtlas());
-//this.setScreen(new TestneBatch());
 //this.setScreen(new TesteCloud());
 //this.setScreen(new TesteCloudTiles());
-//this.setScreen(new TesteBatchTiles());
+//this.setScreen(new TesteBlockTiles());
+//this.setScreen(new TesteBlockTilesCache());
 //this.setScreen(new TesteTiles());
 //this.setScreen(new TestePrimitives());
 //this.setScreen(new TesteBitmap());
-//this.setScreen(new TesteDraTiles());
-this.setScreen(new TestTrasform());
+//this.setScreen(new TestTrasform());
+this.setScreen(new TesteTexRender());
 
 
 
+		
 
 }
 

@@ -39,11 +39,11 @@ public function addParticle()
          addParticle();
 	}
 	
-	override public function render(dt:Float) 
+	override public function render() 
 	{
       for(p in particles)
       {
-         p.move(dt);
+         p.move(1);
       }
 
 	}

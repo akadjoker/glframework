@@ -80,7 +80,7 @@ class TesteTiles extends Screen
 		
 	}
 
-	override public function render(dt:Float) 
+	override public function render() 
 	{ 
 
 	

@@ -1,7 +1,7 @@
 package com.engine.game;
 
 import flash.geom.Matrix;
-import com.engine.misc.MatrixHelp;
+import com.engine.misc.Util;
 /**
  * ...
  * @author djoker
@@ -41,14 +41,14 @@ class Transform
 		   mTransformationMatrix.identity();
 	
 				
-			var cx:Float =  Game.scrollX;
-			var cy:Float =  Game.scrollY;
+			var cx:Float =  Game.camera.scrollX;
+			var cy:Float =  Game.camera.scrollY;
 			var sx:Float = x - cx * scrollFactorX;
 			var sy:Float = y - cy * scrollFactorY;
 			
          
                 if (scaleX != 1.0 || scaleY != 1.0) mTransformationMatrix.scale(scaleX, scaleY);
-                if (skewX  != 0.0 || skewY  != 0.0) MatrixHelp.skew(mTransformationMatrix, skewX, skewY);
+                if (skewX  != 0.0 || skewY  != 0.0) Util.skew(mTransformationMatrix, skewX, skewY);
                 if (rotation != 0.0)                 mTransformationMatrix.rotate(rotation);
                 if (sx != 0.0 || sy != 0.0)          mTransformationMatrix.translate(sx, sy);
                 

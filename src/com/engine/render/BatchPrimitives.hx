@@ -1,6 +1,10 @@
 package com.engine.render;
 
+import flash.geom.Matrix;
+import flash.geom.Point;
+
 import com.engine.game.Game;
+
 import openfl.gl.GL;
 import openfl.gl.GLBuffer;
 import openfl.utils.Float32Array;
@@ -62,6 +66,8 @@ class BatchPrimitives extends Buffer
     idxPos=0;
 	idxCols = 0;
 
+	scrollx = 0;
+	scrolly = 0;
 	fidxPos=0;
 	fidxCols = 0;
 
@@ -124,17 +130,17 @@ public function fcolor(r:Float, g:Float,b:Float, ?a:Float =0.0)
 	 idxCols = 0;
 	 fidxPos=0;
 	 fidxCols = 0;
+	 update();
 	}
     public function end()
 	{
-
 	shader.Enable();
 	BlendMode.setBlend(currentBlendMode);
 
 				  
-	 GL.uniformMatrix4fv(shader.projectionMatrixUniform, false,new Float32Array(Game.projMatrix.toArray()));
-     GL.uniformMatrix4fv(shader.modelViewMatrixUniform, false, new Float32Array(viewMatrix.toArray()));
-
+     GL.uniformMatrix3D(shader.projectionMatrixUniform, false,Game.camera.projMatrix);
+     GL.uniformMatrix3D(shader.modelViewMatrixUniform, false, viewMatrix);
+   
 	 GL.bindBuffer(GL.ARRAY_BUFFER, this.fvertexBuffer);	
      GL.bufferSubData(GL.ARRAY_BUFFER, 0, this.fvertices);
      GL.vertexAttribPointer(shader.vertexAttribute, 3, GL.FLOAT, false, 0, 0);

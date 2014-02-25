@@ -56,6 +56,13 @@ class ApplicationMain {
 		
 		
 		
+		var loader:Loader = new Loader();
+		loaders.set("assets/Background.jpg", loader);
+		total ++;
+		
+		
+		
+		
 		var urlLoader:URLLoader = new URLLoader();
 		urlLoader.dataFormat = BINARY;
 		urlLoaders.set("assets/desert.tmx", urlLoader);
@@ -119,6 +126,13 @@ class ApplicationMain {
 		
 		var loader:Loader = new Loader();
 		loaders.set("assets/sprites.png", loader);
+		total ++;
+		
+		
+		
+		
+		var loader:Loader = new Loader();
+		loaders.set("assets/texture.jpg", loader);
 		total ++;
 		
 		

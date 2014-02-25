@@ -21,13 +21,16 @@ class ApplicationMain {
 		
 		#if ios
 		flash.display.Stage.shouldRotateInterface = function (orientation:Int):Bool {
-			return true;
+			return (orientation == flash.display.Stage.OrientationLandscapeLeft || orientation == flash.display.Stage.OrientationLandscapeRight);
+			
 		}
 		#end
 		
 		
 		
-		
+		#if tizen
+		flash.display.Stage.setFixedOrientation (flash.display.Stage.OrientationLandscapeRight);
+		#end
 		
 		flash.Lib.create (function () {
 				
@@ -94,7 +97,7 @@ class ApplicationMain {
 				
 			},
 			800, 480, 
-			10000, 
+			1000, 
 			0,
 			(true ? flash.Lib.HARDWARE : 0) |
 			(true ? flash.Lib.ALLOW_SHADERS : 0) |
@@ -105,8 +108,8 @@ class ApplicationMain {
 			(false ? flash.Lib.BORDERLESS : 0) |
 			(false ? flash.Lib.VSYNC : 0) |
 			(false ? flash.Lib.FULLSCREEN : 0) |
-			(0 == 4 ? flash.Lib.HW_AA_HIRES : 0) |
-			(0 == 2 ? flash.Lib.HW_AA : 0),
+			(1 == 4 ? flash.Lib.HW_AA_HIRES : 0) |
+			(1 == 2 ? flash.Lib.HW_AA : 0),
 			"glframework by Luis Santos AKA DJOKER",
 			null
 			#if mobile, ScaledStage #end

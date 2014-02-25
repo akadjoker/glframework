@@ -1,5 +1,7 @@
 package com.engine.math;
 
+import flash.geom.Matrix;
+import flash.geom.Point;
 
 
 class Vector2 {
@@ -163,14 +165,14 @@ class Vector2 {
 
         return new Vector2(_x, _y);
 	}
-	
+	/*
     inline public static function Transform(vector:Vector2, transformation:Matrix):Vector2 {
 		var _x = (vector.x * transformation.m[0]) + (vector.y * transformation.m[4]);
         var _y = (vector.x * transformation.m[1]) + (vector.y * transformation.m[5]);
 
         return new Vector2(_x, _y);
 	}
-	
+	*/
     inline public static function Distance(value1:Vector2, value2:Vector2):Float {
 		return Math.sqrt(Vector2.DistanceSquared(value1, value2));
 	}

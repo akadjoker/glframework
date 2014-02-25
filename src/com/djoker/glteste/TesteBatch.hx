@@ -33,15 +33,10 @@ class TesteBatch extends Screen
 	
 	override public function show()
 	{
+	 
 	
-		tex = new Texture("assets/texture.png");
-	    playerTex = new Texture("assets/zazaka.png");
-	
-         batch = new SpriteBatch(500);
-        particles = [];
-        for(i in 0...200)
-         addParticle();
-		 
+         batch = new SpriteBatch(1000);
+ 
 	
 		 var caption:TextField = new TextField();
 		 caption.x =  game.gameWidth / 2-100;
@@ -52,44 +47,63 @@ class TesteBatch extends Screen
 		 caption.selectable = false;
 		 game.addChild(caption);
 		 
-		 player = new  Entity(300, 200, playerTex);
-		 child = new  Entity(0, 0, playerTex);
+		 
+		 
+		tex = getTexture("assets/texture.png");
+	     particles = [];
+        for(i in 0...200)
+        addParticle();
+		 
+		
+		 player = new  Entity(300, 200,  getTexture("assets/zazaka.png"));
+		 child = new  Entity(0, 0,  getTexture("assets/zazaka.png"));
 		 child.blue = 0;
 		 player.add(child);
 		 
-		 logo= new Entity(this.width/2,this.height/2,new Texture("assets/hxlogo.png"));
+		 logo= new Entity(this.width/2,this.height/2,getTexture("assets/hxlogo.png"));
 		 
-		 game.clarColor(0, 0, 0);
+
+		
+		 game.clarColor(0, 0, 0.4);
 
 
 	}
-
-	override public function render(dt:Float) 
+    override public function update(dt:Float) 
 	{ 
   
-		  player.rotation += dt * 2.1;
-		  child.rotation -= dt * 2.5;
+		  player.rotation += dt * 20.1;
+		  child.rotation -= dt * 20.5;
 		//  player.skewX += dt * 0.1;
 		  
-		skew += dt * 1;
+		skew += dt * 10;
  
 		logo.skewX = Math.sin(skew)*1;
 		logo.skewY = Math.cos(skew)*1;
 		
+	}
+	
+	override public function render() 
+	{ 
+  
+		
 		  
 	batch.Begin();
 
+
+	  
 	batch.drawEntity(logo);
-	
-      for(p in particles)
-      {
-         p.move(dt);
-	
-        batch.drawImage(p);
-      }
+
 	  
 	  batch.drawEntity(player);
 	  batch.drawEntity(child);
+	  
+	  		
+      for(p in particles)
+      {
+         p.move(game.deltaTime);
+	
+        batch.drawImage(p);
+      }
 	  
       batch.End();
 	

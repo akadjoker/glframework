@@ -2,7 +2,8 @@ package com.engine.render;
 
 
 
-
+import flash.geom.Matrix;
+import flash.geom.Point;
 
 import openfl.display.OpenGLView;
 import openfl.gl.GL;
@@ -13,8 +14,8 @@ import openfl.utils.Int16Array;
 import openfl.display.FPS;
 
 import com.engine.misc.Util;
-import com.engine.math.Matrix;
 import com.engine.math.Vector2;
+import com.engine.render.filter.Filter;
 
 import com.engine.game.Game;
 
@@ -28,7 +29,6 @@ class SpriteCloud extends Buffer
 	private var capacity:Int;
 	private var numVerts:Int;
 	private var numIndices:Int; 
-	private var tmpVertices:Float32Array;
 	private var vertices:Float32Array;
 	private var indices:Int16Array;
 	private var lastIndexCount:Int;
@@ -40,7 +40,6 @@ class SpriteCloud extends Buffer
     private var indexBuffer:GLBuffer;
     private var invTexWidth:Float = 0;
     private var invTexHeight:Float = 0;
- 	public var vertexDeclaration:Array<Int>;
 	public var vertexStrideSize:Int;
     public var shader:SpriteShader;
 	private var index:Int;
@@ -52,60 +51,16 @@ class SpriteCloud extends Buffer
 	public function new(texture:Texture,capacity:Int ) 
 	{
 		super();
-	 this.capacity = capacity;
-
-
-	
-	
-	   vertexDeclaration = [3, 2,4];
-       vertexStrideSize =  9 * 4; 
- 
-	 
+	   this.capacity = capacity;
+       vertexStrideSize =  (3 + 2 + 4)   * 4  ; 
+       vertexBuffer = GL.createBuffer();
+       indexBuffer = GL.createBuffer();
        index = 0;
-  
-      tmpVertices = new Float32Array(capacity*vertexStrideSize);
-
-
-    drawing = false;
-    currentBatchSize = 0;
-	currentBlendMode = BlendMode.NORMAL;
-    this.currentBaseTexture = texture;
-    invTexWidth  = 1.0 / texture.width;
-    invTexHeight = 1.0 / texture.height;
-
+       vertices = new Float32Array(capacity * vertexStrideSize);
+	   numIndices = vertices.length * 6;
+   	   indices = new Int16Array(numIndices);
 	
-	
-		    
-    vertexBuffer = GL.createBuffer();
-    indexBuffer = GL.createBuffer();
-
-	
-	shader = new SpriteShader();
-
-	rebuid = false;
-	}
-	
-	public function build()
-	{
-
-       numVerts = tmpVertices.length * vertexStrideSize *   4;
-       numIndices = tmpVertices.length * 6;
-	   
-	   
-       vertices = new Float32Array(numVerts);
-
-	   for ( i in 0...tmpVertices.length )
-	   {
-             vertices[i]=tmpVertices[i];
-	   }
-     tmpVertices = null;
-
-	
-	
-        this.indices = new Int16Array(numIndices); 
-		var length = Std.int(this.indices.length/6);
-		
-		for (i in 0...length) 
+		for (i in 0...numIndices) 
 		{
 			var index2 = i * 6;
 			var index3 = i * 4;
@@ -122,14 +77,30 @@ class SpriteCloud extends Buffer
     
     GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, indexBuffer);
     GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STATIC_DRAW);
-    GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, null);
-   
-    GL.bindBuffer(GL.ARRAY_BUFFER, vertexBuffer);
-    GL.bufferData(GL.ARRAY_BUFFER, vertices, GL.STATIC_DRAW);
-	GL.bindBuffer(GL.ARRAY_BUFFER, null);
-	rebuid = true;
+	indices = null;
+   // GL.bindBuffer(GL.ARRAY_BUFFER, vertexBuffer);
+   // GL.bufferData(GL.ARRAY_BUFFER, vertices, GL.STATIC_DRAW);
+		   
 		
+
+
+    drawing = false;
+    currentBatchSize = 0;
+	currentBlendMode = BlendMode.NORMAL;
+    this.currentBaseTexture = texture;
+    invTexWidth  = 1.0 / texture.width;
+    invTexHeight = 1.0 / texture.height;
+    rebuid = false;
+	
+	
+		    
+ 
+	
+	shader = new SpriteShader();
+
 	}
+	
+
 	
 override public function dispose():Void 
 {
@@ -137,7 +108,7 @@ override public function dispose():Void
 		this.vertices = null;
         GL.deleteBuffer(indexBuffer);
 		GL.deleteBuffer(vertexBuffer);
-	super.dispose();
+	    super.dispose();
 	
 }
 	
@@ -250,39 +221,36 @@ a = img.alpha;
 			v2 = tmp;
 		}
  
-tmpVertices[index++] = x1;
-tmpVertices[index++] = y1;
-tmpVertices[index++] = 0;
-tmpVertices[index++] = u;tmpVertices[index++] = v;
-tmpVertices[index++] = r;tmpVertices[index++] = g;tmpVertices[index++] = b;tmpVertices[index++] = a;
+vertices[index++] = x1;
+vertices[index++] = y1;
+vertices[index++] = 0;
+vertices[index++] = u;vertices[index++] = v;
+vertices[index++] = r;vertices[index++] = g;vertices[index++] = b;vertices[index++] = a;
 	
-tmpVertices[index++] = x2;
-tmpVertices[index++] = y2;
-tmpVertices[index++] = 0;
-tmpVertices[index++] = u;tmpVertices[index++] = v2;
-tmpVertices[index++] = r;tmpVertices[index++] = g;tmpVertices[index++] = b;tmpVertices[index++] = a;
+vertices[index++] = x2;
+vertices[index++] = y2;
+vertices[index++] = 0;
+vertices[index++] = u;vertices[index++] = v2;
+vertices[index++] = r;vertices[index++] = g;vertices[index++] = b;vertices[index++] = a;
 
-tmpVertices[index++] = x3;
-tmpVertices[index++] = y3;
-tmpVertices[index++] = 0;
-tmpVertices[index++] = u2;tmpVertices[index++] = v2;
-tmpVertices[index++] = r;tmpVertices[index++] = g;tmpVertices[index++] = b;tmpVertices[index++] = a;
+vertices[index++] = x3;
+vertices[index++] = y3;
+vertices[index++] = 0;
+vertices[index++] = u2;vertices[index++] = v2;
+vertices[index++] = r;vertices[index++] = g;vertices[index++] = b;vertices[index++] = a;
 
-tmpVertices[index++] = x4;
-tmpVertices[index++] = y4;
-tmpVertices[index++] = 0;
-tmpVertices[index++] = u2;tmpVertices[index++] = v;
-tmpVertices[index++] = r;tmpVertices[index++] = g;tmpVertices[index++] = b;tmpVertices[index++] = a;
+vertices[index++] = x4;
+vertices[index++] = y4;
+vertices[index++] = 0;
+vertices[index++] = u2;vertices[index++] = v;
+vertices[index++] = r;vertices[index++] = g;vertices[index++] = b;vertices[index++] = a;
 
 
     currentBatchSize++;
 	
 	}
 	
-	public function add()
-	{
-		currentBatchSize++;
-	}
+
 public function addTile(x:Float,y:Float,width:Float,height:Float,clip:Clip,flipx:Bool,flipy:Bool)
 {
 var r, g, b, a:Float;
@@ -322,29 +290,29 @@ a = 1;
 			v2 = tmp;
 		}
  
-tmpVertices[index++] = x;
-tmpVertices[index++] = y;
-tmpVertices[index++] = 0;
-tmpVertices[index++] = u;tmpVertices[index++] = v;
-tmpVertices[index++] = r;tmpVertices[index++] = g;tmpVertices[index++] = b;tmpVertices[index++] = a;
+vertices[index++] = x;
+vertices[index++] = y;
+vertices[index++] = 0;
+vertices[index++] = u;vertices[index++] = v;
+vertices[index++] = r;vertices[index++] = g;vertices[index++] = b;vertices[index++] = a;
 	
-tmpVertices[index++] = x;
-tmpVertices[index++] = fy2;
-tmpVertices[index++] = 0;
-tmpVertices[index++] = u;tmpVertices[index++] = v2;
-tmpVertices[index++] = r;tmpVertices[index++] = g;tmpVertices[index++] = b;tmpVertices[index++] = a;
+vertices[index++] = x;
+vertices[index++] = fy2;
+vertices[index++] = 0;
+vertices[index++] = u;vertices[index++] = v2;
+vertices[index++] = r;vertices[index++] = g;vertices[index++] = b;vertices[index++] = a;
 
-tmpVertices[index++] = fx2;
-tmpVertices[index++] = fy2;
-tmpVertices[index++] = 0;
-tmpVertices[index++] = u2;tmpVertices[index++] = v2;
-tmpVertices[index++] = r;tmpVertices[index++] = g;tmpVertices[index++] = b;tmpVertices[index++] = a;
+vertices[index++] = fx2;
+vertices[index++] = fy2;
+vertices[index++] = 0;
+vertices[index++] = u2;vertices[index++] = v2;
+vertices[index++] = r;vertices[index++] = g;vertices[index++] = b;vertices[index++] = a;
 
-tmpVertices[index++] = fx2;
-tmpVertices[index++] = y;
-tmpVertices[index++] = 0;
-tmpVertices[index++] = u2;tmpVertices[index++] = v;
-tmpVertices[index++] = r;tmpVertices[index++] = g;tmpVertices[index++] = b;tmpVertices[index++] = a;
+vertices[index++] = fx2;
+vertices[index++] = y;
+vertices[index++] = 0;
+vertices[index++] = u2;vertices[index++] = v;
+vertices[index++] = r;vertices[index++] = g;vertices[index++] = b;vertices[index++] = a;
 
 		    
 						
@@ -355,42 +323,36 @@ tmpVertices[index++] = r;tmpVertices[index++] = g;tmpVertices[index++] = b;tmpVe
 	
 	}
 	
-	public function addVertex(x:Float, y:Float, u:Float, v:Float)
-	{
-    tmpVertices[index++] = x;
-    tmpVertices[index++] = y;
-    tmpVertices[index++] = 0;
-    tmpVertices[index++] = u;tmpVertices[index++] = v;
-    tmpVertices[index++] = 1;tmpVertices[index++] = 1;tmpVertices[index++] = 1;tmpVertices[index++] = 1;
-	}
 
+	public function build()
+	{
+		  GL.bindBuffer(GL.ARRAY_BUFFER, this.vertexBuffer);
+		  GL.bufferData(GL.ARRAY_BUFFER, vertices, GL.STATIC_DRAW);
+		  vertices = null;
 	
+	}
 	
 	public function render()
 	{
-		this.update();
-		if (!rebuid) 
+		if (!rebuid)
 		{
-			rebuid = true;
 			build();
+			rebuid = true;
 			return;
 		}
-
-	 if (currentBatchSize==0) return;
+	this.update();
+	 if (currentBatchSize == 0) return;
+	 
 	 shader.Enable();
- 	// GL.bufferSubData(GL.ARRAY_BUFFER, 0, vertices);
-	  
      GL.bindBuffer(GL.ARRAY_BUFFER, this.vertexBuffer);
-     GL.vertexAttribPointer(shader.vertexAttribute, 3, GL.FLOAT, false, vertexStrideSize, 0);
-     GL.vertexAttribPointer(shader.texCoordAttribute  , 2, GL.FLOAT, false, vertexStrideSize, 3 * 4);
-     GL.vertexAttribPointer(shader.colorAttribute, 4, GL.FLOAT, false, vertexStrideSize, (3+2) * 4);
-     BlendMode.setBlend(currentBlendMode);
-     GL.uniformMatrix4fv(shader.modelViewMatrixUniform, false, new Float32Array(viewMatrix.toArray()));
-     GL.uniformMatrix4fv(shader.projectionMatrixUniform, false,new Float32Array(Game.projMatrix.toArray()));
-	 GL.activeTexture(GL.TEXTURE0);
- 	 currentBaseTexture.Bind();
-     GL.uniform1i (shader.imageUniform, 0);
-	 GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.indexBuffer); 
+	 GL.vertexAttribPointer(Filter.vertexAttribute, 3, GL.FLOAT, false, vertexStrideSize, 0);
+     GL.vertexAttribPointer(Filter.texCoordAttribute  , 2, GL.FLOAT, false, vertexStrideSize, 3 * 4);
+     GL.vertexAttribPointer(Filter.colorAttribute, 4, GL.FLOAT, false, vertexStrideSize, (3+2) * 4);
+     GL.uniformMatrix3D(shader.modelViewMatrixUniform, false, viewMatrix);
+     GL.uniformMatrix3D(shader.projectionMatrixUniform, false,Game.camera.projMatrix);
+	 shader.setTexture(currentBaseTexture);
+     GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.indexBuffer); 
+	 BlendMode.setBlend(currentBlendMode); 
      GL.drawElements(GL.TRIANGLES, currentBatchSize * 6, GL.UNSIGNED_SHORT, 0);
      shader.Disable();
     }

@@ -8,13 +8,14 @@
 	<!-- output -->
 	<app main="com.djoker.glteste.Main" file="glframework" path="bin" />
 	
-	<window background="#000000" fps="10000" />
-	<window width="800" height="480" unless="mobile" />
-	<window orientation="landscape" vsync="false" antialiasing="0" if="cpp" />
+	<window background="#000000" fps="1000" />
+	<window width="800" height="480" />
+	<window orientation="landscape" vsync="false" antialiasing="1" />
 	
 	<!-- classpath, haxe libs -->
 	<source path="src" />
 	<haxelib name="openfl" />
+
 	
 	<!-- assets -->
 	<icon path="assets/openfl.svg" />

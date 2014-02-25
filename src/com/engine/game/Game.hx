@@ -1,6 +1,14 @@
 package com.engine.game;
 
-import com.engine.math.Matrix;
+
+import com.engine.render.BlendMode;
+import com.engine.render.Camera;
+import com.engine.render.Texture;
+import com.engine.render.filter.Filter;
+import com.engine.math.Vector2;
+import com.engine.misc.Util;
+import com.engine.ui.Text;
+
 import flash.display.DisplayObject;
 import flash.display.Sprite;
 import flash.events.Event;
@@ -15,6 +23,10 @@ import openfl.display.FPS;
 import openfl.display.OpenGLView;
 import openfl.gl.GL;
 
+import flash.geom.Matrix;
+import flash.geom.Matrix3D;
+import flash.geom.Point;
+
 
 
 
@@ -26,6 +38,18 @@ import openfl.gl.GL;
 class Game extends OpenGLView
 {
 
+public static var viewWidth:Int = 0;
+public static var viewHeight:Int = 0;
+public static var game:Game;
+public static var now:Int = 0;
+public static var then:Int = 0;
+public static var frameStart:Int = 0;
+public static var fps:Int = 0;
+public static var dt:Float = 0;
+public static var frames:Int = 0;
+public static var fixedTimestep:Bool=true;
+public static var camera:Camera;
+	
 	private var ready:Bool;
 	public var deltaTime:Float;
     private var prevFrame:Int;
@@ -33,24 +57,21 @@ class Game extends OpenGLView
 	private var mMultiTouch:Bool;
 	private var screen:Screen = null;
 	private var container:Sprite;
-	static public var scrollX:Float = 0;
-	static public var scrollY:Float = 0;
-	static public var viewWidth:Int = 0;
-	static public var viewHeight:Int = 0;
+	//value from the windows resize
 	public var screenWidth:Int = 0;
 	public var screenHeight:Int = 0;
+	//values from the game initiate
 	public var gameWidth:Int=0;
 	public var gameHeight:Int = 0;
+
+	
 	private var rescale:Bool = false;
 	private var enableDepth:Bool;
-	
-public var red:Float;
-public var green:Float;
-public var blue:Float;
-
-	
-	static public var projMatrix:Matrix;
-
+    public var red:Float;
+    public var green:Float;
+    public var blue:Float;
+	private var textures:Map<String,Texture>;
+	private var requestedFramerate:Int;
 		
 
 
@@ -64,26 +85,25 @@ public var blue:Float;
 	public function new() 
 	{
 	super();
+	Game.game = this;
 	ready = false;
     this.render = renderView;
-	
-	
-    		
-	
-	
-    
+   
 	
 	
 		screenWidth = Lib.current.stage.stageWidth;
 		screenHeight = Lib.current.stage.stageHeight;
-	    Game.viewWidth = screenHeight;
-		Game.viewHeight = screenHeight;
+		requestedFramerate = Std.int(Lib.current.stage.frameRate);
+	    viewWidth = screenWidth;
+		viewHeight = screenHeight;
 		gameWidth = screenWidth;
 	    gameHeight = screenHeight;
+		Game.camera = new Camera(screenWidth,screenHeight);
 	
+		textures= new  Map<String,Texture>();
 	
-
-		Game.projMatrix=Matrix.OrthoOffCenterLH(0, gameWidth,gameHeight,0,  -1, 1);
+		
+	
 	
 
 	stage.addEventListener(Event.RESIZE, onResize);
@@ -131,6 +151,8 @@ public var blue:Float;
 	  container.addChild(child);
   }
 		
+  
+  
 	private function addedToStage(e:Event)
 	{
   	
@@ -145,6 +167,8 @@ public var blue:Float;
 	Lib.current.stage.addEventListener (MouseEvent.MOUSE_UP, doMouseUp);
     Lib.current.stage.addEventListener (KeyboardEvent.KEY_DOWN, stage_onKeyDown);
 	Lib.current.stage.addEventListener (KeyboardEvent.KEY_UP, stage_onKeyUp);
+	//Lib.current.stage.addEventListener (Event.ENTER_FRAME, onEnterFrame);
+	
 		
 	
 	if (mMultiTouch)
@@ -164,10 +188,13 @@ public var blue:Float;
 	GL.pixelStorei(GL.PACK_ALIGNMENT, 2);
 //	GL.enable(GL.DEPTH_TEST);
     setDeph(true);
-	clarColor(0, 1, 0.4);
+	clarColor(0, 0, 0.4);
 	GL.clearColor(red, green, blue, 1);
 	GL.depthMask(true);
-	 
+	GL.colorMask(true, true, true, true);
+	GL.activeTexture(GL.TEXTURE0);
+		 
+	
 	  
 
 		begin(); 
@@ -228,7 +255,17 @@ public var blue:Float;
 
 	}
 
-    private function focusLost(e:Event) {trace("end game"); ready = false; end(); }
+    private function focusLost(e:Event) 
+	{
+		ready = false; 
+		end(); 
+		for (tex in this.textures)
+		{
+			tex.dispose();
+		}
+		
+		textures = null;
+	}
 	private function onResize(e:Event) 
 	{
 		screenWidth = Lib.current.stage.stageWidth;
@@ -244,10 +281,17 @@ public var blue:Float;
     // trace("resize :" + width + "X" + height);
 	if (screen != null) screen.resize(width, height);
 	}
-	public function update(dt:Float) 
+	public function onUpdate(dt:Float) 
 	{
-	if (screen != null) screen.render(dt);
+	
 	}
+	
+	public function onRender() 
+	{
+	if (screen != null) screen.update(dt);	
+	if (screen != null) screen.render();
+	}
+	
     public function keyDown(key:Int) { };
 	public function keyUp(key:Int) { };
 
@@ -269,9 +313,20 @@ public var blue:Float;
 		}
 	}
 	
+	
+private function onEnterFrame (event:Event):Void 
+{
+onUpdate(dt);
+}
+	
 		
 private function renderView(rect:Rectangle):Void 
 { 
+	
+    updateTimer();
+	
+	
+    var timer:Int = getTimer();
 	viewWidth   = Std.int(rect.width);
 	viewHeight  = Std.int(rect.height);
 	
@@ -292,16 +347,17 @@ private function renderView(rect:Rectangle):Void
     var margin_x:Float = (screenWidth  - gameWidth * scale_w) / 2;
     var margin_y:Float = (screenHeight - gameHeight * scale_h) / 2;
 	
-	GL.viewport (Std.int (margin_x), Std.int (margin_y), Std.int (gameWidth*scale_w), Std.int (gameHeight*scale_h));
-	Game.projMatrix=Matrix.OrthoOffCenterLH(0, gameWidth/ar_origin, gameHeight/ar_origin,0,  -1000, 1000);
+	GL.viewport (Std.int (margin_x), Std.int (margin_y), Std.int (gameWidth * scale_w), Std.int (gameHeight * scale_h));
+    if (camera!=null) camera.resize( gameWidth / ar_origin, gameHeight / ar_origin);
 	} else
 	{
 	GL.viewport (Std.int (rect.x), Std.int (rect.y), Std.int (rect.width), Std.int (rect.height));
- 	Game.projMatrix=Matrix.OrthoOffCenterLH(0, gameWidth,gameHeight,0,  -1, 1);
+    if (camera!=null)camera.resize( viewWidth , viewHeight );
+	//if (camera!=null)camera.resize( gameWidth,gameHeight );
 	}
-	
+	if (camera!=null)camera.update();
 
-
+ 
 	
    
 	nextFrame = Lib.getTimer();
@@ -315,21 +371,66 @@ private function renderView(rect:Rectangle):Void
 	{
 	GL.clear(GL.COLOR_BUFFER_BIT );	
 	}
-  //  GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
-    
+
  
 
 
 	if (ready)
 	{
-	  update(deltaTime);
+		
+	  onRender();
     }
 	
-	
+ GL.disableVertexAttribArray (Filter.vertexAttribute);
+ GL.disableVertexAttribArray (Filter.texCoordAttribute);
+ GL.disableVertexAttribArray (Filter.colorAttribute);	
  GL.bindBuffer (GL.ARRAY_BUFFER, null);	
  GL.useProgram (null);	
- GL.blendFunc(GL.SRC_ALPHA,GL.DST_ALPHA );
- prevFrame = nextFrame;
+ GL.blendFunc(GL.SRC_ALPHA, GL.DST_ALPHA );
+ 
+ 
+//
+
+timer = getTimer();
+prevFrame = nextFrame;
 }
 	
+public function getTexture(url:String, ?flip:Bool = false ):Texture 
+{
+	if (textures.exists(url))
+	{
+		return textures.get(url);
+	} else
+	{	
+	var tex = new Texture();
+	tex.load(url, flip);
+	textures.set(url,tex);
+	return tex;
+	}
+}
+private  function updateTimer()
+{
+then = now;
+now = getTimer();
+dt = then == 0 ? 0 : (now - then) / 1000;
+if (fixedTimestep) {
+dt = 1 / requestedFramerate;
+}
+
+frames++;
+if (now - frameStart >= 1000) 
+{
+	fps = Std.int(Math.min(requestedFramerate, frames));
+frames = 0;
+frameStart = now;
+}
+}
+
+public  function getTimer():Int
+{
+	return Lib.getTimer();
+}
+
+
+
 }

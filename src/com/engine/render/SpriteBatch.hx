@@ -4,10 +4,14 @@ import com.engine.game.Entity;
 import com.engine.game.Game;
 import com.engine.render.BlendMode;
 import flash.geom.Matrix;
+
+import flash.geom.Point;
+
 import openfl.gl.GL;
 import openfl.gl.GLBuffer;
 import openfl.utils.Float32Array;
 import openfl.utils.Int16Array;
+import com.engine.render.filter.Filter;
 
 
 
@@ -32,16 +36,11 @@ class SpriteBatch extends Buffer
 	
 	public var numTex:Int=0;
 	public var numBlend:Int=0;
-
 private var vertexBuffer:GLBuffer;
 private var indexBuffer:GLBuffer;
-
 private var invTexWidth:Float = 0;
 private var invTexHeight:Float = 0;
-
-
-	public var vertexDeclaration:Array<Int>;
-	public var vertexStrideSize:Int;
+private var vertexStrideSize:Int;
 
 
    
@@ -51,10 +50,10 @@ public var shader:SpriteShader;
 	{
 		super();
 	   this.capacity = capacity;
-	   vertexStrideSize =  9 * 4; // 9 floats (x, y, z,u,v, r, g, b, a)
-       numVerts = capacity * vertexStrideSize *   4;
+	   vertexStrideSize =  (3+2+4) * 4; // 9 floats (x, y, z,u,v, r, g, b, a)
+       numVerts = capacity * vertexStrideSize ;
        numIndices = capacity * 6;
-      vertices = new Float32Array(numVerts);
+       vertices = new Float32Array(numVerts);
 
     
 
@@ -88,13 +87,9 @@ public var shader:SpriteShader;
     //upload the index data
     GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, indexBuffer);
     GL.bufferData(GL.ELEMENT_ARRAY_BUFFER,  new Int16Array(indices), GL.STATIC_DRAW);
-
-
+	indices = null;
     GL.bindBuffer(GL.ARRAY_BUFFER, vertexBuffer);
     GL.bufferData(GL.ARRAY_BUFFER, vertices, GL.DYNAMIC_DRAW);
-	
-
-	
 	shader = new SpriteShader();
   	start();
 	}
@@ -346,10 +341,16 @@ this.currentBatchSize++;
 			this.drawEntity(o);
 		}
 	}
-	public function drawEntity(obj:Entity)
+	public function drawEntity(obj:Entity,?childs:Bool=false)
 	{	
+		var matrix:Matrix = obj.getLocalToWorldMatrix();
+		//matrix.identity();
+	
+if (obj.image != null)
+{
 		
-		if(obj.image!= this.currentBaseTexture || this.currentBatchSize >= this.capacity)
+		
+		if(obj.image!= this.currentBaseTexture )
         {
        		switchTexture(obj.image);
         }
@@ -360,7 +361,7 @@ this.currentBatchSize++;
         this.setBlendMode(obj.blendMode);
     }
 
-		
+	
 
  var u:Float  = obj.clip.x * invTexWidth;
  var u2:Float = ( obj.clip.x +  obj.clip.width) * invTexWidth;
@@ -429,7 +430,7 @@ vertices[index+1*9+5] = r;vertices[index+1*9+6] = g;vertices[index+1*9+7] = b;ve
 vertices[index+2*9+5] = r;vertices[index+2*9+6] = g;vertices[index+2*9+7] = b;vertices[index+2*9+8] = a;
 vertices[index+3*9+5] = r;vertices[index+3*9+6] = g;vertices[index+3*9+7] = b;vertices[index+3*9+8] = a;
 
-var matrix:Matrix = obj.getLocalToWorldMatrix();
+
 
 	for (i in 0...4)
 		{
@@ -438,13 +439,19 @@ var matrix:Matrix = obj.getLocalToWorldMatrix();
 			vertices[index + i * 9 + 0] = matrix.a * x + matrix.c * y + matrix.tx;
 		    vertices[index + i * 9 + 1] = matrix.d * y + matrix.b * x + matrix.ty;
 		}		
-	
-
-
- 
-
  
 this.currentBatchSize++;
+
+}
+
+if(childs == true)
+{
+        for (i in 0...obj.children.length)
+		{
+	     	var o:Entity = cast obj.children[i];
+			this.drawEntity(o);
+		}
+}		
 	
 	
 	}
@@ -823,6 +830,8 @@ vertices[index++] = 1; vertices[index++] = 1; vertices[index++] = 1; vertices[in
 		 numTex = 0;
 	     numBlend = 0;
 		 currentBatchSize = 0;
+		 currentBaseTexture = null;
+		 currentBlendMode = -1;
 		 start();
 	}
 	public function End()
@@ -834,11 +843,10 @@ vertices[index++] = 1; vertices[index++] = 1; vertices[index++] = 1; vertices[in
 	private function start()
     {
      shader.Enable();
- 	 GL.activeTexture(GL.TEXTURE0);
      GL.bindBuffer(GL.ARRAY_BUFFER, this.vertexBuffer);
-     GL.vertexAttribPointer(shader.vertexAttribute, 3, GL.FLOAT, false, vertexStrideSize, 0);
-     GL.vertexAttribPointer(shader.texCoordAttribute  , 2, GL.FLOAT, false, vertexStrideSize, 3 * 4);
-     GL.vertexAttribPointer(shader.colorAttribute, 4, GL.FLOAT, false, vertexStrideSize, (3+2) * 4);
+     GL.vertexAttribPointer(Filter.vertexAttribute, 3, GL.FLOAT, false, vertexStrideSize, 0);
+     GL.vertexAttribPointer(Filter.texCoordAttribute  , 2, GL.FLOAT, false, vertexStrideSize, 3 * 4);
+     GL.vertexAttribPointer(Filter.colorAttribute, 4, GL.FLOAT, false, vertexStrideSize, (3+2) * 4);
      if(currentBlendMode != BlendMode.NORMAL)
      {
         setBlendMode(currentBlendMode);
@@ -849,16 +857,14 @@ private function flush()
 {
     if (currentBatchSize == 0) return;
 	this.update();
-	currentBaseTexture.Bind();
+	shader.setTexture(currentBaseTexture);
 	numTex++;
-	 GL.uniformMatrix4fv(shader.projectionMatrixUniform, false,new Float32Array(Game.projMatrix.toArray()));
-     GL.uniformMatrix4fv(shader.modelViewMatrixUniform, false, new Float32Array(viewMatrix.toArray()));
-      
-    GL.uniform1i (shader.imageUniform, 0);
+	GL.uniformMatrix3D(shader.projectionMatrixUniform, false,Game.camera.projMatrix);
+    GL.uniformMatrix3D(shader.modelViewMatrixUniform, false, viewMatrix);
     GL.bufferSubData(GL.ARRAY_BUFFER, 0, vertices);
+//    GL.bufferData(GL.ARRAY_BUFFER, vertices, GL.STATIC_DRAW);
 	GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
     GL.drawElements(GL.TRIANGLES, currentBatchSize * 6, GL.UNSIGNED_SHORT, 0);
-//	trace(currentBatchSize);
     currentBatchSize = 0;
 }
 private function switchTexture (texture:Texture) 

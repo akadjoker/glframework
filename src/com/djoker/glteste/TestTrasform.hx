@@ -21,13 +21,13 @@ class TestTrasform extends Screen
  var tex :Texture;
  var batch:SpriteBatch;
 
-
+   var particles : Array<Particle>;
  
  var child:Entity;
  
  var player:Entity;
  var logo:Entity;
-
+ var caption:TextField;
 
    var playerTex :Texture;
    var skew:Float = 0;
@@ -36,12 +36,11 @@ class TestTrasform extends Screen
 	override public function show()
 	{
 		
-	   playerTex = new Texture("assets/zazaka.png", true);
 	
          batch = new SpriteBatch(500);
    
 	
-		 var caption:TextField = new TextField();
+		  caption = new TextField();
 		 caption.x =  game.gameWidth / 2-100;
 		 caption.y = 20;
 		 caption.width = 200;
@@ -49,15 +48,25 @@ class TestTrasform extends Screen
 		 caption.text = "Test trasform sprites by parent ";
 		 caption.selectable = false;
 		 game.addChild(caption);
+		 
+		 tex = getTexture("assets/texture.png");
+		    particles = [];
+        for(i in 0...200)
+        addParticle();
 
-		logo = new Entity(this.width / 2, this.height / 2, new Texture("assets/hxlogo.png", true));
+		logo = new Entity(this.width / 2, this.height / 2, getTexture("assets/hxlogo.png", true));
 	    logo.blendMode = BlendMode.SCREEN;
 	
-		 player = new  Entity(300, 200, playerTex);
-		 child = new  Entity(0, 0, playerTex);
+		 player = new  Entity(300, 200, getTexture("assets/zazaka.png", true));
+		 child = new  Entity(0, 0, getTexture("assets/zazaka.png", true));
 		 child.blue = 0;
 
 		 player.add(child);
+		 
+		 
+		
+	 
+		
 		 
 
 		 
@@ -65,15 +74,23 @@ class TestTrasform extends Screen
 
 
 	}
+	
+	override public function update(dt:Float) 
+	{ 
 
-	override public function render(dt:Float) 
+		
+		caption.text = logo.getLocalToWorldMatrix().toString();
+		
+	}
+
+	override public function render() 
 	{ 
   
-		  player.rotation += dt * 2.1;
-		  child.rotation -= dt * 2.5;
-		  player.skewX += dt * 0.1;
+		  player.rotation += game.deltaTime * 2.1;
+		  child.rotation -= game.deltaTime * 2.5;
+		  player.skewX += game.deltaTime * 0.1;
 		  
-		skew += dt * 1;
+		skew +=game.deltaTime * 1;
  
 		logo.skewX = Math.sin(skew)*1;
 		logo.skewY = Math.cos(skew)*1;
@@ -83,8 +100,15 @@ class TestTrasform extends Screen
 
 
   	  batch.drawEntity(logo);
-	  batch.drawEntity(player);
-	  batch.drawEntity(child);
+	  batch.drawEntity(player,true);
+
+	   		
+      for(p in particles)
+      {
+         p.move(game.deltaTime);
+	
+        batch.drawImage(p);
+      }
 
 	  
       batch.End();
@@ -96,6 +120,13 @@ class TestTrasform extends Screen
 		
 
 
+public function addParticle()
+{
+	var particle:Particle = new Particle(tex);
+	particle.Init();
+	particle.blendMode = BlendMode.NORMAL;
+    particles.push(particle);
+}
 
 override public function mouseDown(mousex:Float, mousey:Float) 
 {

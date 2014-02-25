@@ -1,6 +1,7 @@
 package com.engine.render;
 
-import flash.geom.Matrix3D;
+import flash.geom.Matrix;
+import flash.geom.Point;
 
 import openfl.display.OpenGLView;
 import openfl.gl.GL;
@@ -13,7 +14,7 @@ import openfl.utils.UInt8Array;
 import openfl.utils.Int16Array;
 import openfl.display.FPS;
 
-import com.engine.math.Matrix;
+import flash.geom.Matrix;
 import com.engine.render.BlendMode;
 
 /**
